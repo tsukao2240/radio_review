@@ -2,38 +2,35 @@
 
 namespace App\Http\Controllers;
 
+use App\RadioProgram;
 use DOMDocument;
 use DOMXPath;
 use Illuminate\Http\Request;
 
 class RadioProgramController extends Controller
 {
-    //radikoの番組表から今放送されている番組をとってくる
-    public function fetch(){
+    //radikoの番組表から今放送されている番組を取得します
+    public function fetchProgramGuide(){
+
         $entries = [];
-        $dom = new DOMDocument();
-        $arr = app()->make('App\Http\Controllers\RadioBroadcastCotroller');
-        $prefectureIds = $arr->getBroadCastId();
-
-        foreach($prefectureIds as $prefectureId){
-
-            $url = 'http://radiko.jp/v3/program/now/' . $prefectureId . '.xml';
+        for($i = 1;$i < 48;$i++){
+            $url = 'http://radiko.jp/v3/program/now/JP' . $i . '.xml';
+            $dom = new DOMDocument();
             @$dom->load($url);
             $xpath = new DOMXPath($dom);
 
             foreach($xpath->query('//radiko/stations/station') as $node){
-
                     $entries[] = array(
                         'station' => $xpath->evaluate('string(name)',$node),
                         'title' => $xpath->evaluate('string(progs/prog/title)',$node),
                         'url' => $xpath->evaluate('string(progs/prog/url)',$node),
-                        //'info' => $xpath->evaluate('string(progs/prog/info)',$node),
-                        'start' => $xpath->evaluate('string(//prog/@ftl)',$node),
-                        'end' => $xpath->evaluate('string(//prog/@tol)',$node),
-                        //'duration' => $xpath->evaluate('string(//prog/@dur)',$node),
+                        'start' => substr_replace(($xpath->evaluate('string(//prog/@ftl)',$node)),':',2,0),
+                        'end' => substr_replace(($xpath->evaluate('string(//prog/@tol)',$node)),':',2,0),
                         );
+
             }
         }
+
         //放送局の重複を削除します
         $arr_tmp = $results = array();
         foreach($entries as $entry => $value){

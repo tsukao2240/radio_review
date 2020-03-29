@@ -12,7 +12,7 @@ class RadioBroadcastCotroller extends Controller
     public function getBroadCastId(){
 
         $dom = new DOMDocument;
-        $broadcast = array();
+        $broadcast = [];
         $url = 'http://radiko.jp/v3/station/region/full.xml';
 
         @$dom->load($url);
@@ -20,16 +20,16 @@ class RadioBroadcastCotroller extends Controller
 
         foreach($xpath->query('//region/stations/station') as $node){
 
-            $broadcast[] = $xpath->evaluate('string(area_id)',$node);
+            $broadcast[] = array
+                            (
+                                $xpath->evaluate('string(id)',$node),
+
+                            );
 
         }
-        $broadcast[] = 'JP29';
-        $broadcast[] = 'JP32';
-        $broadcast[] = 'JP41';
 
         $res = array_unique($broadcast,SORT_REGULAR);
-        natsort($res);
-
         return $res;
     }
+
 }

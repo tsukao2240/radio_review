@@ -21,4 +21,4 @@ Auth::routes();
 
 //Route::get('/home', 'HomeController@index')->name('home');
 
-Route::get('/home','RadioProgramController@fetch');
+Route::get('/home','RadioProgramController@fetchProgramGuide');

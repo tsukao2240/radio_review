@@ -46,10 +46,10 @@ return [
         'mysql' => [
             'driver' => 'mysql',
             'url' => env('DATABASE_URL'),
-            'host' => env('DB_HOST', 'localhost'),
+            'host' => env('DB_HOST', 'homestead'),
             'port' => env('DB_PORT', '3306'),
             'database' => env('DB_DATABASE', 'radio_review'),
-            'username' => env('DB_USERNAME', 'root'),
+            'username' => env('DB_USERNAME', 'homestead'),
             'password' => env('DB_PASSWORD', '2240tuka'),
             'unix_socket' => env('DB_SOCKET', ''),
             'charset' => 'utf8mb4',
