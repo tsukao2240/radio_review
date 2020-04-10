@@ -1,0 +1,15 @@
+<?php
+//トップページ
+Breadcrumbs::for('/',function($trail){
+    $trail->push('ホーム',url('/'));
+});
+//トップページ->放送中の番組
+Breadcrumbs::for('radioProgramList',function($trail){
+    $trail->parent('/');
+    $trail->push('放送中の番組',url('radioProgramList'));
+});
+//トップページ->検索結果
+Breadcrumbs::for('Search',function($trail){
+    $trail->parent('/');
+    $trail->push('検索結果',url('Search'));
+});

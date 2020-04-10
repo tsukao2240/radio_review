@@ -14,11 +14,15 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    return view('home.top');
 });
 
 Auth::routes();
 
-//Route::get('/home', 'HomeController@index')->name('home');
+Route::get('/fetchRadioProgramData','InsertRadioProgramController@fetchRadioInfoOneweek');
 
-Route::get('/home','RadioProgramController@fetchProgramGuide');
+Route::get('/radioProgramList','RadioProgramController@fetchProgramGuide');
+
+//番組タイトルで検索する
+
+Route::get('Search','CrudController@index')->name('search');

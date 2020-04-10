@@ -14,6 +14,7 @@ class CreateRadioProgramsTable extends Migration
     public function up()
     {
         Schema::create('radio_programs', function (Blueprint $table) {
+            $table->bigIncrements('id')->autoIncrement();
             $table->string('station_id');
             $table->string('title');
             $table->string('cast')->nullable();

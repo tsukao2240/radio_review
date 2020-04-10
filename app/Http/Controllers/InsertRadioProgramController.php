@@ -1,37 +1,18 @@
 <?php
 
-namespace App;
+namespace App\Http\Controllers;
 
+use Illuminate\Http\Request;
 use App\Http\Controllers\RadioBroadcastCotroller;
 use App\Http\Controllers\RadioProgramController;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Log\Logger;
-use App\Http\Controllers\Log;
+use DOMDocument;
+use DOMXPath;
 
-class RadioProgram extends Model
+class InsertRadioProgramController extends Controller
 {
     //
-    protected $fillable =
-    [
-        'station_id',
-        'title',
-        'cast',
-        'start',
-        'end',
-        'info',
-        'url',
-        'image',
-
-    ];
-
-    protected $table = 'radio_programs';
-
-    //1週間分の放送番組の情報を取得し、DBに格納します。
-    //Todo
-    //1週間分の情報を取得するが、差分があった場合のみDBに保存するようにする。
-    //番組タイトルが重複しているものがあるので、それらを統合し開始時間と終了時間をいい感じにする。
-
     public function fetchRadioInfoOneweek(){
         $entries = [];
 
@@ -60,6 +41,7 @@ class RadioProgram extends Model
         //var_dump(preg_match('^放送|^（放送',$entries));
         $res = array_unique($entries,SORT_REGULAR);
 
+        var_dump($res);
         //データが多いためバインドできずSQLエラーが発生するため、1000件ずつに分けてDBに格納している。
         if(count($res) > 1000){
             $collection = collect($res);
@@ -68,7 +50,7 @@ class RadioProgram extends Model
                 // DB::beginTransaction();
                 foreach($data as $value){
                     DB::table('radio_programs')
-                            ->updateOrInsert($value->toarray());
+                            ->insertOrIgnore($value->toarray());
                 }
             //     DB::commit();
             // }catch(\Throwable $e){
@@ -79,7 +61,7 @@ class RadioProgram extends Model
 
         }else{
             DB::table('radio_programs')
-            ->updateOrInsert($res);
+            ->insertOrIgnore($res);
 
         }
     }

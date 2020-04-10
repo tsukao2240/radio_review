@@ -23,23 +23,25 @@ class RadioProgramController extends Controller
                     $entries[] = array(
                         'station' => $xpath->evaluate('string(name)',$node),
                         'title' => $xpath->evaluate('string(progs/prog/title)',$node),
-                        'url' => $xpath->evaluate('string(progs/prog/url)',$node),
+                        'cast' => $xpath->evaluate('string(progs/prog/pfm)',$node),
                         'start' => substr_replace(($xpath->evaluate('string(//prog/@ftl)',$node)),':',2,0),
                         'end' => substr_replace(($xpath->evaluate('string(//prog/@tol)',$node)),':',2,0),
+                        'url' => $xpath->evaluate('string(progs/prog/url)',$node),
+
                         );
 
             }
         }
 
         //放送局の重複を削除します
-        $arr_tmp = $results = array();
+        $arr_tmp = $results = [];
         foreach($entries as $entry => $value){
             if(!in_array($value['station'], $arr_tmp)){
                 $arr_tmp[] = $value['station'];
                 $results[] = $value;
                 }
         }
-        return view('layouts.home',compact('results'));
+        return view('layouts.radioProgramList',compact('results'));
 
     }
 }
