@@ -21,8 +21,13 @@ Auth::routes();
 
 Route::get('/fetchRadioProgramData','InsertRadioProgramController@fetchRadioInfoOneweek');
 
-Route::get('/radioProgramList','RadioProgramController@fetchProgramGuide');
+Route::get('/schedule','RadioProgramController@fetchProgramGuide')->name('schedule');
 
 //番組タイトルで検索する
+Route::get('search','CrudController@index')->name('search');
 
-Route::get('Search','CrudController@index')->name('search');
+//番組の詳細情報
+Route::get('list/{id}/{title}','ViewProgramDetailsController@index')->name('list');
+
+//放送局の週間番組表を表示する
+Route::get('station/{id}', 'RadioBroadcastController@getBroadCastId')->name('station');
