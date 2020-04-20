@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 
 class CrudController extends Controller
 {
+    //番組を検索します
     public function index(Request $request)
     {
 
@@ -17,6 +18,7 @@ class CrudController extends Controller
 
             $keyword = DB::table('radio_programs')
                 ->where('title', 'LIKE BINARY', '%' . $keyword . '%')->distinct()->select('title', 'station_id')->simplePaginate(10);
+
         } else {
             //キーワードが入力されていないときはページ遷移しない
             return redirect('/');

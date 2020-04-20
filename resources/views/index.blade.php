@@ -21,13 +21,13 @@
             <tbody>
                 {{-- TODO  同じ番組を表示させないようにする--}}
                 @foreach ($keyword as $item)
-                @php
+                {{-- @php
                 $zenToHan = mb_convert_kana($item->title,'a');
                 $zenToHan = str_replace(array(" ", "　","\n"), "", $zenToHan);
-                @endphp
+                @endphp --}}
                 <tr>
                     <td><a
-                            href="{{ route('list',['id' => $item->station_id,'title' => $item->title]) }}">{{ $zenToHan }}</a>
+                            href="{{ route('list',['id' => $item->station_id,'title' => $item->title]) }}">{{ $item->title }}</a>
                     </td>
                 </tr>
                 @endforeach

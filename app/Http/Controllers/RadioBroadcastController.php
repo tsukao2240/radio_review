@@ -11,7 +11,7 @@ use DateTime as GlobalDateTime;
 
 class RadioBroadcastController extends Controller
 {
-    //
+    //放送局ごとの番組表の情報を取得します
     public function getBroadCastId($id)
     {
 

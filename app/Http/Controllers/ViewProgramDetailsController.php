@@ -4,12 +4,13 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\RadioProgram;
+use Illuminate\Support\Facades\DB;
 use DOMDocument;
 use DOMXPath;
 
 class ViewProgramDetailsController extends Controller
 {
-    //
+    //番組の詳細情報を取得します
     public function index($id, $title)
     {
 
@@ -34,9 +35,16 @@ class ViewProgramDetailsController extends Controller
 
                 );
 
+                //$results = collect(DB::table('radio_programs'))->firstWhere('title',$title);
+
                 return view('detail.radioPrgramDetail', compact('entries'));
             }
         }
-        return view('detail.radioPrgramDetail', compact('entries'));
+        if (empty($entries)) {
+
+            $results = DB::table('radio_programs')->where('title', $title)->select('title','cast','info','image')->get();
+
+        }
+        return view('detail.radioPrgramDetail', compact('results'));
     }
 }

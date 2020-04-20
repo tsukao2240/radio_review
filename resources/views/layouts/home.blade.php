@@ -30,6 +30,12 @@
                     <li class="nav-item active">
                         <a class="nav-link" href="{{ route('schedule') }}">放送中の番組</a>
                     </li>
+                    <li class="nav-item active">
+                        <a class="nav-link" href="http://">レビューを見る</a>
+                    </li>
+                    <li class="nav-item active">
+                        <a class="nav-link" href="{{ route('program') }}">レビューを投稿する</a>
+                    </li>
                     {{ csrf_field() }}
                     {{ Form::open(['route' => 'search','method' => 'get']) }}
                     <div class="input-group">

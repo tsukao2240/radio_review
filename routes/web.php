@@ -31,3 +31,11 @@ Route::get('list/{id}/{title}','ViewProgramDetailsController@index')->name('list
 
 //放送局の週間番組表を表示する
 Route::get('station/{id}', 'RadioBroadcastController@getBroadCastId')->name('station');
+
+//投稿画面
+Route::get('/program','PostCommentsController@index')->name('program');
+
+//レビューの投稿
+Route::post('post/{id}','PostCommentsController@post');
+
+Route::get('delete','DeleteDuplicateRecordsController@delete');
