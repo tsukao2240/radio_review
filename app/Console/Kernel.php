@@ -24,7 +24,8 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // $schedule->command('inspire')->hourly();
+        $schedule->call(new \App\Routine\InsertRadioProgram($schedule))->weeklyOn(0,'6:00');
+        $schedule->call(new \App\Routine\DeleteDuplicateRecords($schedule))->weeklyOn(0,'6:00');
     }
 
     /**
