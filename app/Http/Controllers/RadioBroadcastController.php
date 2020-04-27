@@ -14,7 +14,6 @@ class RadioBroadcastController extends Controller
     //放送局ごとの番組表の情報を取得します
     public function getBroadCastId($id)
     {
-
         $entries = [];
         $date = new GlobalDateTime();
         $today = $date->format('Ymd');
@@ -40,25 +39,21 @@ class RadioBroadcastController extends Controller
                 );
 
                 $thisWeek[] = substr($xpath->evaluate('string(./@ft)', $node), 0, 8);
-
             }
-
         }
-        $thisWeek = array_unique($thisWeek,SORT_REGULAR);
+        $thisWeek = array_unique($thisWeek, SORT_REGULAR);
         $thisWeek = array_merge($thisWeek);
         //
         $count = 0;
-        foreach($entries as $entry){
+        foreach ($entries as $entry) {
 
-            if($entry['date'] === $today && $entry['start'] >= 24){
+            if ($entry['date'] === $today && $entry['start'] >= 24) {
 
                 unset($entries[$count]);
-
             }
             $count++;
-
         }
         $entries = array_merge($entries);
-        return view('layouts.weeklySchedule', compact(['entries', 'thisWeek']));
+        return view('radioprogram.weekly_schedule', compact(['entries', 'thisWeek']));
     }
 }

@@ -18,7 +18,6 @@
                 <td>
                     <div>
                         <a href="{{ url('list/' . $entry['id'] . '/' . $entry['title'])}}">{{$entry['title']}}</a>
-
                     </div>
                     <div>
                         {{ $entry['cast'] }}

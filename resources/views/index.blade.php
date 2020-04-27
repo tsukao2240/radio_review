@@ -27,7 +27,7 @@
                 @endphp --}}
                 <tr>
                     <td><a
-                            href="{{ route('list',['id' => $item->station_id,'title' => $item->title]) }}">{{ $item->title }}</a>
+                            href="{{ route('list',['station_id' => $item->station_id,'title' => $item->title]) }}">{{ $item->title }}</a>
                     </td>
                 </tr>
                 @endforeach

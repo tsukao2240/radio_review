@@ -19,23 +19,26 @@ Route::get('/', function () {
 
 Auth::routes();
 
-Route::get('/fetchRadioProgramData','InsertRadioProgramController@fetchRadioInfoOneweek');
-
-Route::get('/schedule','RadioProgramController@fetchProgramGuide')->name('schedule');
+//放送中の番組を取得する
+Route::get('/schedule', 'RadioProgramController@fetchProgramGuide')->name('schedule');
 
 //番組タイトルで検索する
-Route::get('search','CrudController@index')->name('search');
+Route::get('search', 'CrudController@index')->name('search');
 
-//番組の詳細情報
-Route::get('list/{id}/{title}','ViewProgramDetailsController@index')->name('list');
+//番組の詳細情報を表示する
+Route::get('list/{station_id}/{title}', 'ViewProgramDetailsController@index')->name('list');
 
-//放送局の週間番組表を表示する
-Route::get('station/{id}', 'RadioBroadcastController@getBroadCastId')->name('station');
+//放送局の週間番組表を取得する
+Route::get('station/{station_id}', 'RadioBroadcastController@getBroadCastId')->name('station');
+
+//検索画面
+Route::get('/program', 'PostCommentsController@index')->name('program');
 
 //投稿画面
-Route::get('/program','PostCommentsController@index')->name('program');
+Route::get('/review/{id}', 'PostCommentsController@review')->name('review');
 
 //レビューの投稿
-Route::post('post/{id}','PostCommentsController@post');
+Route::post('/review/{id}', 'PostCommentsController@store')->name('store');
 
-Route::get('delete','DeleteDuplicateRecordsController@delete');
+
+

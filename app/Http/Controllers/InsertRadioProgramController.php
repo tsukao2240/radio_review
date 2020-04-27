@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Http\Controllers\RadioProgramController;
 use Illuminate\Database\Eloquent\Model;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use DOMDocument;
 use DOMXPath;
@@ -31,7 +32,6 @@ class InsertRadioProgramController extends Controller
             foreach ($xpath->query('//radiko/stations/station/progs/prog') as $node) {
 
                 $entries[] = array(
-
                     'station_id' => implode($brodCastIds[$i]),
                     'title' => $xpath->evaluate('string(title)', $node),
                     'cast' => $xpath->evaluate('string(pfm)', $node),
@@ -40,7 +40,6 @@ class InsertRadioProgramController extends Controller
                     'info' => $xpath->evaluate('string(info)', $node),
                     'url' => $xpath->evaluate('string(url)', $node),
                     'image' => $xpath->evaluate('string(img)', $node),
-
                 );
             }
         }
@@ -66,14 +65,24 @@ class InsertRadioProgramController extends Controller
         //     }
         // }
 
+
         //データが多いためSQLエラーが発生するため、1000件ずつに分けてDBに格納している。
         $collection = collect($res);
         $data = $collection->chunk(1000);
-        var_dump($data);
-        foreach ($data as $value) {
+        DB::beginTransaction();
+        try {
+            foreach ($data as $value) {
 
-            DB::table('radio_programs')
-                ->insertOrIgnore($value->toarray());
+                DB::table('radio_programs')
+                    ->insert(
+                        $value->toarray()
+                    );
+
+                DB::commit();
+            }
+        } catch (\Exception $e) {
+            DB::rollBack();
+            echo $e;
         }
 
         // if (count($res) > 1000) {

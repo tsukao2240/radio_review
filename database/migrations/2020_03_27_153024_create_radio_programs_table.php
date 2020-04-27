@@ -17,13 +17,12 @@ class CreateRadioProgramsTable extends Migration
             $table->bigIncrements('id')->autoIncrement();
             $table->string('station_id');
             $table->string('title');
-            $table->string('cast')->nullable();
+            $table->text('cast')->nullable();
             $table->string('start');
             $table->string('end');
             $table->text('info')->nullable();
             $table->text('url')->nullable();
             $table->text('image')->nullable();
-            $table->timestamps();
         });
     }
 

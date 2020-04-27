@@ -2,10 +2,11 @@
 
 <head>
     <!--Bootstrap -->
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
-        integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <link href="{{ mix('css/app.css') }}" rel="stylesheet" type="text/css">
     <!-- Fonts -->
     <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.6.3/css/all.min.css">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
 </head>
 <header class="sticky-top">
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
@@ -20,6 +21,9 @@
             <div class="float-right">
                 <ul class="navbar-nav">
                     <li class="nav-item active">
+                        <a class="nav-link" href="{{ route('schedule') }}">放送中の番組</a>
+                    </li>
+                    <li class="nav-item active">
                         <a class="nav-link" href="{{ route('login') }}">ログイン <span class="sr-only">(current)</span></a>
                     </li>
                     <li class="nav-item active">
@@ -28,32 +32,31 @@
                         @endif
                     </li>
                     <li class="nav-item active">
-                        <a class="nav-link" href="{{ route('schedule') }}">放送中の番組</a>
-                    </li>
-                    <li class="nav-item active">
                         <a class="nav-link" href="http://">レビューを見る</a>
                     </li>
                     <li class="nav-item active">
                         <a class="nav-link" href="{{ route('program') }}">レビューを投稿する</a>
                     </li>
-                    {{ csrf_field() }}
-                    {{ Form::open(['route' => 'search','method' => 'get']) }}
-                    <div class="input-group">
-                        {{ Form::text('title','',['class' => 'form-control','placeholder' => '番組名を検索する']) }}
-                        <div class="input-group-append">
-                            {{ Form::button('<i class="fas fa-search"></i>',['class' => 'btn','type' => 'submit']) }}
-                        </div>
-                    </div>
-                    {{ Form::close() }}
                 </ul>
             </div>
         </div>
     </nav>
+    <div>
+
+    </div>
 
 </header>
 
-
 <body>
+    {{ csrf_field() }}
+    {{ Form::open(['route' => 'search','method' => 'get']) }}
+    <div class="mx-auto" style="width:400">
+        <div class="input-group">
+            {{ Form::text('title','',['class' => 'form-control','placeholder' => '番組名で検索する']) }}
+            {{ Form::button('<i class="fas fa-search"></i>',['class' => 'btn','type' => 'submit']) }}
+        </div>
+    </div>
+    {{ Form::close() }}
     @yield('content')
 </body>
 

@@ -24,9 +24,10 @@
             <tbody>
                 @foreach($results as $result)
                 <tr>
-                    <td><a href="{{ url('station/' . $result['id']) }}">{{$result['station']}}</a></td>
+                    <td><a href="{{ url('station/' . $result['station_id']) }}">{{$result['station_id']}}</a></td>
                     <td>
-                        <a href="{{ url('list/' . $result['id'] . '/' . $result['title'])}}">{{$result['title']}}</a>
+                        <a
+                            href="{{ url('list/' . $result['station_id'] . '/' . $result['title'])}}">{{$result['title']}}</a>
                     </td>
                     <td style="width:25%">{{ $result['cast'] }}</td>
                     <td>{{$result['start'] . ' ' . '-' . ' '. $result['end']}}</td>

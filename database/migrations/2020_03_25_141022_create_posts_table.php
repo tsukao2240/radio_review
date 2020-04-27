@@ -15,7 +15,8 @@ class CreatePostsTable extends Migration
     {
         Schema::create('posts', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->bigInteger('user_id')->unsigned();
+            $table->bigInteger('user_id')->unsigned()->index();
+            $table->bigInteger('program_id')->unsigned()->index();
             $table->string('title')->nullable();
             $table->text('body');
             $table->timestamps();
@@ -31,5 +32,6 @@ class CreatePostsTable extends Migration
     public function down()
     {
         Schema::dropIfExists('posts');
+        Schema::dropIfExists('users');
     }
 }

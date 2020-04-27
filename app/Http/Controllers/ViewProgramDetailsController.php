@@ -11,12 +11,12 @@ use DOMXPath;
 class ViewProgramDetailsController extends Controller
 {
     //番組の詳細情報を取得します
-    public function index($id, $title)
+    public function index($station_id, $title)
     {
 
         $entries = [];
 
-        $url = 'http://radiko.jp/v3/program/station/weekly/' . $id . '.xml';
+        $url = 'http://radiko.jp/v3/program/station/weekly/' . $station_id . '.xml';
         $dom = new DOMDocument();
         @$dom->load($url);
         $xpath = new DOMXPath($dom);
@@ -27,24 +27,24 @@ class ViewProgramDetailsController extends Controller
 
                 $entries[] = array(
 
-
+                    'id' => $xpath->evaluate('string(../../@id)', $node),
                     'title' => $xpath->evaluate('string(title)', $node),
                     'cast' => $xpath->evaluate('string(pfm)', $node),
                     'image' => $xpath->evaluate('string(img)', $node),
+                    'desc' => $xpath->evaluate('string(desc)', $node),
                     'info' => $xpath->evaluate('string(info)', $node)
 
                 );
 
-                //$results = collect(DB::table('radio_programs'))->firstWhere('title',$title);
-
-                return view('detail.radioPrgramDetail', compact('entries'));
+                $id = DB::table('radio_programs')->where('title', $title)->select('id')->first();
+                $id = $id->id;
+                return view('radioprogram.detail', compact('entries', 'id'));
             }
         }
         if (empty($entries)) {
 
-            $results = DB::table('radio_programs')->where('title', $title)->select('title','cast','info','image')->get();
-
+            $results = DB::table('radio_programs')->where('title', $title)->select('title', 'cast', 'info', 'image', 'id')->get();
         }
-        return view('detail.radioPrgramDetail', compact('results'));
+        return view('radioprogram.detail', compact('results'));
     }
 }
