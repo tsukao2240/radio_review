@@ -49,4 +49,14 @@ Route::post('/review/{id}', 'PostController@store')->name('store');
 //自分が投稿したレビューを表示する
 Route::get('/my','MypageController@index')->name('myreview');
 
+//編集画面
+Route::get('/my/edit/{program_id}','MypageController@edit')->name('myreview_edit');
+
+//自分が投稿したレビューを編集する
+Route::post('/my/edit/{program_id}','MypageController@update')->name('myreview_update');
+
+//自分が投稿したレビューを削除する
+Route::post('/my','MypageController@destroy')->name('myreview_delete');
+
+
 
