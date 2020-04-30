@@ -40,7 +40,7 @@
                 </div>
                 @endif
                 <br>
-                @include('layouts.post_create',['id' => $id])
+                @include('layouts.post_create',['program_id' => $program_id])
             </section>
             @endforeach
         </div>
@@ -64,7 +64,7 @@
                 </div>
                 @endif
                 <br>
-                @include('layouts.post_create',['id' => $result->id])
+                @include('layouts.post_create',['program_id' => $result->id])
             </section>
             @endforeach
         </div>

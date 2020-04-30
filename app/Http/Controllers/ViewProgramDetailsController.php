@@ -36,9 +36,9 @@ class ViewProgramDetailsController extends Controller
 
                 );
 
-                $id = DB::table('radio_programs')->where('title', $title)->select('id')->first();
-                $id = $id->id;
-                return view('radioprogram.detail', compact('entries', 'id'));
+                $program = DB::table('radio_programs')->where('title', $title)->select('id')->first();
+                $program_id = $program->id;
+                return view('radioprogram.detail', compact('entries', 'program_id'));
             }
         }
         if (empty($entries)) {

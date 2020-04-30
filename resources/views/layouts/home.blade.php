@@ -1,12 +1,11 @@
 <html>
 
 <head>
-    <!--Bootstrap -->
-    <link href="{{ mix('css/app.css') }}" rel="stylesheet" type="text/css">
     <!-- Fonts -->
     <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.6.3/css/all.min.css">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-
+    <!--Bootstrap -->
+    <link href="{{ mix('css/app.css') }}" rel="stylesheet" type="text/css">
 </head>
 <header class="sticky-top">
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
@@ -14,25 +13,42 @@
             <div class="float-left">
                 <ul class="navbar-nav">
                     <li class="nav-item active">
-                        <h5><a class="nav-link" href="/">RadioProgram Review</a></h5>
+                        <h3><a class="nav-link" href="/">RadioProgram Review</a></h3>
                     </li>
                 </ul>
             </div>
             <div class="float-right">
                 <ul class="navbar-nav">
-                    <li class="nav-item active">
-                        <a class="nav-link" href="{{ route('schedule') }}">放送中の番組</a>
+                    @if (Auth::check())
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button"
+                            aria-haspopup="true" aria-expanded="false">
+                            {{ Auth::user()->name }}
+                        </a>
+                        <div class="dropdown-menu">
+                            <a class="dropdown-item" href="{{ route('myreview') }}">投稿したレビューを見る</a>
+                            <a class="dropdown-item" href="{{ route('logout') }}">
+                                {{ Form::open(['route' => 'logout','method' => 'POST']) }}
+                                {{ Form::submit('ログアウト',['class' => 'btn btn-white']) }}
+                                {{ Form::close() }}
+                            </a>
+                        </div>
                     </li>
-                    <li class="nav-item active">
-                        <a class="nav-link" href="{{ route('login') }}">ログイン <span class="sr-only">(current)</span></a>
-                    </li>
+                    @else
                     <li class="nav-item active">
                         @if (Route::has('register'))
                         <a class="nav-link" href="{{ route('register') }}">会員登録</a>
                         @endif
                     </li>
                     <li class="nav-item active">
-                        <a class="nav-link" href="http://">レビューを見る</a>
+                        <a class="nav-link" href="{{ route('login') }}">ログイン <span class="sr-only">(current)</span></a>
+                    </li>
+                    @endif
+                    <li class="nav-item active">
+                        <a class="nav-link" href="{{ route('schedule') }}">放送中の番組</a>
+                    </li>
+                    <li class="nav-item active">
+                        <a class="nav-link" href="{{ route('view') }}">レビューを見る</a>
                     </li>
                     <li class="nav-item active">
                         <a class="nav-link" href="{{ route('program') }}">レビューを投稿する</a>
@@ -58,6 +74,8 @@
     </div>
     {{ Form::close() }}
     @yield('content')
+    <!--JavaScript-->
+    <script src="{{ mix('js/app.js') }}" defer></script>
 </body>
 
 </html>

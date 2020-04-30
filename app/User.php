@@ -2,13 +2,16 @@
 
 namespace App;
 
-use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Notifications\CustomVerifyEmail;
+use App\Notifications\CustomResetPassword;
+use Illuminate\Contracts\Auth\MustVerifyEmail as MustVerifyEmailContact;
+use Illuminate\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmailContact
 {
-    use Notifiable;
+    use Notifiable, MustVerifyEmail;
 
     /**
      * The attributes that are mass assignable.
@@ -40,5 +43,17 @@ class User extends Authenticatable
     public function posts()
     {
         return $this->hasMany('App\Post');
+    }
+
+    //会員登録時の仮メール送信
+    public function sendmailVerificationNotification()
+    {
+        $this->notify(new CustomVerifyEmail());
+    }
+
+    //パスワードリセットメール
+    public function sendPasswordResetNotification($token)
+    {
+        $this->notify(new CustomResetPassword($token));
     }
 }

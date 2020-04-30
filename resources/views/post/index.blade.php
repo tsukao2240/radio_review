@@ -17,7 +17,7 @@
     <div class="card">
         @foreach ($results as $result)
         <div class="card-header"><a
-                href="{{ route('list',['station_id' => $result->station_id,'title' => $result->title]) }}">{{ $result->title }}</a>
+                href="{{ route('detail',['station_id' => $result->station_id,'title' => $result->title]) }}">{{ $result->title }}</a>
         </div>
         <div class="card-body">
             {{ $result->cast }}
@@ -36,7 +36,7 @@
     <div class="card">
         @foreach ($keyword as $item)
         <div class="card-header"><a
-                href="{{ route('list',['station_id' => $item->station_id,'title' => $item->title]) }}">{{ $item->title }}</a>
+                href="{{ route('detail',['station_id' => $item->station_id,'title' => $item->title]) }}">{{ $item->title }}</a>
         </div>
         <div class="card-body">
             {{ $item->cast }}

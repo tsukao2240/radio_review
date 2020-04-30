@@ -11,6 +11,7 @@ class Post extends Model
     [
         'user_id',
         'program_id',
+        'program_title',
         'title',
         'body',
     ];

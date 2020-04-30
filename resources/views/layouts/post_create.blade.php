@@ -1,1 +1,5 @@
-<a href="{{ route('review',$id) }}"><button class="btn btn-dark">レビューを投稿</button></a>
+@if(Auth::check())
+<a href="{{ route('review',$program_id) }}"><button class="btn btn-dark">レビューを投稿</button></a>
+@else
+<a href="{{ route('login') }}"><button class="btn btn-dark">レビューを投稿</button></a>
+@endif
