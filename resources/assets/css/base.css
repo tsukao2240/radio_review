@@ -1,0 +1,22 @@
+body {
+    font-family: "Hiragino Kaku Gothic ProN", sans-serif;
+}
+/* ヘッダー */
+.img_body {
+    background-image: url(../../images/radio.png);
+    background-color: rgba(255, 255, 255, 0.8);
+    background-blend-mode: lighten;
+    height: 500px;
+}
+.hover {
+    display: inline-block;
+    padding: 0.6em 2em;
+    margin: 0 0 1em;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.3s ease 0s;
+}
+
+.hover:hover {
+    opacity: 0.6;
+}

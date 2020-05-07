@@ -26,6 +26,7 @@ class Kernel extends ConsoleKernel
     {
         $schedule->call(new \App\Routine\InsertRadioProgram($schedule))->weeklyOn(0,'6:00');
         $schedule->call(new \App\Routine\DeleteDuplicateRecords($schedule))->weeklyOn(0,'6:00');
+
     }
 
     /**

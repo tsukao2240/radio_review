@@ -29,11 +29,6 @@ class LoginController extends Controller
      */
     protected $redirectTo = '/';
 
-    // protected function loggedOut(Request $request)
-    // {
-    //     return redirect('/');
-    // }
-
     /**
      * Create a new controller instance.
      *

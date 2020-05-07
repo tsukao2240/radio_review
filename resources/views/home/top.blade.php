@@ -1,11 +1,9 @@
-@extends('layouts.home')
+@extends('layouts.header')
 @section('content')
 
-<head>
-    <title>RadioProgram Review</title>
-</head>
+<title>RadioProgram Review</title>
 
-<body>
-    <h1>ホーム</h1>
-</body>
+<div class="img_body">
+    @include('includes.search')
+</div>
 @endsection

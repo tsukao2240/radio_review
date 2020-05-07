@@ -11,12 +11,12 @@ const mix = require("laravel-mix");
  |
  */
 
-mix.js("resources/js/app.js", "public/js")
-    .sass("resources/sass/app.scss", "public/css")
-    .autoload({
-        jquery: ["$", "window.jQuery"]
-    });
+mix.js("resources/js/app.js", "public/js").sass(
+    "resources/sass/app.scss",
+    "public/css"
+);
 
-mix.sourceMaps()
-    .js("node_modules/popper.js/dist/popper.js", "public/js")
-    .sourceMaps();
+mix.styles(
+    ["resources/assets/css/base.css", "resources/assets/css/weekly_schedule.css"],
+    "public/css/all.css"
+);

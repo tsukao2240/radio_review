@@ -14,7 +14,7 @@ class MypageController extends Controller
     public function index()
     {
         $user_id = Auth::id();
-        $posts = Post::where('user_id', $user_id)->paginate(10);
+        $posts = Post::select('posts.*','radio_programs.station_id')->join('radio_programs','posts.program_id','=','radio_programs.id')->where('user_id', $user_id)->paginate(10);
         return view('mypage.index', compact('posts'));
     }
 

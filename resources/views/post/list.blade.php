@@ -1,27 +1,27 @@
-@extends('layouts.home')
+@extends('layouts.header')
 @section('content')
-<header>
-    <title>
-        レビュー一覧
-    </title>
-</header>
+<title>
+    レビュー一覧
+</title>
 
-<body>
-    <h3 style="text-align:center">レビュー一覧</h3>
-    <br>
-    @foreach ($posts as $post)
-    <div class="card">
-        <div class="card-header">
-            {{ $post->program_title }}
-        </div>
-        <div class="card-body">
-            {{ $post->title }}
-        </div>
-        <div class="card-body">
-            {{ $post->body }}
-        </div>
+@include('includes.search')
+<span>
+    {{ Breadcrumbs::render('review') }}
+</span>
+<h3 style="text-align:center">レビュー一覧</h3>
+<br>
+@foreach ($posts as $post)
+<div class="card">
+    <div class="card-header"><a
+            href="{{ route('detail',['station_id' => $post->station_id,'title' => $post->program_title]) }}">{{ $post->program_title }}</a>
     </div>
-    @endforeach
-</body>
+    <div class="card-body">
+        {{ $post->title }}
+    </div>
+    <div class="card-body">
+        {{ $post->body }}
+    </div>
+</div>
+@endforeach
 
 @endsection

@@ -13,33 +13,34 @@ class CrudController extends Controller
     public function index(Request $request)
     {
         $keyword = $request->input('title');
-        $programs = [];
-        $replace = [
 
-            "　" => ' ',
-            "\n" => '',
-            '(新)' => '',
-            '(終)' => ''
-
-        ];
         if (!empty($keyword)) {
 
-            $keyword = DB::table('radio_programs')
-                ->where('title', 'LIKE BINARY', '%' . $keyword . '%')->distinct()->select()->Paginate(10);
-            foreach ($keyword as $item) {
+            $programs = DB::table('radio_programs')
+                ->where('title', 'LIKE BINARY', '%' . $keyword . '%')
+                ->Where('title','not like','%（新）%')
+                ->Where('title','not like','%［新］%')
+                ->Where('title','not like','%【新】%')
+                ->Where('title','not like','%【新番組】%')
+                ->Where('title','not like','%＜新番組＞%')
+                ->Where('title','not like','%（終）%')
+                ->Where('title','not like','%［終］%')
+                ->Where('title','not like','%≪終≫%')
+                ->Where('title','not like','%【終】%')
+                ->where('title','not like','%【最終回】%')
+                ->where('title','not like','%＜最終回＞%')
+                ->where('title','not like','%(再)%')
+                ->where('title','not like','%【再】%')
+                ->where('title','not like','%≪再≫%')
+                ->where('title','not like','%[再]%')
+                ->where('title','not like','%（再放送）%')
+                ->where('title','not like','%再放送%')
+                ->distinct()->select()->Paginate(10);
 
-                // $zenToHan = mb_convert_kana($item->title, 'a');
-                // $zenToHan = strtr($zenToHan,$replace);
-                // $programs[] = $zenToHan;
-
-            }
-            $programs = array_unique($programs, SORT_REGULAR);
         } else {
             //キーワードが入力されていないときはページ遷移しない
             return back();
         }
-        //検索結果があるかどうかでViewで表示する内容を変更するために使用している
-        //$existResult = $keyword->items();
-        return view('post.index', compact('keyword', 'programs'));
+        return view('post.index', compact('programs'));
     }
 }

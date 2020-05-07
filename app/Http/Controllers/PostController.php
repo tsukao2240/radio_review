@@ -15,7 +15,26 @@ class PostController extends Controller
     //
     public function index()
     {
-        $results = DB::table('radio_programs')->paginate(10);
+        $results = DB::table('radio_programs')
+            ->Where('title', 'not like', '%（新）%')
+            ->Where('title', 'not like', '%［新］%')
+            ->Where('title', 'not like', '%【新】%')
+            ->Where('title', 'not like', '%【新番組】%')
+            ->Where('title', 'not like', '%＜新番組＞%')
+            ->Where('title', 'not like', '%（終）%')
+            ->Where('title', 'not like', '%［終］%')
+            ->Where('title', 'not like', '%≪終≫%')
+            ->Where('title', 'not like', '%【終】%')
+            ->where('title', 'not like', '%【最終回】%')
+            ->where('title', 'not like', '%＜最終回＞%')
+            ->where('title', 'not like', '%(再)%')
+            ->where('title', 'not like', '%【再】%')
+            ->where('title', 'not like', '%≪再≫%')
+            ->where('title', 'not like', '%[再]%')
+            ->where('title', 'not like', '%（再放送）%')
+            ->where('title', 'not like', '%再放送%')
+            ->paginate(10);
+
         return view('post.index', compact('results'));
     }
 
@@ -24,7 +43,7 @@ class PostController extends Controller
         $user_id = Auth::id();
         $program = RadioProgram::findOrFail($program_id);
         $program_title = $program->title;
-        return view('post.create', compact('program_id','user_id','program_title'));
+        return view('post.create', compact('program_id', 'user_id', 'program_title'));
     }
 
     public function store(ReviewCreateRequest $request)
@@ -33,14 +52,12 @@ class PostController extends Controller
         $user_id = $input['user_id'];
         $user = User::findOrFail($user_id);
         $user->posts()->create($input);
-        return redirect()->back()->with('message','投稿が完了しました');
+        return redirect()->back()->with('message', '投稿が完了しました');
     }
 
-    public function view(){
-
-        $posts = Post::all();
-        return view('post.list',compact('posts'));
-
+    public function view()
+    {
+        $posts = DB::table('posts')->select('posts.*','radio_programs.station_id')->leftJoin('radio_programs','posts.program_id','=','radio_programs.id')->get();
+        return view('post.list', compact('posts'));
     }
-
 }
