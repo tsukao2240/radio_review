@@ -11,10 +11,10 @@
 
 <div class="d-flex flex-column align-items-center">
     <br>
-    <h3>{{ $program_title }}</h3>
+    <h3 class="caption">{{ $program_title }}</h3>
     <div>
         {{ csrf_field() }}
-        {{ Form::open(['route' => ['store',$program_id],'method' => 'POST','action' => 'PostController@store']) }}
+        {{ Form::open(['route' => ['post.store',$program_id],'method' => 'POST','action' => 'PostController@store']) }}
         <div class="form-group">
             {{ Form::hidden('user_id',$user_id) }}
         </div>
@@ -45,3 +45,4 @@
     </div>
 </div>
 @endsection
+

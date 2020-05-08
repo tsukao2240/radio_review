@@ -1,18 +1,12 @@
 @extends('layouts.header')
 @section('content')
 
-@if (Session::has('message'))
-<div id="app">
-    <toast-component message="{{ session('message') }}" type="success"></toast-component>
-</div>
-@endif
-
 <div class="d-flex flex-column align-items-center">
     <br>
-    <h2>レビューの編集</h2>
+    <h3 class="caption">レビューの編集</h3>
     <div>
         {{ csrf_field() }}
-        {{ Form::open(['route' => ['myreview_update',$post->id],'method' => 'POST','action' => 'MypageController@update']) }}
+        {{ Form::open(['route' => ['myreview.update',$post->id],'method' => 'POST','action' => 'MypageController@update']) }}
         <div class="form-group">
             {{ Form::hidden('id',$post->id) }}
         </div>

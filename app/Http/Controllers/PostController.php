@@ -57,7 +57,18 @@ class PostController extends Controller
 
     public function view()
     {
-        $posts = DB::table('posts')->select('posts.*','radio_programs.station_id')->leftJoin('radio_programs','posts.program_id','=','radio_programs.id')->get();
-        return view('post.list', compact('posts'));
+        // $posts = DB::table('posts')->select('posts.*', 'radio_programs.station_id')->leftJoin('radio_programs', 'posts.program_id', '=', 'radio_programs.id')->paginate(10);
+        $posts = DB::table('posts')->select('posts.*', 'radio_programs.station_id', 'users.name')
+        ->leftJoin('users', 'users.id', '=', 'posts.user_id')
+        ->leftJoin('radio_programs', 'posts.program_id', '=', 'radio_programs.id')
+        ->paginate(10);
+        return view('post.list_all', compact('posts'));
+    }
+
+    public function list($station_id, $program_title)
+    {
+        $id = RadioProgram::select('id')->where('station_id', '=', $station_id)->where('title', '=', $program_title)->pluck('id');
+        $posts = Post::select('posts.*','users.name')->leftjoin('users','users.id','=','posts.user_id')->where('program_id', '=', $id[0])->paginate(10);
+        return view('post.list_each', compact('posts', 'program_title', 'station_id'));
     }
 }

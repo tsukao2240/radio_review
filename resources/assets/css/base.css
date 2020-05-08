@@ -1,22 +1,88 @@
 body {
     font-family: "Hiragino Kaku Gothic ProN", sans-serif;
 }
-/* ヘッダー */
+/*ホーム画面*/
 .img_body {
     background-image: url(../../images/radio.png);
     background-color: rgba(255, 255, 255, 0.8);
     background-blend-mode: lighten;
     height: 500px;
 }
-.hover {
-    display: inline-block;
-    padding: 0.6em 2em;
-    margin: 0 0 1em;
-    color: #fff;
-    cursor: pointer;
-    transition: all 0.3s ease 0s;
+
+.card {
+    width: 50rem;
+    margin: auto;
 }
 
-.hover:hover {
-    opacity: 0.6;
+.caption {
+    text-align: center;
+    white-space: nowrap;
+}
+.pagination {
+    justify-content: center;
+}
+
+#reviews {
+    width: auto;
+    float: none;
+    padding-right: 100px;
+    padding-left: 100px;
+    border: 1px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.review_box {
+    align-items: center;
+    justify-content: center;
+    border: 1px;
+}
+
+.review_title {
+    display: none;
+    border-top: 1px solid #ececec;
+    border-bottom: 1px solid #ececec;
+    padding: 10px 0 5px;
+}
+
+.dl {
+    display: block;
+    margin-block-start: 1rem;
+    margin-block-end: 1rem;
+    margin-inline-start: 0px;
+    margin-inline-end: 0px;
+}
+
+.dt {
+    display: block;
+}
+
+.dd {
+    display: block;
+    margin-inline-start: 40px;
+    white-space: pre-wrap;
+}
+#reviews dl {
+    font-size: 12px;
+    font-weight: normal;
+    margin-bottom: 10px;
+}
+#reviews dl dt {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 10px 0;
+    text-transform: uppercase;
+}
+#reviews dl dd {
+    margin: 10px 0;
+}
+.review_meta {
+    font-weight: 600;
+}
+.card_review_body {
+    padding: 10px;
+}
+.card_review_footer {
+    background-color: white;
+    padding: 5px 10px;
 }

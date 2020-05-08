@@ -17,6 +17,6 @@ mix.js("resources/js/app.js", "public/js").sass(
 );
 
 mix.styles(
-    ["resources/assets/css/base.css", "resources/assets/css/weekly_schedule.css"],
+    ["resources/assets/css/base.css"],
     "public/css/all.css"
 );

@@ -10,7 +10,7 @@
 <h3 style="text-align: center">放送中の番組</h3>
 <div>
     <table class="table table-bordered table-responsive">
-        <thead>
+        <thead class="thead-light">
             <tr>
                 <th>放送局</th>
                 <th>番組名</th>
@@ -22,7 +22,7 @@
         <tbody>
             @foreach($results as $result)
             <tr>
-                <td><a href="{{ url('station/' . $result['station_id']) }}">{{$result['station_id']}}</a></td>
+                <td><a href="{{ url('schedule/' . $result['station_id']) }}">{{$result['station_id']}}</a></td>
                 <td>
                     <a
                         href="{{ url('list/' . $result['station_id'] . '/' . $result['title'])}}">{{$result['title']}}</a>
