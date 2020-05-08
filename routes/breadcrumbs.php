@@ -1,5 +1,8 @@
 <?php
 //トップページ
+
+use DaveJamesMiller\Breadcrumbs\Facades\Breadcrumbs;
+
 Breadcrumbs::for('/', function ($trail) {
     $trail->push('ホーム', url('/'));
 });
@@ -13,10 +16,15 @@ Breadcrumbs::for('search', function ($trail) {
     $trail->parent('/');
     $trail->push('番組一覧', route('search'));
 });
-//トップページ->放送中の番組->番組情報
-Breadcrumbs::for('detail', function ($trail) {
+//トップページ->{title}
+Breadcrumbs::for('detail', function ($trail,$station_id,$title) {
     $trail->parent('/');
-    $trail->push('番組情報', url('detail'));
+    $trail->push($title, url('list/' . $station_id . '/' . $title));
+});
+//トップページ->{title}->レビュー一覧
+Breadcrumbs::for('review.list', function ($trail,$station_id,$title) {
+    $trail->parent('detail',$station_id,$title);
+    $trail->push('投稿されたレビュー', url('/list'. $station_id . '/' . $title . '/review'));
 });
 //トップページ->検索結果
 Breadcrumbs::for('result', function ($trail) {
@@ -38,3 +46,4 @@ Breadcrumbs::for('weekly_schedule', function ($trail) {
     $trail->parent('schedule');
     $trail->push('週間番組表', url('weekly_schedule'));
 });
+

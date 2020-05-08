@@ -20,3 +20,16 @@ body {
 .hover:hover {
     opacity: 0.6;
 }
+
+.card {
+    width: 50rem;
+    margin: auto;
+}
+
+.caption{
+    text-align: center;
+    white-space: nowrap;
+}
+.pagination {
+    justify-content: center;
+}

@@ -3,18 +3,15 @@
 <title>
     レビュー一覧
 </title>
-
 @include('includes.search')
 <span>
-    {{ Breadcrumbs::render('review') }}
+    {{ Breadcrumbs::render('review.list',$station_id,$program_title) }}
 </span>
-<h3 style="text-align:center">レビュー一覧</h3>
-<br>
+@if (!$posts->isEmpty())
+<h3 class="caption">{{ $program_title }}</h3>
 @foreach ($posts as $post)
+<br>
 <div class="card">
-    <div class="card-header"><a
-            href="{{ route('detail',['station_id' => $post->station_id,'title' => $post->program_title]) }}">{{ $post->program_title }}</a>
-    </div>
     <div class="card-body">
         {{ $post->title }}
     </div>
@@ -23,5 +20,8 @@
     </div>
 </div>
 @endforeach
-
+{{ $posts->links() }}
+@else
+<h3 class="caption">レビューがまだありません</h3>
+@endif
 @endsection

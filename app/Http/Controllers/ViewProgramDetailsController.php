@@ -44,7 +44,7 @@ class ViewProgramDetailsController extends Controller
         }
         if (empty($entries)) {
 
-            $results = DB::table('radio_programs')->where('title', $title)->select('title', 'cast', 'info', 'image', 'id')->get();
+            $results = DB::table('radio_programs')->where('title', $title)->select('title', 'cast', 'info', 'image', 'id','station_id')->get();
         }
         return view('radioprogram.detail', compact('results'));
     }

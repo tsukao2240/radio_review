@@ -2,7 +2,6 @@
 
 <head>
     <!-- Fonts -->
-    <script src="https://kit.fontawesome.com/7626a6514d.js" crossorigin="anonymous"></script>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <!--Style -->
     <link href="{{ mix('css/app.css') }}" rel="stylesheet" type="text/css">
@@ -10,7 +9,7 @@
 </head>
 
 <body>
-    <header class="sticky-top">
+    <header class="head-animation">
         <nav class="navbar navbar-expand-lg navbar-light bg-light">
             <div class="col-12 clearfix">
                 <div class="float-left">
@@ -23,7 +22,7 @@
                 <div class="float-right">
                     <ul class="navbar-nav mr-auto">
                         <li class="nav-item active">
-                            <a class="hover nav-link" href="{{ route('schedule') }}">
+                            <a class="hover nav-link" href="{{ route('program.schedule') }}">
                                 <i class="fas fa-broadcast-tower fa-fw fa-lg"></i>
                                 <span class="text-center">
                                     放送中の番組
@@ -31,7 +30,7 @@
                             </a>
                         </li>
                         <li class="nav-item active">
-                            <a class="hover nav-link" href="{{ route('view') }}">
+                            <a class="hover nav-link" href="{{ route('review.view') }}">
                                 <i class="fas fa-book-open fa-fw fa-lg"></i>
                                 <span class="text-center">
                                     レビューを見る
@@ -40,7 +39,7 @@
                         </li>
                         @if (Auth::check())
                         <li class="nav-item active">
-                            <a class="hover nav-link" href="{{ route('program') }}">
+                            <a class="hover nav-link" href="{{ route('post.program') }}">
                                 <i class="fas fa-pen-square fa-fw fa-lg"></i>
                                 <span class="text-center"> レビューを投稿する
                                 </span>
@@ -62,7 +61,7 @@
                                 <span><i class="fas fa-user-circle fa-fw fa-lg"></i>{{ Auth::user()->name }}</span>
                             </a>
                             <div class="dropdown-menu dropdown-menu-right">
-                                <a class="dropdown-item" href="{{ route('myreview') }}">投稿したレビューを見る</a>
+                                <a class="dropdown-item" href="{{ route('myreview.view') }}">投稿したレビューを見る</a>
                                 @csrf
                                 {{ Form::open(['route' => 'logout','method' => 'POST']) }}
                                 {{ Form::submit('ログアウト',['class' => 'dropdown-item']) }}
@@ -96,24 +95,6 @@
     <!--JavaScript-->
     <script src="{{ mix('js/app.js') }}" defer></script>
 </body>
-
-<style>
-    #header {
-        background;
-        #fff;
-        box-shadow: 0 4px 8px -3px rgba(17, 17, 17 .06);
-        height: 56px;
-        position: fixed;
-        top: 0;
-        tranzition: .3s cubic-bezier(.4, 0, .2, 1);
-        width: 100%;
-        z-index: 19999;
-    }
-
-    .head-animation {
-        transform: translateY(-100%);
-    }
-</style>
 
 <script>
     (function(){

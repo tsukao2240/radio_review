@@ -21,83 +21,15 @@ body {
     opacity: 0.6;
 }
 
-.container {
-    /* grid レイアウトの設定 */
-    display: grid;
-    grid-template-columns: max-content repeat(3, max-content minmax(120px, 1fr));
-    grid-template-rows: max-content repeat(calc(4 * 60), 0.2rem);
-
-    /* カラムの間隔 */
-    grid-column-gap: 3px;
-    column-gap: 3px;
-
-    /* 行の間隔 */
-    grid-row-gap: 3px;
-    row-gap: 3px;
+.card {
+    width: 50rem;
+    margin: auto;
 }
-/* 放送日 */
-.date {
-    /* 枠 */
-    border: solid 1px gray;
 
-    border-radius: 3px;
-
-    /* 背景色 */
-    background-color: lightgray;
-
-    /* 中央揃え・太字 */
+.caption{
     text-align: center;
-    font-weight: bold;
-
-    /* 表示位置を固定 */
-    top: 0;
-    z-index: 2;
-    position: sticky;
-
-    grid-row: 1 / 2;
+    white-space: nowrap;
 }
-
-/* 番組の枠 */
-.content-box {
-    border: solid 1px gray;
-    border-radius: 3px;
-}
-
-/* 番組の枠（上なしバージョン） */
-.content-box-break-top {
-    border-top: none;
-    border-bottom: solid 1px gray;
-    border-left: solid 1px gray;
-    border-right: solid 1px gray;
-
-    border-radius: 3px;
-}
-
-/* 番組の枠（下なしバージョン） */
-.content-box-break-bottom {
-    border-bottom: none;
-    border-top: solid 1px gray;
-    border-left: solid 1px gray;
-    border-right: solid 1px gray;
-
-    border-radius: 3px;
-}
-
-/* 放送開始時間 */
-.content-minute {
-    margin-left: 3px;
-    color: gray;
-    overflow: hidden;
-}
-
-/* 番組名 */
-.content-title {
-    overflow-wrap: break-word;
-    overflow: hidden;
-}
-
-/* 番組内容 */
-.content-discription {
-    margin-top: 3px;
-    color: darkgray;
+.pagination {
+    justify-content: center;
 }

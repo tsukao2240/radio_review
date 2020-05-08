@@ -5,14 +5,16 @@
 @foreach ($entries as $entry)
 <title>{{ $entry['title'] }}</title>
 @endforeach
+@include('includes.search')
+{{ Breadcrumbs::render('detail',$entry['id'],$entry['title']) }}
 @elseif(isset($results))
 @foreach ($results as $result)
 <title>{{ $result->title }}</title>
 @endforeach
+@include('includes.search')
+{{ Breadcrumbs::render('detail',$result->station_id,$result->title) }}
 @endif
 
-@include('includes.search')
-{{ Breadcrumbs::render('detail') }}
 <!--APIからデータが取得できた場合-->
 @if(isset($entries))
 <div class="d-flex justify-content-sm-around">
@@ -39,6 +41,7 @@
             @endif
             <br>
             @include('layouts.post_create',['program_id' => $program_id])
+            @include('layouts.post_view',['station_id' => $entry['id'],'program_title' => $entry['title']])
         </section>
         @endforeach
     </div>
@@ -63,6 +66,7 @@
             @endif
             <br>
             @include('layouts.post_create',['program_id' => $result->id])
+            @include('layouts.post_view',['station_id' => $result->station_id,'program_title' => $result->title])
         </section>
         @endforeach
     </div>
