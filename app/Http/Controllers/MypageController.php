@@ -31,7 +31,7 @@ class MypageController extends Controller
         $post->title = $request->title;
         $post->body = $request->body;
         $post->save();
-        return redirect()->back()->with('message', '編集が完了しました');
+        return redirect('/my')->with('message', '編集が完了しました');
     }
 
     public function destroy(Request $request)

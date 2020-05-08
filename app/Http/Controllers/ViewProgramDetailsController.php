@@ -20,7 +20,8 @@ class ViewProgramDetailsController extends Controller
         $dom = new DOMDocument();
         @$dom->load($url);
         $xpath = new DOMXPath($dom);
-
+        //番組情報をAPIから取得する
+        //APIから取得できない場合はDBからデータを取得する
         foreach ($xpath->query('//radiko/stations/station/progs/prog') as $node) {
 
             if ($title === $xpath->evaluate('string(title)', $node)) {
@@ -38,13 +39,11 @@ class ViewProgramDetailsController extends Controller
 
                 $program = DB::table('radio_programs')->where('title', $title)->select('id')->first();
                 $program_id = $program->id;
-
                 return view('radioprogram.detail', compact('entries', 'program_id'));
             }
         }
         if (empty($entries)) {
-
-            $results = DB::table('radio_programs')->where('title', $title)->select('title', 'cast', 'info', 'image', 'id')->get();
+            $results = DB::table('radio_programs')->where('title', $title)->select('title', 'cast', 'info', 'image', 'id', 'station_id')->get();
         }
         return view('radioprogram.detail', compact('results'));
     }

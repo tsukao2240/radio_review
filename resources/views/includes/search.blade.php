@@ -1,5 +1,5 @@
 {{ csrf_field() }}
-{{ Form::open(['route' => 'search','method' => 'get']) }}
+{{ Form::open(['route' => 'program.search','method' => 'get']) }}
 <div class="mx-auto" style="width:400">
     <div class="input-group">
         {{ Form::text('title','',['class' => 'form-control','placeholder' => '番組名で検索する']) }}
@@ -7,3 +7,4 @@
     </div>
 </div>
 {{ Form::close() }}
+<br>

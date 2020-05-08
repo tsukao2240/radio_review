@@ -20,8 +20,7 @@ class RadioBroadcastController extends Controller
         //日付の切り替えを午前5時に行うために一旦時間までを取得し、判別を行ったあとにYmdの形式に戻している
         $today = $date->format('YmdH');
         if (substr($today, 9, 10) < 5) {
-            $today = $today - 1;
-            $today = substr($today, 0, 8);
+            $today = $date->modify('-1 days')->format('Ymd');
         } else {
             $today = substr($today, 0, 8);
         }
@@ -63,8 +62,4 @@ class RadioBroadcastController extends Controller
         return view('radioprogram.weekly_schedule', compact(['entries', 'thisWeek', 'broadcast_name']));
     }
 
-    public function getBroadcastName()
-    {
-        $station_id = RadioProgram::select('station_id')->distinct()->pluck();
-    }
 }

@@ -9,10 +9,12 @@ use Illuminate\Http\Request;
 
 class RadioProgramController extends Controller
 {
-    //radikoの番組表から今放送されている番組を取得します
+    //radikoのAPIから今放送されている番組を取得します
     public function fetchProgramGuide()
     {
         $entries = [];
+        //$i < 48は都道府県の数
+        //現在放送されている番組をAPIから取得し、重複を削除して表示する
         for ($i = 1; $i < 48; ++$i) {
 
             $url = 'http://radiko.jp/v3/program/now/JP' . $i . '.xml';
@@ -34,6 +36,7 @@ class RadioProgramController extends Controller
 
                 );
             }
+
         }
         //放送局の重複を削除します
         $arr_tmp = [];

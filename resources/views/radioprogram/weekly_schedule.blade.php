@@ -1,16 +1,16 @@
 @extends('layouts.header')
 @section('content')
+@include('includes.search')
 <span>
     {{ Breadcrumbs::render('weekly_schedule') }}
 </span>
 <title>{{ $broadcast_name }}の週間番組表</title>
-@include('includes.search')
 <h3 style="text-align:center">週間番組表({{ $broadcast_name }})</h3>
 <div class="timetable">
     @for ($i = 0; $i < count($thisWeek) - 1; $i++) <div class="tablebox">
         <div class="table">
             <table class="table table-bordered table-responsive">
-                <thead>
+                <thead class="thead-light">
                     <tr>
                         <th>{{ date('m月d日(D)',strtotime($thisWeek[$i])) }}</th>
                     </tr>
@@ -53,15 +53,12 @@
 @endsection
 <style>
     .tablebox {
-        width: 217px;
+        width: 216px;
         float: left;
     }
 
     .timetable {
         clear: both;
-    }
-    .table{
-
     }
 
 </style>

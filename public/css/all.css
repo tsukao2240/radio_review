@@ -1,103 +1,88 @@
 body {
     font-family: "Hiragino Kaku Gothic ProN", sans-serif;
 }
-/* ヘッダー */
+/*ホーム画面*/
 .img_body {
     background-image: url(../../images/radio.png);
     background-color: rgba(255, 255, 255, 0.8);
     background-blend-mode: lighten;
     height: 500px;
 }
-.hover {
-    display: inline-block;
-    padding: 0.6em 2em;
-    margin: 0 0 1em;
-    color: #fff;
-    cursor: pointer;
-    transition: all 0.3s ease 0s;
+
+.card {
+    width: 50rem;
+    margin: auto;
 }
 
-.hover:hover {
-    opacity: 0.6;
-}
-
-.container {
-    /* grid レイアウトの設定 */
-    display: grid;
-    grid-template-columns: max-content repeat(3, max-content minmax(120px, 1fr));
-    grid-template-rows: max-content repeat(calc(4 * 60), 0.2rem);
-
-    /* カラムの間隔 */
-    grid-column-gap: 3px;
-    column-gap: 3px;
-
-    /* 行の間隔 */
-    grid-row-gap: 3px;
-    row-gap: 3px;
-}
-/* 放送日 */
-.date {
-    /* 枠 */
-    border: solid 1px gray;
-
-    border-radius: 3px;
-
-    /* 背景色 */
-    background-color: lightgray;
-
-    /* 中央揃え・太字 */
+.caption {
     text-align: center;
-    font-weight: bold;
-
-    /* 表示位置を固定 */
-    top: 0;
-    z-index: 2;
-    position: sticky;
-
-    grid-row: 1 / 2;
+    white-space: nowrap;
+}
+.pagination {
+    justify-content: center;
 }
 
-/* 番組の枠 */
-.content-box {
-    border: solid 1px gray;
-    border-radius: 3px;
+#reviews {
+    width: auto;
+    float: none;
+    padding-right: 100px;
+    padding-left: 100px;
+    border: 1px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
-/* 番組の枠（上なしバージョン） */
-.content-box-break-top {
-    border-top: none;
-    border-bottom: solid 1px gray;
-    border-left: solid 1px gray;
-    border-right: solid 1px gray;
-
-    border-radius: 3px;
+.review_box {
+    align-items: center;
+    justify-content: center;
+    border: 1px;
 }
 
-/* 番組の枠（下なしバージョン） */
-.content-box-break-bottom {
-    border-bottom: none;
-    border-top: solid 1px gray;
-    border-left: solid 1px gray;
-    border-right: solid 1px gray;
-
-    border-radius: 3px;
+.review_title {
+    display: none;
+    border-top: 1px solid #ececec;
+    border-bottom: 1px solid #ececec;
+    padding: 10px 0 5px;
 }
 
-/* 放送開始時間 */
-.content-minute {
-    margin-left: 3px;
-    color: gray;
-    overflow: hidden;
+.dl {
+    display: block;
+    margin-block-start: 1rem;
+    margin-block-end: 1rem;
+    margin-inline-start: 0px;
+    margin-inline-end: 0px;
 }
 
-/* 番組名 */
-.content-title {
-    overflow-wrap: break-word;
-    overflow: hidden;
+.dt {
+    display: block;
 }
 
-/* 番組内容 */
-.content-discription {
-    margin-top: 3px;
-    color: darkgray;
+.dd {
+    display: block;
+    margin-inline-start: 40px;
+    white-space: pre-wrap;
+}
+#reviews dl {
+    font-size: 12px;
+    font-weight: normal;
+    margin-bottom: 10px;
+}
+#reviews dl dt {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 10px 0;
+    text-transform: uppercase;
+}
+#reviews dl dd {
+    margin: 10px 0;
+}
+.review_meta {
+    font-weight: 600;
+}
+.card_review_body {
+    padding: 10px;
+}
+.card_review_footer {
+    background-color: white;
+    padding: 5px 10px;
 }

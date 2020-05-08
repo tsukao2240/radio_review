@@ -24,8 +24,8 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        $schedule->call(new \App\Routine\InsertRadioProgram($schedule))->weeklyOn(0,'6:00');
-        $schedule->call(new \App\Routine\DeleteDuplicateRecords($schedule))->weeklyOn(0,'6:00');
+        $schedule->call(new \App\Routine\InsertRadioProgram($schedule))->dailyAt('5:00');
+        $schedule->call(new \App\Routine\DeleteDuplicateRecords($schedule))->dailyAt('5:00');
 
     }
 
