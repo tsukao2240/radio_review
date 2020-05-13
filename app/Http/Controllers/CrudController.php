@@ -17,7 +17,7 @@ class CrudController extends Controller
         if (!empty($keyword)) {
 
             $programs = DB::table('radio_programs')
-                ->where('title', 'LIKE BINARY', '%' . $keyword . '%')
+                ->where('title', 'LIKE', '%' . $keyword . '%')
                 ->Where('title','not like','%（新）%')
                 ->Where('title','not like','%［新］%')
                 ->Where('title','not like','%【新】%')
@@ -41,6 +41,7 @@ class CrudController extends Controller
             //キーワードが入力されていないときはページ遷移しない
             return back();
         }
+
         return view('post.index', compact('programs'));
     }
 }
