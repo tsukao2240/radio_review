@@ -23,6 +23,7 @@ class CreateRadioProgramsTable extends Migration
             $table->text('info')->nullable();
             $table->text('url')->nullable();
             $table->text('image')->nullable();
+            $table->collation = 'utf8mb4_general_ci';
         });
     }
 
