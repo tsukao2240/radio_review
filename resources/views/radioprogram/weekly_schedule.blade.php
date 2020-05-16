@@ -51,14 +51,3 @@
 @endfor
 </div>
 @endsection
-<style>
-    .tablebox {
-        width: 216px;
-        float: left;
-    }
-
-    .timetable {
-        clear: both;
-    }
-
-</style>

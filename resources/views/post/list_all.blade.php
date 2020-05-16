@@ -8,6 +8,7 @@
 <span>
     {{ Breadcrumbs::render('review') }}
 </span>
+@if (!$posts->isEmpty())
 <h3 class="caption">レビュー一覧</h3>
 <br>
 <div id="reviews">
@@ -34,4 +35,7 @@
     </div>
 </div>
 {{ $posts->links() }}
+@else
+<h3 class="caption">レビューがまだありません</h3>
+@endif
 @endsection

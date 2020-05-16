@@ -5,20 +5,21 @@ namespace App\Notifications;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
-use Illuminate\Notifications\Notification;
-
-class CustomResetPassword extends Notification
+use Illuminate\Auth\Notifications\ResetPassword;
+class CustomResetPassword extends ResetPassword
 {
     use Queueable;
 
+    public $token;
     /**
      * Create a new notification instance.
      *
      * @return void
      */
-    public function __construct()
+    public function __construct($token)
     {
         //
+        $this->token = $token;
     }
 
     /**
