@@ -67,7 +67,7 @@ class PostController extends Controller
 
     public function list($station_id, $program_title)
     {
-        $id = RadioProgram::select('id')->where('station_id', '=', $station_id)->where('title', '=', $program_title)->pluck('id');
+        $id = RadioProgram::select('*')->where('title', '=', $program_title)->pluck('id');
         $posts = Post::select('posts.*','users.name')->leftjoin('users','users.id','=','posts.user_id')->where('program_id', '=', $id[0])->paginate(10);
         return view('post.list_each', compact('posts', 'program_title', 'station_id'));
     }

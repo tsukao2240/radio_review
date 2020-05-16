@@ -28,8 +28,7 @@ class RegisterMail extends Mailable
      */
     public function build()
     {
-        return $this->from('guririn.2240@gmail.com')
-            ->subject('会員登録のメール')
+        return $this->subject('会員登録のメール')
             ->view('email.send');
     }
 }

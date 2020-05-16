@@ -19,7 +19,7 @@ class RadioBroadcastController extends Controller
         $date = new GlobalDateTime();
         //日付の切り替えを午前5時に行うために一旦時間までを取得し、判別を行ったあとにYmdの形式に戻している
         $today = $date->format('YmdH');
-        if (substr($today, 9, 10) < 5) {
+        if (substr($today, 8, 10) < 5) {
             $today = $date->modify('-1 days')->format('Ymd');
         } else {
             $today = substr($today, 0, 8);
