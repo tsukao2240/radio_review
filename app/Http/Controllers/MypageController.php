@@ -10,7 +10,6 @@ use Illuminate\Support\Facades\Auth;
 
 class MypageController extends Controller
 {
-    //
     public function index()
     {
         $user_id = Auth::id();
