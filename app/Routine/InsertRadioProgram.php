@@ -8,7 +8,7 @@ use DOMXPath;
 
 class InsertRadioProgram
 {
-    //1週間分の放送番組の情報を取得し、DBに格納します。
+    //1週間分の放送番組の情報を取得し、DBに格納する。
 
     public function __invoke()
     {

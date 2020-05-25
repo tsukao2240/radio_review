@@ -9,7 +9,7 @@ use Illuminate\Support\Collection;
 
 class CrudController extends Controller
 {
-    //番組を検索します
+    //番組検索処理
     public function index(Request $request)
     {
         $keyword = $request->input('title');

@@ -10,18 +10,17 @@ use DOMXPath;
 
 class ViewProgramDetailsController extends Controller
 {
-    //番組の詳細情報を取得します
+    //番組の詳細情報を取得する。
     public function index($station_id, $title)
     {
-
         $entries = [];
 
         $url = 'http://radiko.jp/v3/program/station/weekly/' . $station_id . '.xml';
         $dom = new DOMDocument();
         @$dom->load($url);
         $xpath = new DOMXPath($dom);
-        //番組情報をAPIから取得する
-        //APIから取得できない場合はDBからデータを取得する
+        //番組情報をAPIから取得する。
+        //APIから取得できない場合はDBからデータを取得する。
         foreach ($xpath->query('//radiko/stations/station/progs/prog') as $node) {
 
             if ($title === $xpath->evaluate('string(title)', $node)) {
