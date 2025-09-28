@@ -4,8 +4,7 @@
     <!-- Fonts -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <!--Style -->
-    <link href="{{ mix('css/app.css') }}" rel="stylesheet" type="text/css">
-    <link href="{{ mix('css/all.css') }}" rel="stylesheet" type="text/css">
+    @vite(['resources/css/app.css', 'resources/js/app.jsx'])
 </head>
 
 <body>
@@ -63,9 +62,10 @@
                             <div class="dropdown-menu dropdown-menu-right">
                                 <a class="dropdown-item" href="{{ route('myreview.view') }}">投稿したレビューを見る</a>
                                 @csrf
-                                {{ Form::open(['route' => 'logout','method' => 'POST']) }}
-                                {{ Form::submit('ログアウト',['class' => 'dropdown-item']) }}
-                                {{ Form::close() }}
+                                <form method="POST" action="{{ route('logout') }}">
+                                    @csrf
+                                    <button type="submit" class="dropdown-item">ログアウト</button>
+                                </form>
                             </div>
                         </li>
                         @else
@@ -92,8 +92,6 @@
     </header>
     @yield('content')
     @include('includes.footer')
-    <!--JavaScript-->
-    <script src="{{ mix('js/app.js') }}" defer></script>
 </body>
 
 </html>

@@ -24,14 +24,14 @@
                 <div class="btn-toolbar">
                     <div class="btn-group">
                         <div class="form-group">
-                            {{ Form::hidden('program_id',$post->program_id) }}
+                            <input type="hidden" name="program_id" value="{{ $post->program_id }}">
                         </div>
                         <a href="{{ route('myreview.edit',$post->id) }}"><button class="btn btn-primary">編集</button></a>
-                        {{ csrf_field() }}
-                        {{ Form::open(['route' => ['myreview.delete'],'method' => 'POST']) }}
-                        {{ Form::hidden('id',$post->id) }}
-                        {{ Form::submit('削除',['class' => 'btn btn-danger']) }}
-                        {{ Form::close() }}
+                        <form method="POST" action="{{ route('myreview.delete') }}">
+                            @csrf
+                            <input type="hidden" name="id" value="{{ $post->id }}">
+                            <button type="submit" class="btn btn-danger">削除</button>
+                        </form>
                     </div>
                 </div>
             </div>
