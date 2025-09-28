@@ -18,5 +18,5 @@ use Illuminate\Support\Facades\Route;
 //     return $request->user();
 // });
 
-//番組タイトルで検索する(投稿画面)
-Route::get('/programs', 'Api\SearchController@index');
+//番組タイトルで検索する(投稿画面) - 一時的にコメントアウト
+// Route::get('/programs', 'Api\SearchController@index');
