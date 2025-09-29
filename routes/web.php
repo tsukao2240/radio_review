@@ -61,3 +61,10 @@ Route::post('/my/edit/{program_id}', 'MypageController@update')->name('myreview.
 
 //自分が投稿したレビューを削除する
 Route::post('/my', 'MypageController@destroy')->name('myreview.delete');
+
+// タイムフリー録音関連ルート
+Route::post('/recording/timefree/start', 'RadioRecordingController@startTimefreeRecording')->name('recording.timefree.start');
+Route::post('/recording/stop', 'RadioRecordingController@stopRecording')->name('recording.stop');
+Route::get('/recording/status', 'RadioRecordingController@getRecordingStatus')->name('recording.status');
+Route::get('/recording/download', 'RadioRecordingController@downloadRecording')->name('recording.download');
+Route::get('/recording/list', 'RadioRecordingController@listRecordings')->name('recording.list');

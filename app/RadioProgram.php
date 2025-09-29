@@ -11,7 +11,6 @@ use App\Http\Controllers\Log;
 
 class RadioProgram extends Model
 {
-    //
     protected $fillable =
     [
         'station_id',
@@ -22,7 +21,6 @@ class RadioProgram extends Model
         'info',
         'url',
         'image',
-
     ];
 
     protected $table = 'radio_programs';
