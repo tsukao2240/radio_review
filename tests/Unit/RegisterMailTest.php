@@ -3,7 +3,7 @@
 namespace Tests\Unit;
 
 use App\Mail\RegisterMail;
-use App\Models\User;
+use App\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -14,7 +14,7 @@ class RegisterMailTest extends TestCase
     /**
      * RegisterMailが正しく構築されるかテスト
      */
-    public function test_register_mail_can_be_built()
+    public function test_register_mail_can_be_built(): void
     {
         $user = User::factory()->create([
             'name' => 'テストユーザー',
@@ -39,7 +39,7 @@ class RegisterMailTest extends TestCase
     /**
      * ユーザー名がnullの場合のデフォルト値テスト
      */
-    public function test_register_mail_with_null_user_name()
+    public function test_register_mail_with_null_user_name(): void
     {
         $user = (object) ['name' => null, 'email' => 'test@example.com'];
 
@@ -53,7 +53,7 @@ class RegisterMailTest extends TestCase
     /**
      * キュー設定のテスト
      */
-    public function test_register_mail_queue_configuration()
+    public function test_register_mail_queue_configuration(): void
     {
         $user = User::factory()->create();
         $mail = new RegisterMail($user);

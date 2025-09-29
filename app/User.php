@@ -8,10 +8,11 @@ use Illuminate\Contracts\Auth\MustVerifyEmail as MustVerifyEmailContact;
 use Illuminate\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class User extends Authenticatable implements MustVerifyEmailContact
 {
-    use Notifiable, MustVerifyEmail;
+    use Notifiable, MustVerifyEmail, HasFactory;
 
     /**
      * The attributes that are mass assignable.

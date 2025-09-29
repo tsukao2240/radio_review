@@ -1,6 +1,5 @@
 @import 'bootstrap';
 @import 'react-toastify/dist/ReactToastify.css';
-@import '../assets/css/base.css';
 
 /* アプリケーション固有のスタイル */
 body {

@@ -6,9 +6,7 @@
 <!--初期表示-->
 @include('includes.search')
 @if (isset($results))
-<span>
-    {{ Breadcrumbs::render('result') }}
-</span>
+<div id="breadcrumb-container"></div>
 <h3 class="caption">番組一覧（{{ $results->total() }}件）</h3>
 <div class="card">
     @foreach ($results as $result)
@@ -23,9 +21,7 @@
 {{ $results->links() }}
 <!--検索実行結果を表示する-->
 @elseif(isset($programs) && $programs->total() > 0)
-<span>
-    {{ Breadcrumbs::render('result') }}
-</span>
+<div id="breadcrumb-container"></div>
 <h3 class="caption">検索結果（{{ $programs->total() }}件）</h3>
 <div class="card">
     @foreach ($programs as $item)
@@ -39,9 +35,7 @@
 </div>
 {{ $programs->appends(request()->query())->links() }}
 @else
-<span>
-    {{ Breadcrumbs::render('result') }}
-</span>
+<div id="breadcrumb-container"></div>
 <h3 class="caption">
     検索結果が見つかりませんでした
 </h3>

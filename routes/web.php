@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 
 /*
 |--------------------------------------------------------------------------
@@ -17,9 +18,8 @@ Route::get('/', function () {
     return view('home.top');
 });
 
-// Laravel 11 compatible auth routes
-Route::get('/login', function() { return redirect('/'); })->name('login');
-Route::post('/logout', function() { return redirect('/'); })->name('logout');
+// 認証ルート
+Auth::routes();
 
 //放送中の番組を取得する
 Route::get('/schedule', 'RadioProgramController@fetchRecentProgram')->name('program.schedule');
