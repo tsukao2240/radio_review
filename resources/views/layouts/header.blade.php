@@ -4,7 +4,11 @@
     <!-- Fonts -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <!--Style -->
-    @vite(['resources/css/app.css', 'resources/js/app.jsx'])
+    {{-- 一時的にプロダクションアセットを直接参照 --}}
+    <link rel="stylesheet" href="{{ asset('build/assets/app-DgRo2gfp.css') }}">
+    <link rel="stylesheet" href="{{ asset('build/assets/custom-UurEJdjO.css') }}">
+    <link rel="stylesheet" href="{{ asset('build/assets/app-CZOjr4-t.css') }}">
+    <script type="module" src="{{ asset('build/assets/app-C0Nx4PSf.js') }}"></script>
 </head>
 
 <body>

@@ -23,11 +23,102 @@ URL:http://radio-review.com/<br>
 
 
 ## 使用技術
-・PHP<br>
-・Laravel<br>
+・PHP 8.2+<br>
+・Laravel 11<br>
 ・HTML<br>
 ・CSS<br>
 ・JavaScript<br>
-・Vue<br>
-・Mysql<br>
-・AWS<br>
+・React<br>
+・Vite<br>
+・MySQL<br>
+・Redis<br>
+・Docker<br>
+
+## Docker開発環境のセットアップ
+
+### 前提条件
+- Docker Desktop がインストールされていること
+- Git がインストールされていること
+
+### セットアップ手順
+
+1. **リポジトリのクローン**
+   ```bash
+   git clone [repository-url]
+   cd radio_review
+   ```
+
+2. **環境設定ファイルの準備**
+   ```bash
+   # Docker用の環境設定をコピー
+   copy .env.docker .env
+   ```
+
+3. **Dockerコンテナの起動**
+   ```bash
+   docker-compose up -d
+   ```
+
+4. **Laravelのセットアップ**
+   ```bash
+   # Composerの依存関係をインストール
+   docker-compose exec app composer install
+
+   # アプリケーションキーの生成
+   docker-compose exec app php artisan key:generate
+
+   # データベースのマイグレーション
+   docker-compose exec app php artisan migrate
+
+   # ストレージリンクの作成
+   docker-compose exec app php artisan storage:link
+   ```
+
+5. **Node.jsの依存関係をインストールしてViteを起動**
+   ```bash
+   # NPMの依存関係をインストール
+   docker-compose exec vite npm install
+
+   # Vite開発サーバーを起動（既に起動している場合は不要）
+   docker-compose exec vite npm run dev
+   ```
+
+### アクセス方法
+- **Webアプリケーション**: http://localhost:8000
+- **Vite開発サーバー**: http://localhost:5173
+- **MySQL**: localhost:3306
+- **Redis**: localhost:6379
+
+### よく使うDockerコマンド
+
+```bash
+# コンテナの状態確認
+docker-compose ps
+
+# コンテナのログを確認
+docker-compose logs app
+
+# Artisanコマンドの実行
+docker-compose exec app php artisan [command]
+
+# コンテナの停止
+docker-compose down
+
+# コンテナの再起動
+docker-compose restart
+
+# データベースの初期化（注意：データが削除されます）
+docker-compose down -v
+docker-compose up -d
+```
+
+### トラブルシューティング
+
+1. **ポートの競合エラー**
+   - 他のアプリケーションがポートを使用している場合は、`docker-compose.yml`でポート番号を変更してください
+
+2. **権限エラー**
+   - Windowsの場合、Dockerのファイル共有設定を確認してください
+
+3. **データベース接続エラー**
+   - `.env`ファイルでデータベース設定が正しいか確認してください
