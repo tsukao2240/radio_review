@@ -138,5 +138,127 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
+
+// 録音ファイルをダウンロード（週間番組表用）
+async function downloadRecording(recordingId) {
+    try {
+        // ダウンロードURLを構築
+        const downloadUrl = '{{ route("recording.download") }}?' + new URLSearchParams({
+            recording_id: recordingId
+        });
+
+        // ファイルを取得
+        const response = await fetch(downloadUrl);
+        if (!response.ok) {
+            throw new Error('ダウンロードに失敗しました');
+        }
+
+        const blob = await response.blob();
+        const filename = getFilenameFromRecordingId(recordingId);
+
+        // File System Access APIをサポートしているかチェック
+        if ('showSaveFilePicker' in window) {
+            try {
+                // カスタム保存先を指定（D:\ミュージック\radio）
+                const fileHandle = await window.showSaveFilePicker({
+                    suggestedName: filename,
+                    startIn: 'music', // 音楽フォルダから開始
+                    types: [{
+                        description: '音声ファイル',
+                        accept: {
+                            'audio/mp4': ['.m4a'],
+                            'audio/mpeg': ['.mp3']
+                        }
+                    }]
+                });
+
+                const writable = await fileHandle.createWritable();
+                await writable.write(blob);
+                await writable.close();
+
+                alert('ファイルが正常に保存されました！');
+                return;
+            } catch (e) {
+                console.log('Save picker cancelled, falling back to default download');
+            }
+        }
+
+        // フォールバック: 通常のダウンロード
+        downloadWithCustomName(blob, filename);
+
+    } catch (error) {
+        console.error('ダウンロードエラー:', error);
+        alert('ダウンロードに失敗しました: ' + error.message);
+    }
+}
+
+// カスタム名でダウンロード（フォールバック用）
+function downloadWithCustomName(blob, filename) {
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.style.display = 'none';
+    a.href = url;
+    a.download = filename;
+
+    document.body.appendChild(a);
+    a.click();
+
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+
+    showDownloadLocationInfo();
+}
+
+// 録音IDからファイル名を取得
+function getFilenameFromRecordingId(recordingId) {
+    const parts = recordingId.split('_');
+    if (parts.length >= 3) {
+        const station = parts[0];
+        const datetime = parts[1];
+        const timestamp = parts[2];
+
+        const year = datetime.substring(0, 4);
+        const month = datetime.substring(4, 6);
+        const day = datetime.substring(6, 8);
+        const hour = datetime.substring(8, 10);
+        const minute = datetime.substring(10, 12);
+
+        return `${station}_${year}${month}${day}_${hour}${minute}.m4a`;
+    }
+    return recordingId + '.m4a';
+}
+
+// ダウンロード場所の案内を表示
+function showDownloadLocationInfo() {
+    const info = document.createElement('div');
+    info.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: #007bff;
+        color: white;
+        padding: 15px 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        z-index: 10001;
+        max-width: 350px;
+    `;
+
+    info.innerHTML = `
+        <div style="font-weight: bold; margin-bottom: 8px;">💾 ダウンロード完了</div>
+        <div style="font-size: 14px; line-height: 1.4;">
+            推奨保存先: <strong>D:\\ミュージック\\radio</strong><br>
+            ブラウザの設定でデフォルト保存先を変更できます
+        </div>
+    `;
+
+    document.body.appendChild(info);
+
+    setTimeout(() => {
+        if (document.body.contains(info)) {
+            document.body.removeChild(info);
+        }
+    }, 8000);
+}
 </script>
 @endsection
