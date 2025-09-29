@@ -102,37 +102,69 @@ class RadioRecordingController extends Controller
     private function getRadikoAuthToken(): ?string
     {
         try {
-            // 認証APIにアクセス
-            $response = $this->client->post('https://radiko.jp/v2/api/auth1', [
+            // 第1步: 認証トークンを取得
+            $response1 = $this->client->post('https://radiko.jp/v2/api/auth1', [
                 'headers' => [
                     'User-Agent' => 'curl/7.68.0',
                     'Accept' => '*/*'
-                ]
+                ],
+                'timeout' => 10
             ]);
 
-            $authToken = $response->getHeaderLine('X-Radiko-AuthToken');
-            $keyLength = $response->getHeaderLine('X-Radiko-KeyLength');
-            $keyOffset = $response->getHeaderLine('X-Radiko-KeyOffset');
+            $authToken = $response1->getHeaderLine('X-Radiko-AuthToken');
+            $keyLength = (int)$response1->getHeaderLine('X-Radiko-KeyLength');
+            $keyOffset = (int)$response1->getHeaderLine('X-Radiko-KeyOffset');
 
-            if (!$authToken) {
+            if (!$authToken || !$keyLength || !$keyOffset) {
+                \Log::error('radiko auth1レスポンスヘッダーが不正', [
+                    'auth_token' => $authToken ? 'あり' : 'なし',
+                    'key_length' => $keyLength,
+                    'key_offset' => $keyOffset
+                ]);
                 return null;
             }
 
-            // 部分キーを生成（簡略化版）
-            $partialKey = base64_encode(substr(file_get_contents('https://radiko.jp/apps/js/playerCommon.js'), $keyOffset, $keyLength));
+            // 第2步: playerCommon.jsから部分キーを取得
+            $jsContent = file_get_contents('https://radiko.jp/apps/js/playerCommon.js');
+            if (!$jsContent) {
+                \Log::error('playerCommon.jsの取得に失敗');
+                return null;
+            }
 
-            // 認証完了
-            $this->client->post('https://radiko.jp/v2/api/auth2', [
+            // 部分キーを抽出
+            if (strlen($jsContent) < $keyOffset + $keyLength) {
+                \Log::error('部分キーのオフセットが範囲外', [
+                    'content_length' => strlen($jsContent),
+                    'required' => $keyOffset + $keyLength
+                ]);
+                return null;
+            }
+
+            $partialKey = base64_encode(substr($jsContent, $keyOffset, $keyLength));
+
+            // 第3步: 認証完了
+            $response2 = $this->client->post('https://radiko.jp/v2/api/auth2', [
                 'headers' => [
                     'X-Radiko-AuthToken' => $authToken,
                     'X-Radiko-PartialKey' => $partialKey,
                     'User-Agent' => 'curl/7.68.0'
-                ]
+                ],
+                'timeout' => 10
             ]);
+
+            // auth2のレスポンスステータスを確認
+            if ($response2->getStatusCode() !== 200) {
+                \Log::error('radiko auth2が失敗', ['status' => $response2->getStatusCode()]);
+                return null;
+            }
 
             return $authToken;
 
         } catch (\Exception $e) {
+            \Log::error('radiko認証エラー', [
+                'message' => $e->getMessage(),
+                'code' => $e->getCode()
+            ]);
             return null;
         }
     }
