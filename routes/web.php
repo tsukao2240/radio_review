@@ -76,3 +76,8 @@ Route::get('/favorites', 'FavoriteProgramController@index')->name('favorites.ind
 Route::post('/favorites', 'FavoriteProgramController@store')->name('favorites.store');
 Route::post('/favorites/delete', 'FavoriteProgramController@destroy')->name('favorites.destroy');
 Route::get('/favorites/check', 'FavoriteProgramController@check')->name('favorites.check');
+
+// 録音予約関連ルート
+Route::get('/recording/schedules', 'RecordingScheduleController@index')->name('recording.schedules');
+Route::post('/recording/schedule', 'RecordingScheduleController@store')->name('recording.schedule.store');
+Route::post('/recording/schedule/cancel', 'RecordingScheduleController@cancel')->name('recording.schedule.cancel');
