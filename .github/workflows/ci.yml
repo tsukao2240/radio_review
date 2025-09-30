@@ -80,7 +80,7 @@ jobs:
         DB_PASSWORD: root
 
     - name: Run PHPUnit tests
-      run: vendor/bin/phpunit --coverage-clover=coverage.xml
+      run: vendor/bin/phpunit --coverage-clover=coverage.xml --coverage-text
       env:
         APP_ENV: testing
         DB_CONNECTION: mysql
