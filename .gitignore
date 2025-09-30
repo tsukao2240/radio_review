@@ -17,3 +17,9 @@ yarn-error.log
 /ffmpeg/ffmpeg.exe
 /ffmpeg/ffmpeg
 /ffmpeg/ffmpeg-linux.tar.xz
+
+# 引き継ぎ資料
+引き継ぎ*.txt
+引き継ぎ*.md
+handover*.txt
+handover*.md
