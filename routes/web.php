@@ -68,3 +68,5 @@ Route::post('/recording/stop', 'RadioRecordingController@stopRecording')->name('
 Route::get('/recording/status', 'RadioRecordingController@getRecordingStatus')->name('recording.status');
 Route::get('/recording/download', 'RadioRecordingController@downloadRecording')->name('recording.download');
 Route::get('/recording/list', 'RadioRecordingController@listRecordings')->name('recording.list');
+Route::get('/recording/history', 'RadioRecordingController@showHistory')->name('recording.history');
+Route::post('/recording/delete', 'RadioRecordingController@deleteRecording')->name('recording.delete');
