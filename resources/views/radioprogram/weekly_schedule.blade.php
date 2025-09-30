@@ -1,5 +1,49 @@
 @extends('layouts.header')
 @section('content')
+<style>
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+    .timetable {
+        display: flex;
+        flex-direction: column;
+        padding: 10px;
+    }
+    .tablebox {
+        width: 100% !important;
+        margin-bottom: 15px;
+    }
+    .table {
+        font-size: 14px;
+    }
+    .table td, .table th {
+        padding: 8px 5px;
+    }
+    .recording-btn, .stop-recording-btn {
+        font-size: 12px;
+        padding: 5px 10px;
+        width: 100%;
+    }
+    .recording-info {
+        font-size: 12px;
+    }
+    h3 {
+        font-size: 18px;
+        padding: 10px;
+    }
+}
+
+@media (min-width: 769px) {
+    .timetable {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-around;
+    }
+    .tablebox {
+        flex: 0 0 calc(14.28% - 10px);
+        margin: 5px;
+    }
+}
+</style>
 @include('includes.search')
 <span>
     {{ Breadcrumbs::render('weekly_schedule') }}
@@ -41,10 +85,23 @@
                                         data-end="{{ str_replace(':', '', $entry['end']) }}">
                                     タイムフリー録音
                                 </button>
-                            @elseif($programEndTime->isFuture())
-                                <span class="text-muted small">まだ放送されていません</span>
-                            @else
-                                <span class="text-muted small">タイムフリー期間終了</span>
+                                <div class="recording-status" style="display:none; margin-top:5px;">
+                                    <div class="progress" style="height: 20px; margin-bottom: 5px;">
+                                        <div class="progress-bar progress-bar-striped progress-bar-animated"
+                                             role="progressbar"
+                                             style="width: 0%"
+                                             aria-valuenow="0"
+                                             aria-valuemin="0"
+                                             aria-valuemax="100">0%</div>
+                                    </div>
+                                    <small class="recording-info" style="display: block; margin-bottom: 3px;">
+                                        サイズ: <span class="file-size">0 MB</span> |
+                                        時間: <span class="elapsed-time">00:00</span> / <span class="total-time">--:--</span>
+                                    </small>
+                                    <button class="btn btn-sm btn-danger stop-recording-btn" style="width: 100%;">
+                                        録音停止
+                                    </button>
+                                </div>
                             @endif
                         </td>
                     </tr>
@@ -72,10 +129,23 @@
                                             data-end="{{ str_replace(':', '', $entry['end']) }}">
                                         タイムフリー録音
                                     </button>
-                                @elseif($programEndTime->isFuture())
-                                    <span class="text-muted small">まだ放送されていません</span>
-                                @else
-                                    <span class="text-muted small">タイムフリー期間終了</span>
+                                    <div class="recording-status" style="display:none; margin-top:5px;">
+                                        <div class="progress" style="height: 20px; margin-bottom: 5px;">
+                                            <div class="progress-bar progress-bar-striped progress-bar-animated"
+                                                 role="progressbar"
+                                                 style="width: 0%"
+                                                 aria-valuenow="0"
+                                                 aria-valuemin="0"
+                                                 aria-valuemax="100">0%</div>
+                                        </div>
+                                        <small class="recording-info" style="display: block; margin-bottom: 3px;">
+                                            サイズ: <span class="file-size">0 MB</span> |
+                                            時間: <span class="elapsed-time">00:00</span> / <span class="total-time">--:--</span>
+                                        </small>
+                                        <button class="btn btn-sm btn-danger stop-recording-btn" style="width: 100%;">
+                                            録音停止
+                                        </button>
+                                    </div>
                                 @endif
                             </td>
                         </tr>
@@ -90,6 +160,8 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    let activeRecordings = new Map();
+
     // タイムフリー録音ボタンのイベントリスナー
     document.querySelectorAll('.recording-btn').forEach(function(btn) {
         btn.addEventListener('click', function() {
@@ -99,9 +171,16 @@ document.addEventListener('DOMContentLoaded', function() {
             const startTime = this.dataset.start;
             const endTime = this.dataset.end;
 
+            // 録音時間を計算（分単位）
+            const startMinutes = parseInt(startTime.substring(0, 2)) * 60 + parseInt(startTime.substring(2, 4));
+            const endMinutes = parseInt(endTime.substring(0, 2)) * 60 + parseInt(endTime.substring(2, 4));
+            const durationMinutes = endMinutes - startMinutes;
+
             // ボタンを無効化
             this.disabled = true;
             this.textContent = '録音開始中...';
+
+            const currentButton = this;
 
             // AJAX リクエストでタイムフリー録音開始
             fetch('{{ route("recording.timefree.start") }}', {
@@ -120,23 +199,218 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    this.textContent = '録音中';
-                    this.classList.remove('btn-success');
-                    this.classList.add('btn-warning');
-                    alert('タイムフリー録音を開始しました: ' + data.filename);
+                    // ボタンを非表示にして、進行状況表示を表示
+                    currentButton.style.display = 'none';
+                    const statusDiv = currentButton.nextElementSibling;
+
+                    if (statusDiv && statusDiv.classList.contains('recording-status')) {
+                        statusDiv.style.display = 'block';
+
+                        // 停止ボタンのイベントリスナーを設定
+                        const stopBtn = statusDiv.querySelector('.stop-recording-btn');
+                        if (stopBtn) {
+                            stopBtn.onclick = function() {
+                                stopRecording(data.recording_id, currentButton, statusDiv);
+                            };
+                        }
+
+                        // 録音状態を監視開始
+                        startRecordingMonitor(data.recording_id, currentButton, data.filename, statusDiv, durationMinutes);
+                    }
                 } else {
-                    this.disabled = false;
-                    this.textContent = 'タイムフリー録音';
+                    currentButton.disabled = false;
+                    currentButton.textContent = 'タイムフリー録音';
                     alert('録音開始に失敗しました: ' + data.message);
                 }
             })
             .catch(error => {
-                this.disabled = false;
-                this.textContent = 'タイムフリー録音';
+                currentButton.disabled = false;
+                currentButton.textContent = 'タイムフリー録音';
                 alert('エラーが発生しました: ' + error);
             });
         });
     });
+
+    // 録音状態監視開始
+    function startRecordingMonitor(recordingId, button, filename, statusDiv, durationMinutes) {
+        const startTime = Date.now();
+        const totalSeconds = durationMinutes * 60;
+
+        activeRecordings.set(recordingId, {
+            button: button,
+            statusDiv: statusDiv,
+            filename: filename,
+            startTime: startTime,
+            totalSeconds: totalSeconds
+        });
+
+        // 総録音時間を表示
+        const totalTimeSpan = statusDiv.querySelector('.total-time');
+        if (totalTimeSpan) {
+            totalTimeSpan.textContent = formatTime(totalSeconds);
+        }
+
+        // 即座に最初のチェックを実行
+        checkRecordingStatus(recordingId, button, filename, statusDiv, null, startTime, totalSeconds);
+
+        // 500ms間隔で状態をチェック（高速ダウンロード対応）
+        const intervalId = setInterval(() => {
+            checkRecordingStatus(recordingId, button, filename, statusDiv, intervalId, startTime, totalSeconds);
+        }, 500);
+
+        activeRecordings.get(recordingId).intervalId = intervalId;
+    }
+
+    // 録音状態をチェック
+    function checkRecordingStatus(recordingId, button, filename, statusDiv, intervalId, startTime, totalSeconds) {
+        // 既に完了済みの録音はチェックしない
+        if (!activeRecordings.has(recordingId)) {
+            return;
+        }
+
+        fetch('{{ route("recording.status") }}?' + new URLSearchParams({
+            recording_id: recordingId
+        }))
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // 既に完了済みならスキップ
+                if (!activeRecordings.has(recordingId)) {
+                    return;
+                }
+
+                // 経過時間を表示（整数に変換）
+                const elapsedSeconds = Math.floor(data.elapsed_seconds || Math.floor((Date.now() - startTime) / 1000));
+                const elapsedTimeSpan = statusDiv.querySelector('.elapsed-time');
+                if (elapsedTimeSpan) {
+                    elapsedTimeSpan.textContent = formatTime(elapsedSeconds);
+                }
+
+                // 進捗率を表示（サーバーからの値を優先）
+                const progress = data.progress_percentage !== undefined ? data.progress_percentage : 0;
+                const progressBar = statusDiv.querySelector('.progress-bar');
+                if (progressBar) {
+                    const progressInt = Math.floor(progress);
+                    progressBar.style.width = progressInt + '%';
+                    progressBar.textContent = progressInt + '%';
+                    progressBar.setAttribute('aria-valuenow', progressInt);
+                }
+
+                // ファイルサイズを表示
+                if (data.file_size !== undefined && data.file_size > 0) {
+                    const fileSizeSpan = statusDiv.querySelector('.file-size');
+                    if (fileSizeSpan) {
+                        fileSizeSpan.textContent = data.file_size_formatted || formatFileSize(data.file_size);
+                    }
+                }
+
+                // 録音完了判定
+                if (data.status === 'completed' || (data.file_exists && !data.is_recording)) {
+                    // 録音情報を削除（重複実行防止）
+                    const recording = activeRecordings.get(recordingId);
+                    activeRecordings.delete(recordingId);
+
+                    // タイマーを停止
+                    if (recording && recording.intervalId) {
+                        clearInterval(recording.intervalId);
+                    }
+
+                    // 進行状況表示を非表示
+                    statusDiv.style.display = 'none';
+
+                    // ボタンを再表示してダウンロードボタンに変更
+                    button.style.display = 'block';
+                    button.textContent = 'ダウンロード';
+                    button.classList.remove('btn-success', 'btn-warning');
+                    button.classList.add('btn-primary');
+                    button.disabled = false;
+
+                    // ボタンをダウンロードボタンに変更
+                    button.onclick = function() {
+                        downloadRecording(recordingId);
+                    };
+
+                    alert('録音が完了しました: ' + filename);
+                }
+            }
+        })
+        .catch(error => {
+            // エラー表示
+            if (activeRecordings.has(recordingId)) {
+                const recording = activeRecordings.get(recordingId);
+                if (recording && recording.statusDiv) {
+                    const recordingInfo = recording.statusDiv.querySelector('.recording-info');
+                    if (recordingInfo) {
+                        recordingInfo.innerHTML = '<span style="color: red;">エラー: 状態取得失敗</span>';
+                    }
+                }
+            }
+        });
+    }
+
+    // 録音を停止
+    function stopRecording(recordingId, button, statusDiv) {
+        if (!confirm('録音を停止しますか？')) {
+            return;
+        }
+
+        fetch('{{ route("recording.stop") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify({
+                recording_id: recordingId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // 監視を停止
+                const recording = activeRecordings.get(recordingId);
+                if (recording && recording.intervalId) {
+                    clearInterval(recording.intervalId);
+                }
+                activeRecordings.delete(recordingId);
+
+                // 進行状況表示を非表示
+                statusDiv.style.display = 'none';
+
+                // ボタンを元に戻す
+                button.style.display = 'block';
+                button.textContent = 'タイムフリー録音';
+                button.classList.remove('btn-warning', 'btn-primary');
+                button.classList.add('btn-success');
+                button.disabled = false;
+
+                alert('録音を停止しました');
+            } else {
+                alert('録音停止に失敗しました: ' + data.message);
+            }
+        })
+        .catch(error => {
+            alert('エラーが発生しました: ' + error);
+        });
+    }
+
+    // 時間をフォーマット（秒 -> MM:SS）
+    function formatTime(seconds) {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
+    }
+
+    // ファイルサイズをフォーマット
+    function formatFileSize(bytes) {
+        if (bytes < 1024) {
+            return bytes + ' B';
+        } else if (bytes < 1024 * 1024) {
+            return (bytes / 1024).toFixed(0) + ' KB';
+        } else {
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+    }
 });
 
 // 録音ファイルをダウンロード（週間番組表用）

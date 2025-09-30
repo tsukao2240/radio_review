@@ -10,3 +10,10 @@ Homestead.json
 Homestead.yaml
 npm-debug.log
 yarn-error.log
+
+# ffmpeg binaries
+/ffmpeg/ffmpeg-master-latest-win64-gpl/
+/ffmpeg/ffmpeg-7.0.2-amd64-static/
+/ffmpeg/ffmpeg.exe
+/ffmpeg/ffmpeg
+/ffmpeg/ffmpeg-linux.tar.xz

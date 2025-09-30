@@ -1,5 +1,32 @@
 @extends('layouts.header')
 @section('content')
+<style>
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+    #reviews {
+        padding: 10px;
+    }
+    .card {
+        margin-bottom: 15px;
+    }
+    .card-header {
+        font-size: 16px;
+        padding: 10px;
+    }
+    .card-body {
+        padding: 10px;
+        font-size: 14px;
+    }
+    .card-footer {
+        padding: 8px;
+        font-size: 12px;
+    }
+    h3.caption {
+        font-size: 18px;
+        padding: 10px;
+    }
+}
+</style>
 <title>
     レビュー一覧
 </title>
