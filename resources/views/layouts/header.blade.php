@@ -1,7 +1,8 @@
 <html>
 
 <head>
-    <!-- Fonts -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <!--Style -->
     {{-- 一時的にプロダクションアセットを直接参照 --}}
@@ -9,6 +10,25 @@
     <link rel="stylesheet" href="{{ asset('build/assets/custom-UurEJdjO.css') }}">
     <link rel="stylesheet" href="{{ asset('build/assets/app-CZOjr4-t.css') }}">
     <script type="module" src="{{ asset('build/assets/app-C0Nx4PSf.js') }}"></script>
+    <style>
+        /* レスポンシブ対応 */
+        @media (max-width: 768px) {
+            .navbar-nav {
+                flex-direction: column;
+            }
+            .float-left, .float-right {
+                float: none !important;
+                width: 100%;
+            }
+            .navbar-nav li {
+                width: 100%;
+                text-align: center;
+            }
+            .navbar-nav .nav-link {
+                padding: 10px 15px;
+            }
+        }
+    </style>
 </head>
 
 <body>

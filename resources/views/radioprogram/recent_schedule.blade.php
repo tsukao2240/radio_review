@@ -1,5 +1,31 @@
 @extends('layouts.header')
 @section('content')
+<style>
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+    .container {
+        padding: 10px;
+    }
+    .table {
+        font-size: 14px;
+    }
+    .table td, .table th {
+        padding: 8px 5px;
+    }
+    .recording-btn, .stop-recording-btn {
+        font-size: 12px;
+        padding: 5px 10px;
+        width: 100%;
+    }
+    .recording-info {
+        font-size: 12px;
+    }
+    h3 {
+        font-size: 18px;
+        padding: 10px;
+    }
+}
+</style>
 
 <title>放送中の番組</title>
 
@@ -43,6 +69,23 @@
                             data-end="{{ str_replace(':', '', $result['end']) }}">
                         録音開始
                     </button>
+                    <div class="recording-status" style="display:none; margin-top:5px;">
+                        <div class="progress" style="height: 20px; margin-bottom: 5px;">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated"
+                                 role="progressbar"
+                                 style="width: 0%"
+                                 aria-valuenow="0"
+                                 aria-valuemin="0"
+                                 aria-valuemax="100">0%</div>
+                        </div>
+                        <small class="recording-info" style="display: block; margin-bottom: 3px;">
+                            サイズ: <span class="file-size">0 MB</span> |
+                            時間: <span class="elapsed-time">00:00</span> / <span class="total-time">--:--</span>
+                        </small>
+                        <button class="btn btn-sm btn-danger stop-recording-btn" style="width: 100%;">
+                            録音停止
+                        </button>
+                    </div>
                 </td>
             </tr>
             @endforeach
@@ -72,6 +115,11 @@ document.addEventListener('DOMContentLoaded', function() {
             this.disabled = true;
             this.textContent = '録音開始中...';
 
+            // 録音時間を計算（分単位）
+            const startMinutes = parseInt(startTime.substring(0, 2)) * 60 + parseInt(startTime.substring(2, 4));
+            const endMinutes = parseInt(endTime.substring(0, 2)) * 60 + parseInt(endTime.substring(2, 4));
+            const durationMinutes = endMinutes - startMinutes;
+
             // AJAX リクエストでタイムフリー録音開始（放送中番組用）
             fetch('{{ route("recording.timefree.start") }}', {
                 method: 'POST',
@@ -88,57 +136,140 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .then(response => response.json())
             .then(data => {
-                if (data.success) {
-                    this.textContent = '録音中';
-                    this.classList.remove('btn-warning');
-                    this.classList.add('btn-danger');
-                    alert('録音を開始しました: ' + data.filename);
+                const currentButton = this;
+                alert('録音開始レスポンス: success=' + data.success + ', recording_id=' + data.recording_id);
 
-                    // 録音状態を監視開始
-                    startRecordingMonitor(data.recording_id, this, data.filename);
+                if (data.success) {
+                    // ボタンを非表示にして、進行状況表示を表示
+                    alert('ボタンを非表示にします');
+                    currentButton.style.display = 'none';
+                    const statusDiv = currentButton.nextElementSibling;
+
+                    if (!statusDiv) {
+                        alert('エラー: statusDivが見つかりません');
+                        return;
+                    }
+
+                    alert('進行状況エリアを表示します');
+                    statusDiv.style.display = 'block';
+
+                    // 停止ボタンのイベントリスナーを設定
+                    const stopBtn = statusDiv.querySelector('.stop-recording-btn');
+                    if (stopBtn) {
+                        stopBtn.onclick = function() {
+                            stopRecording(data.recording_id, currentButton, statusDiv);
+                        };
+                    } else {
+                        alert('警告: 停止ボタンが見つかりません');
+                    }
+
+                    // 録音状態を監視開始（録音時間も渡す）
+                    alert('監視を開始します: ' + data.recording_id);
+                    startRecordingMonitor(data.recording_id, currentButton, data.filename, statusDiv, durationMinutes);
                 } else {
-                    this.disabled = false;
-                    this.textContent = '録音開始';
+                    currentButton.disabled = false;
+                    currentButton.textContent = '録音開始';
                     alert('録音開始に失敗しました: ' + data.message);
                 }
-            })
+            }.bind(this))
             .catch(error => {
                 this.disabled = false;
                 this.textContent = '録音開始';
                 alert('エラーが発生しました: ' + error);
-            });
+            }.bind(this));
         });
     });
 
     // 録音状態監視開始
-    function startRecordingMonitor(recordingId, button, filename) {
-        // 5秒間隔で状態をチェック
-        const intervalId = setInterval(() => {
-            checkRecordingStatus(recordingId, button, filename, intervalId);
-        }, 5000);
+    function startRecordingMonitor(recordingId, button, filename, statusDiv, durationMinutes) {
+        const startTime = Date.now();
+        const totalSeconds = durationMinutes * 60;
 
+        // 録音情報を保存
         activeRecordings.set(recordingId, {
             button: button,
-            intervalId: intervalId,
-            filename: filename
+            statusDiv: statusDiv,
+            filename: filename,
+            startTime: startTime,
+            totalSeconds: totalSeconds
         });
+
+        // 総録音時間を表示
+        const totalTimeSpan = statusDiv.querySelector('.total-time');
+        totalTimeSpan.textContent = formatTime(totalSeconds);
+
+        // 即座に最初のチェックを実行
+        checkRecordingStatus(recordingId, button, filename, statusDiv, null, startTime, totalSeconds);
+
+        // 500ms間隔で状態をチェック（高速ダウンロード対応）
+        const intervalId = setInterval(() => {
+            checkRecordingStatus(recordingId, button, filename, statusDiv, intervalId, startTime, totalSeconds);
+        }, 500);
+
+        activeRecordings.get(recordingId).intervalId = intervalId;
     }
 
     // 録音状態をチェック
-    function checkRecordingStatus(recordingId, button, filename, intervalId) {
+    function checkRecordingStatus(recordingId, button, filename, statusDiv, intervalId, startTime, totalSeconds) {
+        // 既に完了済みの録音はチェックしない
+        if (!activeRecordings.has(recordingId)) {
+            return;
+        }
+
         fetch('{{ route("recording.status") }}?' + new URLSearchParams({
             recording_id: recordingId
         }))
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                if (data.status === 'completed' || data.file_exists) {
-                    // 録音完了
-                    clearInterval(intervalId);
+                // 既に完了済みならスキップ
+                if (!activeRecordings.has(recordingId)) {
+                    return;
+                }
+
+                // 経過時間を計算（APIレスポンスの値を優先、整数に変換）
+                const elapsedSeconds = Math.floor(data.elapsed_seconds || Math.floor((Date.now() - startTime) / 1000));
+                const elapsedTimeSpan = statusDiv.querySelector('.elapsed-time');
+                if (elapsedTimeSpan) {
+                    elapsedTimeSpan.textContent = formatTime(elapsedSeconds);
+                }
+
+                // 進捗率を表示（サーバーからの値を優先）
+                const progress = data.progress_percentage !== undefined ? data.progress_percentage : 0;
+                const progressBar = statusDiv.querySelector('.progress-bar');
+                if (progressBar) {
+                    const progressInt = Math.floor(progress);
+                    progressBar.style.width = progressInt + '%';
+                    progressBar.textContent = progressInt + '%';
+                    progressBar.setAttribute('aria-valuenow', progressInt);
+                }
+
+                // ファイルサイズを表示（APIレスポンスの値を使用）
+                if (data.file_size !== undefined && data.file_size > 0) {
+                    const fileSizeSpan = statusDiv.querySelector('.file-size');
+                    if (fileSizeSpan) {
+                        fileSizeSpan.textContent = data.file_size_formatted || formatFileSize(data.file_size);
+                    }
+                }
+
+                // 録音完了判定（APIの is_recording を使用）
+                if (data.status === 'completed' || (data.file_exists && !data.is_recording)) {
+                    // 録音情報を削除（重複実行防止）
+                    const recording = activeRecordings.get(recordingId);
                     activeRecordings.delete(recordingId);
 
+                    // タイマーを停止
+                    if (recording && recording.intervalId) {
+                        clearInterval(recording.intervalId);
+                    }
+
+                    // 進行状況表示を非表示
+                    statusDiv.style.display = 'none';
+
+                    // ボタンを再表示してダウンロードボタンに変更
+                    button.style.display = 'block';
                     button.textContent = 'ダウンロード';
-                    button.classList.remove('btn-danger');
+                    button.classList.remove('btn-warning', 'btn-danger');
                     button.classList.add('btn-success');
                     button.disabled = false;
 
@@ -153,8 +284,81 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         })
         .catch(error => {
-            console.log('録音状態チェックエラー:', error);
+            // エラー時は画面にアラート表示
+            if (activeRecordings.has(recordingId)) {
+                const recording = activeRecordings.get(recordingId);
+                if (recording && recording.statusDiv) {
+                    const recordingInfo = recording.statusDiv.querySelector('.recording-info');
+                    if (recordingInfo) {
+                        recordingInfo.innerHTML = '<span style="color: red;">エラー: 状態取得失敗</span>';
+                    }
+                }
+            }
         });
+    }
+
+    // 録音を停止
+    function stopRecording(recordingId, button, statusDiv) {
+        if (!confirm('録音を停止しますか？')) {
+            return;
+        }
+
+        fetch('{{ route("recording.stop") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify({
+                recording_id: recordingId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // 監視を停止
+                const recording = activeRecordings.get(recordingId);
+                if (recording && recording.intervalId) {
+                    clearInterval(recording.intervalId);
+                }
+                activeRecordings.delete(recordingId);
+
+                // 進行状況表示を非表示
+                statusDiv.style.display = 'none';
+
+                // ボタンを元に戻す
+                button.style.display = 'block';
+                button.textContent = '録音開始';
+                button.classList.remove('btn-danger', 'btn-success');
+                button.classList.add('btn-warning');
+                button.disabled = false;
+
+                alert('録音を停止しました');
+            } else {
+                alert('録音停止に失敗しました: ' + data.message);
+            }
+        })
+        .catch(error => {
+            alert('エラーが発生しました: ' + error);
+        });
+    }
+
+    // 時間をフォーマット（秒 -> MM:SS）
+    function formatTime(seconds) {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
+    }
+
+    // ファイルサイズをフォーマット
+    function formatFileSize(bytes) {
+        if (bytes < 1024) {
+            return bytes + ' B';
+        } else if (bytes < 1024 * 1024) {
+            return (bytes / 1024).toFixed(0) + ' KB';
+        } else {
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
     }
 
     // ダウンロード完了ポップアップ表示
