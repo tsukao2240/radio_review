@@ -1,8 +1,63 @@
 @extends('layouts.header')
 @section('content')
+<style>
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+    .container {
+        padding: 10px;
+    }
+    .card {
+        margin-bottom: 15px;
+    }
+    .card-header, .card-body {
+        padding: 10px;
+    }
+    .caption {
+        font-size: 18px;
+        padding: 10px;
+    }
+}
+
+.caption {
+    text-align: center;
+    margin: 20px 0;
+}
+
+.card {
+    margin-bottom: 20px;
+    border: 1px solid #ddd;
+}
+
+.card-header {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-bottom: 1px solid #ddd;
+}
+
+.card-header a {
+    text-decoration: none;
+    color: #007bff;
+    font-weight: 500;
+}
+
+.card-header a:hover {
+    text-decoration: underline;
+}
+
+.card-body {
+    padding: 15px;
+    background-color: #fff;
+}
+
+.pagination {
+    margin-top: 20px;
+    justify-content: center;
+}
+</style>
 
 <title>番組一覧</title>
 
+<div class="container">
 <!--初期表示-->
 @include('includes.search')
 @if (isset($results))
@@ -40,4 +95,5 @@
     検索結果が見つかりませんでした
 </h3>
 @endif
+</div>
 @endsection
