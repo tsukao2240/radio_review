@@ -73,10 +73,25 @@
                             {{ $entry['start'] . ' ' . '-' . ' '. $entry['end'] }}
                             <br>
                             @php
+                                $programStartTime = \Carbon\Carbon::createFromFormat('Ymd H:i', $entry['date'] . ' ' . $entry['start']);
                                 $programEndTime = \Carbon\Carbon::createFromFormat('Ymd H:i', $entry['date'] . ' ' . $entry['end']);
                                 $canRecord = $programEndTime->diffInDays(now()) <= 7;
                             @endphp
-                            @if($canRecord && $programEndTime->isPast())
+                            @if(!$programStartTime->isPast())
+                                @if (Auth::check())
+                                    <button class="btn btn-sm btn-warning schedule-recording-btn"
+                                            data-station-id="{{ $entry['id'] }}"
+                                            data-title="{{ $entry['title'] }}"
+                                            data-start="{{ $entry['date'] . str_replace(':', '', $entry['start']) }}"
+                                            data-end="{{ $entry['date'] . str_replace(':', '', $entry['end']) }}">
+                                        録音予約
+                                    </button>
+                                @else
+                                    <a href="{{ route('login') }}" class="btn btn-sm btn-warning">
+                                        ログインして録音予約
+                                    </a>
+                                @endif
+                            @elseif($canRecord && $programEndTime->isPast())
                                 <button class="btn btn-sm btn-success recording-btn"
                                         data-station-id="{{ $entry['id'] }}"
                                         data-title="{{ $entry['title'] }}"
@@ -117,10 +132,25 @@
                                 {{ $entry['start'] . ' ' . '-' . ' '. $entry['end'] }}
                                 <br>
                                 @php
+                                    $programStartTime = \Carbon\Carbon::createFromFormat('Ymd H:i', $entry['date'] . ' ' . $entry['start']);
                                     $programEndTime = \Carbon\Carbon::createFromFormat('Ymd H:i', $entry['date'] . ' ' . $entry['end']);
                                     $canRecord = $programEndTime->diffInDays(now()) <= 7;
                                 @endphp
-                                @if($canRecord && $programEndTime->isPast())
+                                @if(!$programStartTime->isPast())
+                                    @if (Auth::check())
+                                        <button class="btn btn-sm btn-warning schedule-recording-btn"
+                                                data-station-id="{{ $entry['id'] }}"
+                                                data-title="{{ $entry['title'] }}"
+                                                data-start="{{ $entry['date'] . str_replace(':', '', $entry['start']) }}"
+                                                data-end="{{ $entry['date'] . str_replace(':', '', $entry['end']) }}">
+                                            録音予約
+                                        </button>
+                                    @else
+                                        <a href="{{ route('login') }}" class="btn btn-sm btn-warning">
+                                            ログインして録音予約
+                                        </a>
+                                    @endif
+                                @elseif($canRecord && $programEndTime->isPast())
                                     <button class="btn btn-sm btn-success recording-btn"
                                             data-station-id="{{ $entry['id'] }}"
                                             data-title="{{ $entry['title'] }}"
@@ -166,6 +196,55 @@ document.addEventListener('DOMContentLoaded', function() {
     if ('Notification' in window && Notification.permission === 'default') {
         Notification.requestPermission();
     }
+
+    // 録音予約ボタンのイベントリスナー
+    document.querySelectorAll('.schedule-recording-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            const stationId = this.dataset.stationId;
+            const title = this.dataset.title;
+            const startTime = this.dataset.start;
+            const endTime = this.dataset.end;
+
+            // ボタンを無効化
+            this.disabled = true;
+            this.textContent = '予約中...';
+
+            const currentButton = this;
+
+            // AJAX リクエストで録音予約
+            fetch('{{ route("recording.schedule.store") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({
+                    station_id: stationId,
+                    program_title: title,
+                    scheduled_start_time: startTime,
+                    scheduled_end_time: endTime
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    currentButton.textContent = '予約完了';
+                    currentButton.classList.remove('btn-warning');
+                    currentButton.classList.add('btn-secondary');
+                    alert('録音予約が完了しました');
+                } else {
+                    currentButton.disabled = false;
+                    currentButton.textContent = '録音予約';
+                    alert('録音予約に失敗しました: ' + data.message);
+                }
+            })
+            .catch(error => {
+                currentButton.disabled = false;
+                currentButton.textContent = '録音予約';
+                alert('エラーが発生しました: ' + error);
+            });
+        });
+    });
 
     // タイムフリー録音ボタンのイベントリスナー
     document.querySelectorAll('.recording-btn').forEach(function(btn) {

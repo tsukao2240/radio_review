@@ -27,6 +27,8 @@ class Kernel extends ConsoleKernel
         $schedule->call(new \App\Routine\InsertRadioProgram($schedule))->dailyAt('5:00');
         $schedule->call(new \App\Routine\DeleteDuplicateRecords($schedule))->dailyAt('5:00');
 
+        // 録音予約処理を毎分実行
+        $schedule->command('recording:process-schedules')->everyMinute();
     }
 
     /**

@@ -31,31 +31,19 @@ class RecordingScheduleController extends Controller
         $request->validate([
             'station_id' => 'required|string',
             'program_title' => 'required|string',
-            'scheduled_start_time' => 'required|date|after:now',
-            'scheduled_end_time' => 'required|date|after:scheduled_start_time'
+            'scheduled_start_time' => 'required',
+            'scheduled_end_time' => 'required'
         ]);
 
         try {
-            // 開始時刻が1週間以内かチェック
             $startTime = Carbon::parse($request->scheduled_start_time);
-            if ($startTime->diffInDays(now()) > 7) {
+            $endTime = Carbon::parse($request->scheduled_end_time);
+
+            // 開始時刻が1週間以内かチェック
+            if ($startTime->gt(Carbon::now()->addWeek())) {
                 return response()->json([
                     'success' => false,
                     'message' => '録音予約は1週間先までです'
-                ]);
-            }
-
-            // 重複チェック
-            $existing = RecordingSchedule::where('user_id', Auth::id())
-                ->where('station_id', $request->station_id)
-                ->where('scheduled_start_time', $startTime)
-                ->whereIn('status', ['pending', 'recording'])
-                ->first();
-
-            if ($existing) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'すでに同じ番組が予約されています'
                 ]);
             }
 
@@ -84,19 +72,26 @@ class RecordingScheduleController extends Controller
     public function cancel(Request $request)
     {
         $request->validate([
-            'id' => 'required|integer'
+            'schedule_id' => 'required|integer'
         ]);
 
         try {
-            $schedule = RecordingSchedule::where('id', $request->id)
+            $schedule = RecordingSchedule::where('id', $request->schedule_id)
                 ->where('user_id', Auth::id())
-                ->whereIn('status', ['pending'])
                 ->first();
 
             if (!$schedule) {
                 return response()->json([
                     'success' => false,
                     'message' => '予約が見つかりません'
+                ]);
+            }
+
+            // pending状態の予約のみキャンセル可能
+            if ($schedule->status !== 'pending') {
+                return response()->json([
+                    'success' => false,
+                    'message' => '予約済み以外の予約はキャンセルできません'
                 ]);
             }
 
