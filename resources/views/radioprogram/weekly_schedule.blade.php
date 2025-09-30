@@ -1,46 +1,177 @@
 @extends('layouts.header')
 @section('content')
 <style>
+.schedule-header {
+    text-align: center;
+    margin: 30px 0;
+    padding: 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.schedule-header h3 {
+    font-size: 28px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.timetable {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    padding: 20px 0;
+}
+
+.tablebox {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.tablebox:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+    transform: translateY(-2px);
+}
+
+.tablebox .table {
+    margin-bottom: 0;
+}
+
+.tablebox thead th {
+    background: #f8f9fa;
+    color: #333;
+    font-weight: 600;
+    font-size: 16px;
+    text-align: center;
+    padding: 15px;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.tablebox tbody td {
+    padding: 15px;
+    border-bottom: 1px solid #e9ecef;
+    line-height: 1.6;
+}
+
+.tablebox tbody td a {
+    color: #007bff;
+    font-weight: 600;
+    text-decoration: none;
+    display: block;
+    margin-bottom: 8px;
+}
+
+.tablebox tbody td a:hover {
+    color: #0056b3;
+    text-decoration: underline;
+}
+
+.program-time {
+    color: #6c757d;
+    font-size: 14px;
+    font-weight: 500;
+    margin: 8px 0;
+}
+
+.program-cast {
+    color: #6c757d;
+    font-size: 13px;
+    margin: 5px 0;
+}
+
+.recording-btn, .schedule-recording-btn {
+    width: 100%;
+    margin-top: 10px;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.schedule-recording-btn {
+    background: #ffc107;
+    border-color: #ffc107;
+    color: #000;
+}
+
+.schedule-recording-btn:hover {
+    background: #e0a800;
+    border-color: #d39e00;
+}
+
+.recording-btn {
+    background: #28a745;
+    border-color: #28a745;
+}
+
+.recording-btn:hover {
+    background: #218838;
+    border-color: #1e7e34;
+}
+
+.recording-status {
+    margin-top: 10px;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 6px;
+}
+
+.stop-recording-btn {
+    background: #dc3545;
+    border-color: #dc3545;
+    width: 100%;
+    padding: 6px 12px;
+    font-size: 13px;
+}
+
+.stop-recording-btn:hover {
+    background: #c82333;
+    border-color: #bd2130;
+}
+
 /* レスポンシブ対応 */
 @media (max-width: 768px) {
     .timetable {
-        display: flex;
-        flex-direction: column;
+        grid-template-columns: 1fr;
+        gap: 10px;
         padding: 10px;
     }
-    .tablebox {
-        width: 100% !important;
-        margin-bottom: 15px;
+    
+    .schedule-header h3 {
+        font-size: 20px;
+        padding: 10px;
     }
-    .table {
+    
+    .tablebox thead th {
         font-size: 14px;
+        padding: 12px;
     }
-    .table td, .table th {
-        padding: 8px 5px;
+    
+    .tablebox tbody td {
+        padding: 12px;
+        font-size: 13px;
     }
-    .recording-btn, .stop-recording-btn {
+    
+    .recording-btn, .schedule-recording-btn {
         font-size: 12px;
-        padding: 5px 10px;
-        width: 100%;
-    }
-    .recording-info {
-        font-size: 12px;
-    }
-    h3 {
-        font-size: 18px;
-        padding: 10px;
+        padding: 6px 10px;
     }
 }
 
-@media (min-width: 769px) {
+@media (min-width: 769px) and (max-width: 1200px) {
     .timetable {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: space-around;
+        grid-template-columns: repeat(3, 1fr);
     }
-    .tablebox {
-        flex: 0 0 calc(14.28% - 10px);
-        margin: 5px;
+}
+
+@media (min-width: 1201px) {
+    .timetable {
+        grid-template-columns: repeat(7, 1fr);
     }
 }
 </style>
@@ -49,7 +180,9 @@
     {{ Breadcrumbs::render('weekly_schedule') }}
 </span>
 <title>{{ $broadcast_name }}の週間番組表</title>
-<h3 style="text-align:center">週間番組表({{ $broadcast_name }})</h3>
+<div class="schedule-header">
+    <h3>週間番組表（{{ $broadcast_name }}）</h3>
+</div>
 <div class="timetable">
     @for ($i = 0; $i < count($thisWeek) - 1; $i++) <div class="tablebox">
         <div class="table">
@@ -70,7 +203,7 @@
                             {{ $entry['cast'] }}
                             @endif
                             <br>
-                            {{ $entry['start'] . ' ' . '-' . ' '. $entry['end'] }}
+                            <span class="program-time">{{ $entry['start'] }} - {{ $entry['end'] }}</span>
                             <br>
                             @php
                                 $programStartTime = \Carbon\Carbon::createFromFormat('Ymd H:i', $entry['date'] . ' ' . $entry['start']);
@@ -129,7 +262,7 @@
                                 {{ $entry['cast'] }}
                                 @endif
                                 <br>
-                                {{ $entry['start'] . ' ' . '-' . ' '. $entry['end'] }}
+                                <span class="program-time">{{ $entry['start'] }} - {{ $entry['end'] }}</span>
                                 <br>
                                 @php
                                     $programStartTime = \Carbon\Carbon::createFromFormat('Ymd H:i', $entry['date'] . ' ' . $entry['start']);
