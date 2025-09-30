@@ -23,3 +23,5 @@ yarn-error.log
 引き継ぎ*.md
 handover*.txt
 handover*.md
+HANDOVER*.md
+MIGRATION_NOTES.md
