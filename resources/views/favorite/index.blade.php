@@ -1,23 +1,134 @@
 @extends('layouts.header')
 @section('content')
 <style>
+.favorite-header {
+    text-align: center;
+    margin: 30px 0;
+}
+
+.favorite-header h3 {
+    font-size: 28px;
+    font-weight: 600;
+    color: #333;
+}
+
+.favorite-list {
+    display: grid;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.favorite-card {
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 20px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.favorite-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+}
+
+.favorite-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+.favorite-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+    flex: 1;
+}
+
+.favorite-station {
+    display: inline-block;
+    background: #007bff;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    margin-left: 10px;
+}
+
+.favorite-date {
+    color: #6c757d;
+    font-size: 14px;
+    margin-bottom: 12px;
+}
+
+.favorite-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-delete {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.3s ease;
+}
+
+.btn-delete:hover {
+    background: #c82333;
+}
+
+.btn-delete i {
+    margin-right: 5px;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.empty-state i {
+    font-size: 64px;
+    color: #ccc;
+    margin-bottom: 20px;
+}
+
+.empty-state p {
+    font-size: 18px;
+    color: #6c757d;
+}
+
+.back-button {
+    text-align: center;
+    margin-top: 30px;
+}
+
 /* レスポンシブ対応 */
 @media (max-width: 768px) {
     .container {
         padding: 10px;
     }
-    .table {
-        font-size: 12px;
+    .favorite-header h3 {
+        font-size: 22px;
     }
-    .table td, .table th {
-        padding: 8px 5px;
+    .favorite-card {
+        padding: 15px;
     }
-    .btn-sm {
-        font-size: 11px;
-        padding: 4px 8px;
+    .favorite-title {
+        font-size: 16px;
     }
-    h3 {
-        font-size: 18px;
+    .favorite-card-header {
+        flex-direction: column;
+    }
+    .favorite-station {
+        margin-left: 0;
+        margin-top: 8px;
     }
 }
 </style>
@@ -25,7 +136,9 @@
 <title>お気に入り番組</title>
 
 <div class="container mt-4">
-    <h3 class="text-center mb-4">お気に入り番組</h3>
+    <div class="favorite-header">
+        <h3>お気に入り番組</h3>
+    </div>
 
     @if(session('message'))
         <div class="alert alert-success">
@@ -34,41 +147,36 @@
     @endif
 
     @if(!empty($favorites) && count($favorites) > 0)
-        <div class="table-responsive">
-            <table class="table table-bordered table-hover">
-                <thead class="thead-light">
-                    <tr>
-                        <th>放送局</th>
-                        <th>番組名</th>
-                        <th>登録日時</th>
-                        <th>操作</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($favorites as $favorite)
-                        <tr>
-                            <td>{{ $favorite->station_id }}</td>
-                            <td>{{ $favorite->program_title }}</td>
-                            <td>{{ \Carbon\Carbon::parse($favorite->created_at)->format('Y/m/d H:i') }}</td>
-                            <td>
-                                <button class="btn btn-sm btn-danger delete-favorite-btn"
-                                        data-favorite-id="{{ $favorite->id }}"
-                                        data-program-title="{{ $favorite->program_title }}">
-                                    <i class="fas fa-trash"></i> 削除
-                                </button>
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
+        <div class="favorite-list">
+            @foreach($favorites as $favorite)
+                <div class="favorite-card">
+                    <div class="favorite-card-header">
+                        <div>
+                            <div class="favorite-title">{{ $favorite->program_title }}</div>
+                            <span class="favorite-station">{{ $favorite->station_id }}</span>
+                        </div>
+                    </div>
+                    <div class="favorite-date">
+                        <i class="far fa-clock"></i> 登録日時: {{ $favorite->created_at->format('Y年m月d日 H:i') }}
+                    </div>
+                    <div class="favorite-actions">
+                        <button class="btn-delete delete-favorite-btn"
+                                data-favorite-id="{{ $favorite->id }}"
+                                data-program-title="{{ $favorite->program_title }}">
+                            <i class="fas fa-trash"></i> 削除
+                        </button>
+                    </div>
+                </div>
+            @endforeach
         </div>
     @else
-        <div class="alert alert-warning text-center">
-            お気に入り番組がありません
+        <div class="empty-state">
+            <i class="far fa-heart"></i>
+            <p>お気に入り番組がありません</p>
         </div>
     @endif
 
-    <div class="text-center mt-4">
+    <div class="back-button">
         <a href="{{ route('program.schedule') }}" class="btn btn-secondary">
             <i class="fas fa-arrow-left"></i> 放送中の番組に戻る
         </a>
