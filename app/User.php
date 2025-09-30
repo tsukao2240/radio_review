@@ -46,6 +46,11 @@ class User extends Authenticatable implements MustVerifyEmailContact
         return $this->hasMany('App\Post');
     }
 
+    public function favoritePrograms()
+    {
+        return $this->hasMany('App\FavoriteProgram');
+    }
+
     //会員登録時の仮メール送信
     public function sendmailVerificationNotification()
     {

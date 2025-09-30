@@ -70,3 +70,9 @@ Route::get('/recording/download', 'RadioRecordingController@downloadRecording')-
 Route::get('/recording/list', 'RadioRecordingController@listRecordings')->name('recording.list');
 Route::get('/recording/history', 'RadioRecordingController@showHistory')->name('recording.history');
 Route::post('/recording/delete', 'RadioRecordingController@deleteRecording')->name('recording.delete');
+
+// お気に入り番組関連ルート
+Route::get('/favorites', 'FavoriteProgramController@index')->name('favorites.index');
+Route::post('/favorites', 'FavoriteProgramController@store')->name('favorites.store');
+Route::post('/favorites/delete', 'FavoriteProgramController@destroy')->name('favorites.destroy');
+Route::get('/favorites/check', 'FavoriteProgramController@check')->name('favorites.check');
