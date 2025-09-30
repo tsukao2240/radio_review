@@ -60,6 +60,16 @@
                                 </span>
                             </a>
                         </li>
+                        @if (Auth::check())
+                        <li class="nav-item active">
+                            <a class="hover nav-link" href="{{ route('favorites.index') }}">
+                                <i class="fas fa-heart fa-fw fa-lg"></i>
+                                <span class="text-center">
+                                    お気に入り番組
+                                </span>
+                            </a>
+                        </li>
+                        @endif
                         <li class="nav-item active">
                             <a class="hover nav-link" href="{{ route('review.view') }}">
                                 <i class="fas fa-book-open fa-fw fa-lg"></i>

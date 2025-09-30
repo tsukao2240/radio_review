@@ -162,6 +162,11 @@
 document.addEventListener('DOMContentLoaded', function() {
     let activeRecordings = new Map();
 
+    // 通知許可リクエスト
+    if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission();
+    }
+
     // タイムフリー録音ボタンのイベントリスナー
     document.querySelectorAll('.recording-btn').forEach(function(btn) {
         btn.addEventListener('click', function() {
@@ -330,6 +335,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         downloadRecording(recordingId);
                     };
 
+                    // ブラウザ通知を表示
+                    showBrowserNotification(filename);
                     alert('録音が完了しました: ' + filename);
                 }
             }
@@ -533,6 +540,35 @@ function showDownloadLocationInfo() {
             document.body.removeChild(info);
         }
     }, 8000);
+}
+
+// ブラウザ通知を表示
+function showBrowserNotification(filename) {
+    if ('Notification' in window && Notification.permission === 'granted') {
+        try {
+            const notification = new Notification('録音完了', {
+                body: `${filename} のダウンロードが完了しました`,
+                icon: '/favicon.ico',
+                badge: '/favicon.ico',
+                tag: 'recording-complete',
+                requireInteraction: false,
+                silent: false
+            });
+
+            // 通知をクリックした時の動作
+            notification.onclick = function() {
+                window.focus();
+                this.close();
+            };
+
+            // 5秒後に自動で閉じる
+            setTimeout(() => {
+                notification.close();
+            }, 5000);
+        } catch (error) {
+            console.error('通知の表示に失敗しました:', error);
+        }
+    }
 }
 </script>
 @endsection
