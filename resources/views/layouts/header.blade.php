@@ -53,6 +53,14 @@
                             </a>
                         </li>
                         <li class="nav-item active">
+                            <a class="hover nav-link" href="{{ route('recording.history') }}">
+                                <i class="fas fa-microphone fa-fw fa-lg"></i>
+                                <span class="text-center">
+                                    録音履歴
+                                </span>
+                            </a>
+                        </li>
+                        <li class="nav-item active">
                             <a class="hover nav-link" href="{{ route('review.view') }}">
                                 <i class="fas fa-book-open fa-fw fa-lg"></i>
                                 <span class="text-center">

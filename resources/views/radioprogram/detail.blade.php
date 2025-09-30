@@ -57,7 +57,7 @@
             <h5>{{ $entry['cast'] }}</h5>
             @if (!empty($entry['image']))
             <div>
-                <img src="{!! $entry['image'] !!}">
+                <img src="{!! $entry['image'] !!}" loading="lazy" alt="{{ $entry['title'] }}">
             </div>
             @endif
             @if(!empty($entry['desc']))
@@ -88,7 +88,7 @@
             <h5>{{ $result->cast }}</h5>
             @if (!empty($result->image))
             <div>
-                <img src="{!! $result->image !!}">
+                <img src="{!! $result->image !!}" loading="lazy" alt="{{ $result->title }}">
             </div>
             @endif
             @if (!empty($result->info))
