@@ -22,6 +22,12 @@ RUN apk add --no-cache \
     && docker-php-ext-install pdo_mysql \
     && docker-php-ext-install zip
 
+# Redis PHPエクステンションをインストール
+RUN apk add --no-cache pcre-dev $PHPIZE_DEPS \
+    && pecl install redis \
+    && docker-php-ext-enable redis \
+    && apk del pcre-dev $PHPIZE_DEPS
+
 # Composerをインストール
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 

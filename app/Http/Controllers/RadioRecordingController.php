@@ -832,14 +832,29 @@ class RadioRecordingController extends Controller
         $recordings = [];
 
         // Redisドライバーの場合のみkeys()を使用
-        if (method_exists(Cache::getStore(), 'getRedis')) {
-            $cacheKeys = Cache::getRedis()->keys('laravel_database_recording_*');
+        $store = Cache::getStore();
+        if ($store instanceof \Illuminate\Cache\RedisStore) {
+            $redis = $store->connection();
+            $prefix = $store->getPrefix();
+
+            // プレフィックス付きのパターンで検索（すべてのプレフィックスパターンをカバー）
+            $cacheKeys = $redis->keys('*recording_*');
 
             foreach ($cacheKeys as $key) {
-                $recordingId = str_replace('laravel_database_recording_', '', $key);
-                $recordingInfo = Cache::get("recording_{$recordingId}");
+                // すべてのプレフィックスを除去してrecording_で始まるキーを抽出
+                if (preg_match('/recording_[^:]+$/', $key, $matches)) {
+                    $cleanKey = $matches[0];
+                } else {
+                    continue;
+                }
+
+                $recordingInfo = Cache::get($cleanKey);
 
                 if ($recordingInfo) {
+                    // recording_id を抽出（キーから）
+                    preg_match('/recording_(.+)$/', $cleanKey, $matches);
+                    $recordingId = $matches[1] ?? $cleanKey;
+
                     // ファイル情報を追加
                     $filepath = $recordingInfo['filepath'];
                     $fileExists = file_exists($filepath);
@@ -849,6 +864,11 @@ class RadioRecordingController extends Controller
                     $recordingInfo['file_exists'] = $fileExists;
                     $recordingInfo['file_size'] = $this->formatFileSize($fileSize);
 
+                    // created_atをCarbonオブジェクトに変換（日本時間に設定）
+                    if (isset($recordingInfo['created_at']) && is_string($recordingInfo['created_at'])) {
+                        $recordingInfo['created_at'] = \Carbon\Carbon::parse($recordingInfo['created_at'])->setTimezone('Asia/Tokyo');
+                    }
+
                     $recordings[] = $recordingInfo;
                 }
             }
@@ -856,7 +876,9 @@ class RadioRecordingController extends Controller
 
         // 作成日時で降順ソート
         usort($recordings, function($a, $b) {
-            return strtotime($b['created_at']) - strtotime($a['created_at']);
+            $timeA = isset($a['created_at']) ? strtotime($a['created_at']) : 0;
+            $timeB = isset($b['created_at']) ? strtotime($b['created_at']) : 0;
+            return $timeB - $timeA;
         });
 
         // ディスク使用状況を取得
