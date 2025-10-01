@@ -184,17 +184,69 @@
     <h3>週間番組表（{{ $broadcast_name }}）</h3>
 </div>
 <div class="timetable">
-    @for ($i = 0; $i < count($thisWeek) - 1; $i++) <div class="tablebox">
+    @for ($i = 0; $i < count($thisWeek); $i++)
+    @php
+        // この曜日に表示すべき番組があるかチェック
+        $currentDate = $thisWeek[$i];
+        $nextDate = date('Ymd', strtotime($currentDate . ' +1 day'));
+        $hasPrograms = false;
+        
+        foreach ($entries as $entry) {
+            $entryDate = $entry['date'];
+            $startTimeInt = (int)str_replace(':', '', $entry['start']);
+            
+            // 当日の5:00〜23:59の番組
+            $isCurrentDayProgram = ($currentDate === $entryDate && $startTimeInt >= 500 && $startTimeInt < 2400);
+            
+            // 当日の24:00〜28:59の深夜番組
+            $isCurrentDayLateNightProgram = ($entryDate === $nextDate && $startTimeInt >= 2400 && $startTimeInt < 2900);
+            
+            if ($isCurrentDayProgram || $isCurrentDayLateNightProgram) {
+                $hasPrograms = true;
+                break;
+            }
+        }
+    @endphp
+    
+    @if ($hasPrograms)
+    <div class="tablebox">
         <div class="table">
             <table class="table table-bordered table-responsive">
-                <thead class="thead-light">
+                <thead>
                     <tr>
                         <th>{{ date('m月d日(D)',strtotime($thisWeek[$i])) }}</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach ($entries as $entry)
-                    @if ($thisWeek[$i] === $entry['date'] && intval($entry['start']) >= 5 && intval($entry['start'] < 24))
+                    @php
+                        // 現在の曜日の日付
+                        $currentDate = $thisWeek[$i];
+                        
+                        // 前日の日付（深夜番組用）
+                        $previousDate = isset($thisWeek[$i - 1]) ? $thisWeek[$i - 1] : null;
+                        
+                        // 番組の日付と開始時刻
+                        $entryDate = $entry['date'];
+                        $entryStart = $entry['start']; // "HH:MM"形式
+                        
+                        // 時刻を整数に変換（"24:30" -> 2430）
+                        $startTimeInt = (int)str_replace(':', '', $entryStart);
+                        
+                        // 表示条件
+                        // 1. 当日の5:00〜23:59の番組（24:00以降は除外して重複を防ぐ）
+                        $isCurrentDayProgram = ($currentDate === $entryDate && $startTimeInt >= 500 && $startTimeInt < 2400);
+                        
+                        // 2. 当日の24:00〜28:59の深夜番組（dateは翌日だがstartは24時以降）
+                        $isCurrentDayLateNightProgram = false;
+                        $nextDate = date('Ymd', strtotime($currentDate . ' +1 day'));
+                        // 当日の深夜番組: dateは翌日、startは24:00以降
+                        $isCurrentDayLateNightProgram = ($entryDate === $nextDate && $startTimeInt >= 2400 && $startTimeInt < 2900);
+                        
+                        // 表示判定: 当日5:00〜23:59 または 当日24:00〜28:59
+                        $shouldDisplay = $isCurrentDayProgram || $isCurrentDayLateNightProgram;
+                    @endphp
+                    @if ($shouldDisplay)
                     <tr>
                         <td>
                             <a href="{{ url('list/' . $entry['id'] . '/' . $entry['title'])}}">{{$entry['title']}}</a>
@@ -253,71 +305,13 @@
                             @endif
                         </td>
                     </tr>
-                        @elseif(intval($thisWeek[$i]) + 1 === intval($entry['date']) && intval($entry['start']) >= 24)
-                        <tr>
-                            <td>
-                                <a href="{{ url('list/' . $entry['id'] . '/' . $entry['title'])}}">{{$entry['title']}}</a>
-                                @if ($entry['cast'] !== '')
-                                <br>
-                                {{ $entry['cast'] }}
-                                @endif
-                                <br>
-                                <span class="program-time">{{ $entry['start'] }} - {{ $entry['end'] }}</span>
-                                <br>
-                                @php
-                                    $programStartTime = \Carbon\Carbon::createFromFormat('Ymd H:i', $entry['date'] . ' ' . $entry['start']);
-                                    $programEndTime = \Carbon\Carbon::createFromFormat('Ymd H:i', $entry['date'] . ' ' . $entry['end']);
-                                    $canRecord = $programEndTime->diffInDays(now()) <= 7;
-                                @endphp
-                                @if(!$programStartTime->isPast())
-                                    @if (Auth::check())
-                                        <button class="btn btn-sm btn-warning schedule-recording-btn"
-                                                data-station-id="{{ $entry['id'] }}"
-                                                data-title="{{ $entry['title'] }}"
-                                                data-start="{{ $entry['date'] . str_replace(':', '', $entry['start']) }}"
-                                                data-end="{{ $entry['date'] . str_replace(':', '', $entry['end']) }}">
-                                            録音予約
-                                        </button>
-                                    @else
-                                        <a href="{{ route('login') }}" class="btn btn-sm btn-warning">
-                                            ログインして録音予約
-                                        </a>
-                                    @endif
-                                @elseif($canRecord && $programEndTime->isPast())
-                                    <button class="btn btn-sm btn-success recording-btn"
-                                            data-station-id="{{ $entry['id'] }}"
-                                            data-title="{{ $entry['title'] }}"
-                                            data-date="{{ $entry['date'] }}"
-                                            data-start="{{ str_replace(':', '', $entry['start']) }}"
-                                            data-end="{{ str_replace(':', '', $entry['end']) }}">
-                                        タイムフリー録音
-                                    </button>
-                                    <div class="recording-status" style="display:none; margin-top:5px;">
-                                        <div class="progress" style="height: 20px; margin-bottom: 5px;">
-                                            <div class="progress-bar progress-bar-striped progress-bar-animated"
-                                                 role="progressbar"
-                                                 style="width: 0%"
-                                                 aria-valuenow="0"
-                                                 aria-valuemin="0"
-                                                 aria-valuemax="100">0%</div>
-                                        </div>
-                                        <small class="recording-info" style="display: block; margin-bottom: 3px;">
-                                            サイズ: <span class="file-size">0 MB</span> |
-                                            時間: <span class="elapsed-time">00:00</span> / <span class="total-time">--:--</span>
-                                        </small>
-                                        <button class="btn btn-sm btn-danger stop-recording-btn" style="width: 100%;">
-                                            録音停止
-                                        </button>
-                                    </div>
-                                @endif
-                            </td>
-                        </tr>
                         @endif
-                        @endforeach
+                    @endforeach
                 </tbody>
             </table>
         </div>
-</div>
+    </div>
+    @endif
 @endfor
 </div>
 

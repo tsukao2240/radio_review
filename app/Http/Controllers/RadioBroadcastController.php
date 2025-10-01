@@ -64,11 +64,6 @@ class RadioBroadcastController extends Controller
                 if (intval($today) <= intval($progDate)) {
                     $startTime = substr_replace($xpath->evaluate('string(./@ftl)', $node), ':', 2, 0);
 
-                    // 24時以降の番組を事前にフィルタリング
-                    if ($progDate === $today && intval(substr($startTime, 0, 2)) >= 24) {
-                        continue;
-                    }
-
                     $entries[] = [
                         'id' => $xpath->evaluate('string(../../@id)', $node),
                         'date' => $progDate,
@@ -88,6 +83,19 @@ class RadioBroadcastController extends Controller
 
             // array_unique を使用してより効率的に重複削除
             $thisWeek = array_values(array_unique($thisWeek));
+
+            // エントリを日付と時刻順にソート
+            usort($entries, function($a, $b) {
+                // まず日付で比較
+                $dateCompare = strcmp($a['date'], $b['date']);
+                if ($dateCompare !== 0) {
+                    return $dateCompare;
+                }
+                
+                // 日付が同じ場合は時刻で比較
+                // "HH:MM"形式の文字列として比較
+                return strcmp($a['start'], $b['start']);
+            });
 
             return [
                 'entries' => $entries,
