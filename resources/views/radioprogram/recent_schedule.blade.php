@@ -1,31 +1,5 @@
-@extends('layouts.header')
+@extends('layouts.app')
 @section('content')
-<style>
-/* レスポンシブ対応 */
-@media (max-width: 768px) {
-    .container {
-        padding: 10px;
-    }
-    .table {
-        font-size: 14px;
-    }
-    .table td, .table th {
-        padding: 8px 5px;
-    }
-    .recording-btn, .stop-recording-btn {
-        font-size: 12px;
-        padding: 5px 10px;
-        width: 100%;
-    }
-    .recording-info {
-        font-size: 12px;
-    }
-    h3 {
-        font-size: 18px;
-        padding: 10px;
-    }
-}
-</style>
 
 <title>放送中の番組</title>
 
