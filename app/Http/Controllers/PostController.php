@@ -15,35 +15,28 @@ class PostController extends Controller
     //"レビューを投稿する"画面で初期表示ですべての番組を表示する
     public function index()
     {
-        // 一時的にデータベースアクセスを無効化
-        // データベース問題解決後に元のコードに戻す予定
         try {
-            $results = DB::table('radio_programs')
-                ->Where('title', 'not like', '%（新）%')
-                ->Where('title', 'not like', '%［新］%')
-                ->Where('title', 'not like', '%【新】%')
-                ->Where('title', 'not like', '%【新番組】%')
-                ->Where('title', 'not like', '%＜新番組＞%')
-                ->Where('title', 'not like', '%（終）%')
-                ->Where('title', 'not like', '%［終］%')
-                ->Where('title', 'not like', '%≪終≫%')
-                ->Where('title', 'not like', '%【終】%')
-                ->where('title', 'not like', '%【最終回】%')
-                ->where('title', 'not like', '%＜最終回＞%')
-                ->where('title', 'not like', '%(再)%')
-                ->where('title', 'not like', '%【再】%')
-                ->where('title', 'not like', '%≪再≫%')
-                ->where('title', 'not like', '%[再]%')
-                ->where('title', 'not like', '%（再放送）%')
-                ->where('title', 'not like', '%再放送%')
-                ->paginate(10);
+            // 除外パターンを配列にまとめて効率化
+            $excludePatterns = [
+                '%（新）%', '%［新］%', '%【新】%', '%【新番組】%', '%＜新番組＞%',
+                '%（終）%', '%［終］%', '%≪終≫%', '%【終】%', '%【最終回】%', '%＜最終回＞%',
+                '%（再）%', '%【再】%', '%≪再≫%', '%[再]%', '%（再放送）%', '%再放送%'
+            ];
+            
+            $query = DB::table('radio_programs');
+            
+            foreach ($excludePatterns as $pattern) {
+                $query->where('title', 'not like', $pattern);
+            }
+            
+            $results = $query->paginate(10);
         } catch (\Exception $e) {
             // データベース接続エラーの場合は空のペジネーションオブジェクトを返す
             $results = new \Illuminate\Pagination\LengthAwarePaginator(
-                collect([]), // 空のコレクション
-                0, // 全体のアイテム数
-                10, // 1ページあたりのアイテム数
-                1, // 現在のページ
+                collect([]),
+                0,
+                10,
+                1,
                 ['path' => request()->url(), 'pageName' => 'page']
             );
         }
