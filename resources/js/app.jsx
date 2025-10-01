@@ -1,11 +1,17 @@
 /**
- * First we will load all of this project's JavaScript dependencies which
- * includes React and other libraries. It is a great starting point when
- * building robust, powerful web applications using React and Laravel.
+ * 最適化されたJavaScript設定
+ * 必要最小限のライブラリのみをインポート
  */
 
-import('./bootstrap');
+// axiosのみをインポート（API通信用）
+import axios from 'axios';
+window.axios = axios;
+window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 
+// Bootstrapのドロップダウン機能のみをインポート
+import { Dropdown } from 'bootstrap';
+
+// React関連
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { ToastContainer } from 'react-toastify';
@@ -23,12 +29,18 @@ const App = () => {
     );
 };
 
-// DOM要素が存在する場合のみReactアプリを初期化
-const container = document.getElementById('app');
-if (container) {
-    const root = createRoot(container);
+// DOMが読み込まれた後にReactアプリを初期化
+document.addEventListener('DOMContentLoaded', () => {
+    // ToastContainerのみを追加（既存のコンテンツを保持）
+    const toastContainer = document.createElement('div');
+    document.body.appendChild(toastContainer);
+    const root = createRoot(toastContainer);
     root.render(<App />);
-}
+    
+    // Bootstrapのドロップダウンを初期化
+    const dropdownElementList = document.querySelectorAll('[data-toggle="dropdown"]');
+    [...dropdownElementList].map(dropdownToggleEl => new Dropdown(dropdownToggleEl));
+});
 
 // Reactコンポーネントをグローバルに使用可能にする
 window.ToastComponent = ToastComponent;
