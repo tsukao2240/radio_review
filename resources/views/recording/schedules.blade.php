@@ -1,26 +1,5 @@
-@extends('layouts.header')
+@extends('layouts.app')
 @section('content')
-<style>
-/* レスポンシブ対応 */
-@media (max-width: 768px) {
-    .container {
-        padding: 10px;
-    }
-    .table {
-        font-size: 12px;
-    }
-    .table td, .table th {
-        padding: 8px 5px;
-    }
-    .btn-sm {
-        font-size: 11px;
-        padding: 4px 8px;
-    }
-    h3 {
-        font-size: 18px;
-    }
-}
-</style>
 
 <title>録音予約</title>
 

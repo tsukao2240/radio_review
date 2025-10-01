@@ -1,35 +1,5 @@
-@extends('layouts.header')
+@extends('layouts.app')
 @section('content')
-<style>
-/* レスポンシブ対応 */
-@media (max-width: 768px) {
-    .d-flex.justify-content-sm-around {
-        flex-direction: column;
-        padding: 10px;
-    }
-    .col-lg-4 {
-        width: 100%;
-        max-width: 100%;
-        padding: 10px;
-    }
-    section h3 {
-        font-size: 18px;
-    }
-    section h5 {
-        font-size: 14px;
-    }
-    section img {
-        max-width: 100%;
-        height: auto;
-    }
-    .btn {
-        font-size: 14px;
-        padding: 8px 12px;
-        width: 100%;
-        margin-bottom: 10px;
-    }
-}
-</style>
 
 <!--APIからデータが取得できた場合-->
 @if(isset($entries))
