@@ -54,10 +54,11 @@ class PostController extends Controller
     //"レビューを見る"画面の処理
     public function view()
     {
-        $posts = DB::table('posts')->select('posts.*', 'radio_programs.station_id', 'users.name')
-        ->leftJoin('users', 'users.id', '=', 'posts.user_id')
-        ->leftJoin('radio_programs', 'posts.program_id', '=', 'radio_programs.id')
-        ->paginate(10);
+        // N+1クエリを解消: Eloquentでwithを使用してリレーションをEager Load
+        $posts = Post::with(['user', 'radioProgram'])
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
+            
         return view('post.list_all', compact('posts'));
     }
     //番組詳細画面の"レビューを見る"ボタンの処理
