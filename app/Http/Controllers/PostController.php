@@ -16,20 +16,11 @@ class PostController extends Controller
     public function index()
     {
         try {
-            // 除外パターンを配列にまとめて効率化
-            $excludePatterns = [
-                '%（新）%', '%［新］%', '%【新】%', '%【新番組】%', '%＜新番組＞%',
-                '%（終）%', '%［終］%', '%≪終≫%', '%【終】%', '%【最終回】%', '%＜最終回＞%',
-                '%（再）%', '%【再】%', '%≪再≫%', '%[再]%', '%（再放送）%', '%再放送%'
-            ];
+            // LIKE句を使わずにNOT REGEXP一発で処理して効率化
+            $excludePattern = '\uff08\u65b0\uff09|\uff3b\u65b0\uff3d|\u3010\u65b0\u3011|\u3010\u65b0\u756a\u7d44\u3011|\uff1c\u65b0\u756a\u7d44\uff1e|\uff08\u7d42\uff09|\uff3b\u7d42\uff3d|\u226a\u7d42\u226b|\u3010\u7d42\u3011|\u3010\u6700\u7d42\u56de\u3011|\uff1c\u6700\u7d42\u56de\uff1e|\uff08\u518d\uff09|\u3010\u518d\u3011|\u226a\u518d\u226b|\[\u518d\]|\uff08\u518d\u653e\u9001\uff09|\u518d\u653e\u9001';
             
-            $query = DB::table('radio_programs');
-            
-            foreach ($excludePatterns as $pattern) {
-                $query->where('title', 'not like', $pattern);
-            }
-            
-            $results = $query->paginate(10);
+            $results = RadioProgram::whereRaw('title NOT REGEXP ?', [$excludePattern])
+                ->paginate(10);
         } catch (\Exception $e) {
             // データベース接続エラーの場合は空のペジネーションオブジェクトを返す
             $results = new \Illuminate\Pagination\LengthAwarePaginator(
@@ -72,8 +63,17 @@ class PostController extends Controller
     //番組詳細画面の"レビューを見る"ボタンの処理
     public function list($station_id, $program_title)
     {
-        $id = RadioProgram::select('*')->where('title', '=', $program_title)->pluck('id');
-        $posts = Post::select('posts.*','users.name')->leftjoin('users','users.id','=','posts.user_id')->where('program_id', '=', $id[0])->paginate(10);
+        // N+1クエリを解消: Eloquentでwithを使用してリレーションをEager Load
+        $program = RadioProgram::where('title', $program_title)->first();
+        
+        if (!$program) {
+            abort(404, '番組が見つかりません');
+        }
+        
+        $posts = Post::with('user')
+            ->where('program_id', $program->id)
+            ->paginate(10);
+            
         return view('post.list_each', compact('posts', 'program_title', 'station_id'));
     }
 }
