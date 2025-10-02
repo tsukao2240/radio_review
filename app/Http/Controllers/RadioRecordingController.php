@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Http\JsonResponse;
 use Carbon\Carbon;
 use GuzzleHttp\Client;
+use App\Exceptions\RecordingException;
+use App\Exceptions\ExternalApiException;
 
 class RadioRecordingController extends Controller
 {
@@ -131,10 +133,8 @@ class RadioRecordingController extends Controller
             return $response;
 
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'タイムフリー録音開始に失敗しました: ' . $e->getMessage()
-            ]);
+            \Log::error('タイムフリー録音開始エラー', ['error' => $e->getMessage(), 'station_id' => $stationId]);
+            throw new RecordingException('タイムフリー録音の開始に失敗しました', 0, $e);
         }
     }
 
@@ -413,10 +413,8 @@ class RadioRecordingController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => '録音停止に失敗しました: ' . $e->getMessage()
-            ]);
+            \Log::error('録音停止エラー', ['error' => $e->getMessage(), 'recording_id' => $recordingId]);
+            throw new RecordingException('録音の停止に失敗しました', 0, $e);
         }
     }
 
@@ -876,10 +874,8 @@ class RadioRecordingController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => '削除に失敗しました: ' . $e->getMessage()
-            ]);
+            \Log::error('録音ファイル削除エラー', ['error' => $e->getMessage(), 'filename' => $filename]);
+            throw new RecordingException('録音ファイルの削除に失敗しました', 0, $e);
         }
     }
 }

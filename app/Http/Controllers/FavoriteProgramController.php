@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\FavoriteProgram;
 use Illuminate\Support\Facades\Auth;
+use App\Exceptions\DatabaseException;
 
 class FavoriteProgramController extends Controller
 {
@@ -55,10 +56,8 @@ class FavoriteProgramController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => '登録に失敗しました'
-            ], 500);
+            \Log::error('お気に入り登録エラー', ['error' => $e->getMessage(), 'user_id' => Auth::id()]);
+            throw new DatabaseException('お気に入りの登録に失敗しました', 0, $e);
         }
     }
 
@@ -88,10 +87,8 @@ class FavoriteProgramController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => '削除に失敗しました'
-            ], 500);
+            \Log::error('お気に入り削除エラー', ['error' => $e->getMessage(), 'user_id' => Auth::id()]);
+            throw new DatabaseException('お気に入りの削除に失敗しました', 0, $e);
         }
     }
 
