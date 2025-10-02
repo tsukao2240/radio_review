@@ -7,6 +7,7 @@ use Tests\TestCase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
+use App\User;
 
 class RadioRecordingTest extends TestCase
 {
