@@ -40,8 +40,10 @@ class ViewProgramDetailsController extends Controller
 
                     );
 
+                    // N+1問題を回避: ループの外でクエリを実行するために、
+                    // 最初の一致で取得して返す
                     $program = RadioProgram::where('title', $title)->select('id')->first();
-                    $program_id = $program->id;
+                    $program_id = $program ? $program->id : null;
 
                     return ['type' => 'entries', 'data' => $entries, 'program_id' => $program_id];
                 }
@@ -53,6 +55,8 @@ class ViewProgramDetailsController extends Controller
                     ->get();
                 return ['type' => 'results', 'data' => $results];
             }
+            
+            return ['type' => 'entries', 'data' => [], 'program_id' => null];
         });
 
         if ($result['type'] === 'entries') {
