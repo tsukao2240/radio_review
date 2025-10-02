@@ -50,17 +50,13 @@ Route::group(['middleware' => 'verified'], function () {
     Route::post('/review/{id}', 'PostController@store')->middleware('verified')->name('post.store');
 });
 
-//自分が投稿したレビューを表示する
-Route::get('/my', 'MypageController@index')->name('myreview.view');
-
-//編集画面
-Route::get('/my/edit/{program_id}', 'MypageController@edit')->name('myreview.edit');
-
-//自分が投稿したレビューを編集する
-Route::post('/my/edit/{program_id}', 'MypageController@update')->name('myreview.update');
-
-//自分が投稿したレビューを削除する
-Route::post('/my', 'MypageController@destroy')->name('myreview.delete');
+//自分が投稿したレビューを表示する（認証必須）
+Route::middleware(['auth'])->group(function () {
+    Route::get('/my', 'MypageController@index')->name('myreview.view');
+    Route::get('/my/edit/{program_id}', 'MypageController@edit')->name('myreview.edit');
+    Route::post('/my/edit/{program_id}', 'MypageController@update')->name('myreview.update');
+    Route::post('/my', 'MypageController@destroy')->name('myreview.delete');
+});
 
 // タイムフリー録音関連ルート
 Route::post('/recording/timefree/start', 'RadioRecordingController@startTimefreeRecording')->name('recording.timefree.start');
