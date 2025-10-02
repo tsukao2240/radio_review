@@ -5,6 +5,8 @@
 /vendor
 .env
 .env.backup
+.env.local
+.env.production
 .phpunit.result.cache
 Homestead.json
 Homestead.yaml
@@ -26,3 +28,5 @@ handover*.md
 HANDOVER*.md
 MIGRATION_NOTES.md
 PRIORITY_TASKS.md
+SECURITY_CHECKLIST.md
+ENV_SETUP.md
