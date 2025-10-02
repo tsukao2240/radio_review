@@ -24,4 +24,6 @@ class RadioProgram extends Model
     ];
 
     protected $table = 'radio_programs';
+
+    public $timestamps = false;
 }
