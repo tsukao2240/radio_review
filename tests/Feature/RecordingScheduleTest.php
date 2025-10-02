@@ -22,8 +22,8 @@ class RecordingScheduleTest extends TestCase
         $response = $this->actingAs($user)->postJson('/recording/schedule', [
             'station_id' => 'TBS',
             'program_title' => 'テスト番組',
-            'scheduled_start_time' => Carbon::now()->addHours(2)->format('YmdHi00'),
-            'scheduled_end_time' => Carbon::now()->addHours(3)->format('YmdHi00'),
+            'scheduled_start_time' => Carbon::now()->addHours(2)->format('YmdHis'),
+            'scheduled_end_time' => Carbon::now()->addHours(3)->format('YmdHis'),
         ]);
 
         $response->assertStatus(200)
@@ -50,8 +50,8 @@ class RecordingScheduleTest extends TestCase
         $response1 = $this->actingAs($user)->postJson('/recording/schedule', [
             'station_id' => 'TBS',
             'program_title' => 'テスト番組1',
-            'scheduled_start_time' => Carbon::now()->addHours(2)->format('YmdHi00'),
-            'scheduled_end_time' => Carbon::now()->addHours(3)->format('YmdHi00'),
+            'scheduled_start_time' => Carbon::now()->addHours(2)->format('YmdHis'),
+            'scheduled_end_time' => Carbon::now()->addHours(3)->format('YmdHis'),
         ]);
 
         $response1->assertStatus(200)
@@ -61,8 +61,8 @@ class RecordingScheduleTest extends TestCase
         $response2 = $this->actingAs($user)->postJson('/recording/schedule', [
             'station_id' => 'TBS',
             'program_title' => 'テスト番組2',
-            'scheduled_start_time' => Carbon::now()->addHours(4)->format('YmdHi00'),
-            'scheduled_end_time' => Carbon::now()->addHours(5)->format('YmdHi00'),
+            'scheduled_start_time' => Carbon::now()->addHours(4)->format('YmdHis'),
+            'scheduled_end_time' => Carbon::now()->addHours(5)->format('YmdHis'),
         ]);
 
         $response2->assertStatus(200)

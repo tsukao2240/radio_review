@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.header')
 @section('content')
 
 <title>録音予約</title>

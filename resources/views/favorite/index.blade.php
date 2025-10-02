@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.header')
 @section('content')
 
 <title>お気に入り番組</title>

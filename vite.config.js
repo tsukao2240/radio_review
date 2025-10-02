@@ -26,4 +26,27 @@ export default defineConfig({
             '~bootstrap': 'bootstrap',
         }
     },
+    build: {
+        // 本番環境向け最適化
+        minify: 'terser',
+        terserOptions: {
+            compress: {
+                drop_console: true, // console.logを削除
+                drop_debugger: true, // debuggerを削除
+            },
+        },
+        rollupOptions: {
+            output: {
+                // チャンク分割によるバンドルサイズ最適化
+                manualChunks: {
+                    'react-vendor': ['react', 'react-dom'],
+                    'bootstrap': ['bootstrap'],
+                },
+            },
+        },
+        // ソースマップは開発環境のみ
+        sourcemap: false,
+        // チャンクサイズ警告の閾値
+        chunkSizeWarningLimit: 1000,
+    },
 });

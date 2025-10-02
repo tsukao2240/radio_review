@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.header')
 @section('content')
 <title>
     {{ Auth::user()->name }}さんが投稿したレビュー
