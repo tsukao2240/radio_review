@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\FavoriteProgram;
 use Illuminate\Support\Facades\Auth;
+use App\Exceptions\DatabaseException;
+use App\Http\Requests\FavoriteProgramRequest;
 
 class FavoriteProgramController extends Controller
 {
@@ -21,21 +23,16 @@ class FavoriteProgramController extends Controller
     }
 
     // お気に入り登録
-    public function store(Request $request)
+    public function store(FavoriteProgramRequest $request)
     {
-        $request->validate([
-            'station_id' => 'required|string',
-            'program_title' => 'required|string'
-        ]);
-
         try {
-            // 重複チェック
-            $existing = FavoriteProgram::where('user_id', Auth::id())
+            // exists()を使って重複チェックを最適化
+            $exists = FavoriteProgram::where('user_id', Auth::id())
                 ->where('station_id', $request->station_id)
                 ->where('program_title', $request->program_title)
-                ->first();
+                ->exists();
 
-            if ($existing) {
+            if ($exists) {
                 return response()->json([
                     'success' => false,
                     'message' => 'すでにお気に入りに登録されています'
@@ -55,10 +52,8 @@ class FavoriteProgramController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => '登録に失敗しました: ' . $e->getMessage()
-            ]);
+            \Log::error('お気に入り登録エラー', ['error' => $e->getMessage(), 'user_id' => Auth::id()]);
+            throw new DatabaseException('お気に入りの登録に失敗しました', 0, $e);
         }
     }
 
@@ -70,18 +65,17 @@ class FavoriteProgramController extends Controller
         ]);
 
         try {
-            $favorite = FavoriteProgram::where('id', $request->id)
+            // delete()を直接使って効率化（戻り値で削除件数を取得）
+            $deleted = FavoriteProgram::where('id', $request->id)
                 ->where('user_id', Auth::id())
-                ->first();
+                ->delete();
 
-            if (!$favorite) {
+            if (!$deleted) {
                 return response()->json([
                     'success' => false,
                     'message' => 'お気に入りが見つかりません'
-                ]);
+                ], 404);
             }
-
-            $favorite->delete();
 
             return response()->json([
                 'success' => true,
@@ -89,21 +83,15 @@ class FavoriteProgramController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => '削除に失敗しました: ' . $e->getMessage()
-            ]);
+            \Log::error('お気に入り削除エラー', ['error' => $e->getMessage(), 'user_id' => Auth::id()]);
+            throw new DatabaseException('お気に入りの削除に失敗しました', 0, $e);
         }
     }
 
     // お気に入り確認API
-    public function check(Request $request)
+    public function check(FavoriteProgramRequest $request)
     {
-        $request->validate([
-            'station_id' => 'required|string',
-            'program_title' => 'required|string'
-        ]);
-
+        // exists()を使ってメモリ効率化
         $isFavorite = FavoriteProgram::where('user_id', Auth::id())
             ->where('station_id', $request->station_id)
             ->where('program_title', $request->program_title)

@@ -5,26 +5,17 @@
     "isEntry": true
   },
   "resources/css/custom.css": {
-    "file": "assets/custom-UurEJdjO.css",
+    "file": "assets/custom-CynL1X3_.css",
     "src": "resources/css/custom.css",
     "isEntry": true
   },
   "resources/js/app.jsx": {
-    "file": "assets/app-C0Nx4PSf.js",
+    "file": "assets/app-d1WOwl0G.js",
     "name": "app",
     "src": "resources/js/app.jsx",
     "isEntry": true,
-    "dynamicImports": [
-      "resources/js/bootstrap.js"
-    ],
     "css": [
       "assets/app-CZOjr4-t.css"
     ]
-  },
-  "resources/js/bootstrap.js": {
-    "file": "assets/bootstrap-5T4iTdjS.js",
-    "name": "bootstrap",
-    "src": "resources/js/bootstrap.js",
-    "isDynamicEntry": true
   }
 }

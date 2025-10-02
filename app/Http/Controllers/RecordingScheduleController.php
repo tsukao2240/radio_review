@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\RecordingSchedule;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use App\Http\Requests\RecordingScheduleRequest;
 
 class RecordingScheduleController extends Controller
 {
@@ -26,18 +27,12 @@ class RecordingScheduleController extends Controller
     }
 
     // 予約作成
-    public function store(Request $request)
+    public function store(RecordingScheduleRequest $request)
     {
-        $request->validate([
-            'station_id' => 'required|string',
-            'program_title' => 'required|string',
-            'scheduled_start_time' => 'required',
-            'scheduled_end_time' => 'required'
-        ]);
-
         try {
-            $startTime = Carbon::parse($request->scheduled_start_time);
-            $endTime = Carbon::parse($request->scheduled_end_time);
+            // YmdHis形式の文字列をパース
+            $startTime = Carbon::createFromFormat('YmdHis', $request->scheduled_start_time);
+            $endTime = Carbon::createFromFormat('YmdHis', $request->scheduled_end_time);
 
             // 開始時刻が1週間以内かチェック
             if ($startTime->gt(Carbon::now()->addWeek())) {
@@ -51,8 +46,8 @@ class RecordingScheduleController extends Controller
                 'user_id' => Auth::id(),
                 'station_id' => $request->station_id,
                 'program_title' => $request->program_title,
-                'scheduled_start_time' => $request->scheduled_start_time,
-                'scheduled_end_time' => $request->scheduled_end_time
+                'scheduled_start_time' => $startTime->format('Y-m-d H:i:s'),
+                'scheduled_end_time' => $endTime->format('Y-m-d H:i:s')
             ]);
 
             return response()->json([

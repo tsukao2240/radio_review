@@ -25,12 +25,5 @@ class RadioProgram extends Model
 
     protected $table = 'radio_programs';
 
-    public function post()
-    {
-        return $this->belongsTo('App\Post');
-    }
-    public function radioProgram()
-    {
-        return $this->belongsTo('App\RadioProgram');
-    }
+    public $timestamps = false;
 }

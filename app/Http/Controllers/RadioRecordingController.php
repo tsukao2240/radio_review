@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Http\JsonResponse;
 use Carbon\Carbon;
 use GuzzleHttp\Client;
+use App\Exceptions\RecordingException;
+use App\Exceptions\ExternalApiException;
 
 class RadioRecordingController extends Controller
 {
@@ -88,8 +90,6 @@ class RadioRecordingController extends Controller
             ];
             Cache::put("recording_{$recordingId}", $recordingInfo, 7200);
 
-            \Log::info('録音を開始', ['recording_id' => $recordingId]);
-
             // テスト環境では非同期処理をスキップ
             if (app()->environment('testing')) {
                 // テスト時は同期実行せずに即座にレスポンスを返す
@@ -133,10 +133,8 @@ class RadioRecordingController extends Controller
             return $response;
 
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'タイムフリー録音開始に失敗しました: ' . $e->getMessage()
-            ]);
+            \Log::error('タイムフリー録音開始エラー', ['error' => $e->getMessage(), 'station_id' => $stationId]);
+            throw new RecordingException('タイムフリー録音の開始に失敗しました', 0, $e);
         }
     }
 
@@ -156,17 +154,9 @@ class RadioRecordingController extends Controller
                 'timeout' => 10
             ]);
 
-            \Log::info('radiko auth1成功', ['status' => $response1->getStatusCode()]);
-
             $authToken = $response1->getHeaderLine('X-Radiko-AuthToken');
             $keyLength = (int)$response1->getHeaderLine('X-Radiko-KeyLength');
             $keyOffset = (int)$response1->getHeaderLine('X-Radiko-KeyOffset');
-
-            \Log::info('radiko auth1レスポンスヘッダー', [
-                'auth_token' => $authToken ? 'あり' : 'なし',
-                'key_length' => $keyLength,
-                'key_offset' => $keyOffset
-            ]);
 
             // keyOffsetは0も有効な値なので、isset()で確認
             if (!$authToken || !$keyLength || $keyOffset === false || $keyOffset === null) {
@@ -216,14 +206,11 @@ class RadioRecordingController extends Controller
             ]);
 
             // auth2のレスポンスステータスを確認
-            \Log::info('radiko auth2レスポンス', ['status' => $response2->getStatusCode()]);
-
             if ($response2->getStatusCode() !== 200) {
                 \Log::error('radiko auth2が失敗', ['status' => $response2->getStatusCode()]);
                 return null;
             }
 
-            \Log::info('radiko認証完了', ['auth_token' => substr($authToken, 0, 10) . '...']);
             return $authToken;
 
         } catch (\Exception $e) {
@@ -304,13 +291,6 @@ class RadioRecordingController extends Controller
     {
         $actualOS = $this->detectActualOS();
 
-        \Log::info('ffmpeg検索開始', [
-            'php_os_family' => PHP_OS_FAMILY,
-            'actual_os' => $actualOS,
-            'base_path' => base_path(),
-            'is_windows' => $this->isWindowsEnvironment()
-        ]);
-
         // 両方のパターンを試す（環境検出が間違っている可能性があるため）
         $projectPaths = [
             base_path('ffmpeg/ffmpeg-7.0.2-amd64-static/ffmpeg'), // Linux用（静的ビルド）
@@ -343,11 +323,8 @@ class RadioRecordingController extends Controller
             'C:\Program Files\ffmpeg\bin\ffmpeg.exe',
         ];
 
-        \Log::info('システムパスでffmpeg検索', ['paths' => $possiblePaths]);
-
         foreach ($possiblePaths as $path) {
             if ($this->isExecutableAvailable($path)) {
-                \Log::info('システムffmpegを検出', ['path' => $path]);
                 return $path;
             }
         }
@@ -436,10 +413,8 @@ class RadioRecordingController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => '録音停止に失敗しました: ' . $e->getMessage()
-            ]);
+            \Log::error('録音停止エラー', ['error' => $e->getMessage(), 'recording_id' => $recordingId]);
+            throw new RecordingException('録音の停止に失敗しました', 0, $e);
         }
     }
 
@@ -448,8 +423,6 @@ class RadioRecordingController extends Controller
     {
         $recordingId = $request->input('recording_id');
 
-        \Log::info('録音状態確認API呼び出し', ['recording_id' => $recordingId]);
-
         if (!$recordingId) {
             return response()->json(['success' => false, 'message' => '録音IDが必要です']);
         }
@@ -457,7 +430,6 @@ class RadioRecordingController extends Controller
         $recordingInfo = Cache::get("recording_{$recordingId}");
 
         if (!$recordingInfo) {
-            \Log::warning('録音情報が見つかりません', ['recording_id' => $recordingId]);
             return response()->json(['success' => false, 'message' => '録音情報が見つかりません']);
         }
 
@@ -516,13 +488,6 @@ class RadioRecordingController extends Controller
             'is_recording' => $isRecording,
             'recording_info' => $recordingInfo
         ];
-
-        \Log::info('録音状態レスポンス', [
-            'recording_id' => $recordingId,
-            'file_size' => $fileSize,
-            'progress' => $progressPercentage,
-            'is_recording' => $isRecording
-        ]);
 
         return response()->json($responseData);
     }
@@ -586,8 +551,6 @@ class RadioRecordingController extends Controller
         ini_set('memory_limit', '256M'); // 適切なメモリ設定
         set_time_limit(600); // 10分タイムアウト
 
-        \Log::info('高速並列ダウンロード開始', ['url' => $playlistUrl]);
-
         // m3u8プレイリストを取得
         $response = $this->client->get($playlistUrl, [
             'headers' => [
@@ -596,8 +559,6 @@ class RadioRecordingController extends Controller
         ]);
 
         $playlistContent = (string)$response->getBody();
-        \Log::info('プレイリスト取得成功', ['size' => strlen($playlistContent), 'content_preview' => substr($playlistContent, 0, 500)]);
-
         // セグメントURLを抽出
         $segments = [];
         $lines = explode("\n", $playlistContent);
@@ -625,7 +586,6 @@ class RadioRecordingController extends Controller
         }
 
         if ($isMasterPlaylist) {
-            \Log::info('マスタープレイリスト検出、サブプレイリストを取得');
             // マスタープレイリストから最高品質のURLを取得
             $subPlaylistUrl = null;
             foreach ($lines as $line) {
@@ -641,7 +601,6 @@ class RadioRecordingController extends Controller
             }
 
             if ($subPlaylistUrl) {
-                \Log::info('サブプレイリストURL', ['url' => $subPlaylistUrl]);
                 // サブプレイリストを取得
                 $response = $this->client->get($subPlaylistUrl, [
                     'headers' => [
@@ -651,8 +610,7 @@ class RadioRecordingController extends Controller
                 $playlistContent = (string)$response->getBody();
                 $baseUrl = dirname($subPlaylistUrl);
                 $lines = explode("\n", $playlistContent); // 再解析
-                \Log::info('サブプレイリスト取得成功', ['size' => strlen($playlistContent), 'content_preview' => substr($playlistContent, 0, 500)]);
-            } else {
+                } else {
                 \Log::warning('サブプレイリストURLが見つかりませんでした');
             }
         }
@@ -674,12 +632,6 @@ class RadioRecordingController extends Controller
             }
         }
 
-        \Log::info('セグメント抽出完了', [
-            'count' => count($segments),
-            'first_segment' => !empty($segments) ? $segments[0] : 'なし',
-            'last_segment' => !empty($segments) ? $segments[count($segments) - 1] : 'なし'
-        ]);
-
         if (empty($segments)) {
             \Log::error('セグメントが見つかりませんでした', [
                 'playlist_size' => strlen($playlistContent),
@@ -700,12 +652,6 @@ class RadioRecordingController extends Controller
         $maxParallel = 10; // radikoサーバー保護のため控えめに設定
         $segmentFiles = [];
         $chunks = array_chunk($segments, $maxParallel);
-
-        \Log::info('並列ダウンロード開始', [
-            'total_segments' => count($segments),
-            'chunks' => count($chunks),
-            'parallel' => $maxParallel
-        ]);
 
         foreach ($chunks as $chunkIndex => $chunk) {
             $chunkStartTime = microtime(true);
@@ -748,15 +694,6 @@ class RadioRecordingController extends Controller
             }
 
             $chunkTime = microtime(true) - $chunkStartTime;
-            \Log::info('チャンク完了', [
-                'chunk' => $chunkIndex + 1,
-                'total_chunks' => count($chunks),
-                'segment_count' => count($chunk),
-                'success_count' => $successCount,
-                'failure_count' => $failureCount,
-                'time_seconds' => round($chunkTime, 2)
-            ]);
-
             // チャンク間で待機してサーバー負荷を分散
             if ($chunkIndex < count($chunks) - 1) {
                 usleep(200000); // 0.2秒待機（サーバー保護）
@@ -764,12 +701,6 @@ class RadioRecordingController extends Controller
         }
 
         $downloadTime = microtime(true) - $downloadStartTime;
-        \Log::info('全セグメントダウンロード完了', [
-            'count' => count($segmentFiles),
-            'total_time_seconds' => round($downloadTime, 2),
-            'avg_per_segment_ms' => round(($downloadTime / count($segmentFiles)) * 1000, 2)
-        ]);
-
         // セグメントを結合（stream_copy_to_streamで高速化）
         $outputHandle = fopen($filepath, 'wb');
         foreach ($segmentFiles as $segmentFile) {
@@ -785,8 +716,7 @@ class RadioRecordingController extends Controller
         // 一時ディレクトリ削除
         @rmdir($tempDir);
 
-        \Log::info('ファイル結合完了', ['output' => $filepath, 'size' => filesize($filepath)]);
-    }
+        }
 
     // 録音ファイルダウンロード
     public function downloadRecording(Request $request)
@@ -832,41 +762,72 @@ class RadioRecordingController extends Controller
         $recordings = [];
 
         // Redisドライバーの場合のみkeys()を使用
-        if (method_exists(Cache::getStore(), 'getRedis')) {
-            $cacheKeys = Cache::getRedis()->keys('laravel_database_recording_*');
+        $store = Cache::getStore();
+        if ($store instanceof \Illuminate\Cache\RedisStore) {
+            $redis = $store->connection();
 
-            foreach ($cacheKeys as $key) {
-                $recordingId = str_replace('laravel_database_recording_', '', $key);
-                $recordingInfo = Cache::get("recording_{$recordingId}");
+            // SCAN使用でメモリ効率的に取得（keys()よりパフォーマンスが良い）
+            $cursor = null;
+            $pattern = '*recording_*';
+            
+            do {
+                $result = $redis->scan($cursor, ['MATCH' => $pattern, 'COUNT' => 100]);
+                $cursor = $result[0];
+                $keys = $result[1];
+                
+                foreach ($keys as $key) {
+                    // すべてのプレフィックスを除去してrecording_で始まるキーを抽出
+                    if (preg_match('/recording_[^:]+$/', $key, $matches)) {
+                        $cleanKey = $matches[0];
+                    } else {
+                        continue;
+                    }
 
-                if ($recordingInfo) {
-                    // ファイル情報を追加
-                    $filepath = $recordingInfo['filepath'];
-                    $fileExists = file_exists($filepath);
-                    $fileSize = $fileExists ? filesize($filepath) : 0;
+                    $recordingInfo = Cache::get($cleanKey);
 
-                    $recordingInfo['recording_id'] = $recordingId;
-                    $recordingInfo['file_exists'] = $fileExists;
-                    $recordingInfo['file_size'] = $this->formatFileSize($fileSize);
+                    if ($recordingInfo) {
+                        // recording_id を抽出（キーから）
+                        preg_match('/recording_(.+)$/', $cleanKey, $matches);
+                        $recordingId = $matches[1] ?? $cleanKey;
 
-                    $recordings[] = $recordingInfo;
+                        // ファイル情報を追加
+                        $filepath = $recordingInfo['filepath'];
+                        $fileExists = file_exists($filepath);
+                        $fileSize = $fileExists ? filesize($filepath) : 0;
+
+                        $recordingInfo['recording_id'] = $recordingId;
+                        $recordingInfo['file_exists'] = $fileExists;
+                        $recordingInfo['file_size'] = $this->formatFileSize($fileSize);
+
+                        // created_atをCarbonオブジェクトに変換（日本時間に設定）
+                        if (isset($recordingInfo['created_at']) && is_string($recordingInfo['created_at'])) {
+                            $recordingInfo['created_at'] = \Carbon\Carbon::parse($recordingInfo['created_at'])->setTimezone('Asia/Tokyo');
+                        }
+
+                        $recordings[] = $recordingInfo;
+                    }
                 }
-            }
+            } while ($cursor !== 0 && $cursor !== '0');
         }
 
         // 作成日時で降順ソート
         usort($recordings, function($a, $b) {
-            return strtotime($b['created_at']) - strtotime($a['created_at']);
+            $timeA = isset($a['created_at']) ? strtotime($a['created_at']) : 0;
+            $timeB = isset($b['created_at']) ? strtotime($b['created_at']) : 0;
+            return $timeB - $timeA;
         });
 
-        // ディスク使用状況を取得
+        // ディスク使用状況を取得（ファイル一覧取得を最適化）
         $recordingsPath = storage_path('app/recordings');
+        $diskUsage = null;
+        
         if (is_dir($recordingsPath)) {
             $totalSize = 0;
-            $files = glob($recordingsPath . '/*');
-            foreach ($files as $file) {
-                if (is_file($file)) {
-                    $totalSize += filesize($file);
+            $iterator = new \FilesystemIterator($recordingsPath, \FilesystemIterator::SKIP_DOTS);
+            
+            foreach ($iterator as $file) {
+                if ($file->isFile()) {
+                    $totalSize += $file->getSize();
                 }
             }
 
@@ -876,10 +837,8 @@ class RadioRecordingController extends Controller
             $diskUsage = [
                 'used' => $this->formatFileSize($totalSize),
                 'total' => $this->formatFileSize($diskTotal),
-                'percentage' => round(($totalSize / $diskTotal) * 100, 2)
+                'percentage' => $diskTotal > 0 ? round(($totalSize / $diskTotal) * 100, 2) : 0
             ];
-        } else {
-            $diskUsage = null;
         }
 
         return view('recording.history', compact('recordings', 'diskUsage'));
@@ -915,10 +874,8 @@ class RadioRecordingController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => '削除に失敗しました: ' . $e->getMessage()
-            ]);
+            \Log::error('録音ファイル削除エラー', ['error' => $e->getMessage(), 'filename' => $filename]);
+            throw new RecordingException('録音ファイルの削除に失敗しました', 0, $e);
         }
     }
 }
