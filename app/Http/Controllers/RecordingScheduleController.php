@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\RecordingSchedule;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use App\Http\Requests\RecordingScheduleRequest;
 
 class RecordingScheduleController extends Controller
 {
@@ -26,15 +27,8 @@ class RecordingScheduleController extends Controller
     }
 
     // 予約作成
-    public function store(Request $request)
+    public function store(RecordingScheduleRequest $request)
     {
-        $request->validate([
-            'station_id' => 'required|string',
-            'program_title' => 'required|string',
-            'scheduled_start_time' => 'required',
-            'scheduled_end_time' => 'required'
-        ]);
-
         try {
             // YmdHis形式の文字列をパース
             $startTime = Carbon::createFromFormat('YmdHis', $request->scheduled_start_time);

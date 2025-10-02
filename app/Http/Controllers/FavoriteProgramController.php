@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\FavoriteProgram;
 use Illuminate\Support\Facades\Auth;
 use App\Exceptions\DatabaseException;
+use App\Http\Requests\FavoriteProgramRequest;
 
 class FavoriteProgramController extends Controller
 {
@@ -22,13 +23,8 @@ class FavoriteProgramController extends Controller
     }
 
     // お気に入り登録
-    public function store(Request $request)
+    public function store(FavoriteProgramRequest $request)
     {
-        $request->validate([
-            'station_id' => 'required|string',
-            'program_title' => 'required|string'
-        ]);
-
         try {
             // exists()を使って重複チェックを最適化
             $exists = FavoriteProgram::where('user_id', Auth::id())
@@ -93,13 +89,8 @@ class FavoriteProgramController extends Controller
     }
 
     // お気に入り確認API
-    public function check(Request $request)
+    public function check(FavoriteProgramRequest $request)
     {
-        $request->validate([
-            'station_id' => 'required|string',
-            'program_title' => 'required|string'
-        ]);
-
         // exists()を使ってメモリ効率化
         $isFavorite = FavoriteProgram::where('user_id', Auth::id())
             ->where('station_id', $request->station_id)
