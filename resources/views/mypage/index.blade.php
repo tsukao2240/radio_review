@@ -57,7 +57,7 @@
 <div class="empty-state">
     <i class="far fa-edit"></i>
     <p>まだ投稿がありません</p>
-    <a href="{{ route('program.list') }}" class="btn btn-primary">
+    <a href="{{ route('program.schedule') }}" class="btn btn-primary">
         <i class="fas fa-plus"></i> レビューを投稿する
     </a>
 </div>
