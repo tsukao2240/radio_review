@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\RadioProgram;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 use DOMDocument;
 use DOMXPath;
 
@@ -15,7 +14,7 @@ class ViewProgramDetailsController extends Controller
     {
         // 番組詳細を1時間キャッシュ
         $cacheKey = 'program_detail_' . $station_id . '_' . md5($title);
-        
+
         $result = Cache::remember($cacheKey, 3600, function () use ($station_id, $title) {
             $entries = [];
 
@@ -23,7 +22,7 @@ class ViewProgramDetailsController extends Controller
             $dom = new DOMDocument();
             @$dom->load($url);
             $xpath = new DOMXPath($dom);
-            
+
             //番組情報をAPIから取得する。
             //APIから取得できない場合はDBからデータを取得する。
             foreach ($xpath->query('//radiko/stations/station/progs/prog') as $node) {
@@ -43,11 +42,11 @@ class ViewProgramDetailsController extends Controller
 
                     $program = RadioProgram::where('title', $title)->select('id')->first();
                     $program_id = $program->id;
-                    
+
                     return ['type' => 'entries', 'data' => $entries, 'program_id' => $program_id];
                 }
             }
-            
+
             if (empty($entries)) {
                 $results = RadioProgram::where('title', $title)
                     ->select('title', 'cast', 'info', 'image', 'id', 'station_id')
@@ -55,7 +54,7 @@ class ViewProgramDetailsController extends Controller
                 return ['type' => 'results', 'data' => $results];
             }
         });
-        
+
         if ($result['type'] === 'entries') {
             $entries = $result['data'];
             $program_id = $result['program_id'];
