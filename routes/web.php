@@ -62,7 +62,7 @@ Route::post('/my/edit/{program_id}', 'MypageController@update')->name('myreview.
 //自分が投稿したレビューを削除する
 Route::post('/my', 'MypageController@destroy')->name('myreview.delete');
 
-// タイムフリー録音関連ルート
+// タイムフリー録音関連ルート（認証不要）
 Route::post('/recording/timefree/start', 'RadioRecordingController@startTimefreeRecording')->name('recording.timefree.start');
 Route::post('/recording/stop', 'RadioRecordingController@stopRecording')->name('recording.stop');
 Route::get('/recording/status', 'RadioRecordingController@getRecordingStatus')->name('recording.status');
@@ -71,13 +71,17 @@ Route::get('/recording/list', 'RadioRecordingController@listRecordings')->name('
 Route::get('/recording/history', 'RadioRecordingController@showHistory')->name('recording.history');
 Route::post('/recording/delete', 'RadioRecordingController@deleteRecording')->name('recording.delete');
 
-// お気に入り番組関連ルート
-Route::get('/favorites', 'FavoriteProgramController@index')->name('favorites.index');
-Route::post('/favorites', 'FavoriteProgramController@store')->name('favorites.store');
-Route::post('/favorites/delete', 'FavoriteProgramController@destroy')->name('favorites.destroy');
-Route::get('/favorites/check', 'FavoriteProgramController@check')->name('favorites.check');
+// お気に入り番組関連ルート（認証必須）
+Route::middleware(['auth'])->group(function () {
+    Route::get('/favorites', 'FavoriteProgramController@index')->name('favorites.index');
+    Route::post('/favorites', 'FavoriteProgramController@store')->name('favorites.store');
+    Route::post('/favorites/delete', 'FavoriteProgramController@destroy')->name('favorites.destroy');
+    Route::get('/favorites/check', 'FavoriteProgramController@check')->name('favorites.check');
+});
 
-// 録音予約関連ルート
-Route::get('/recording/schedules', 'RecordingScheduleController@index')->name('recording.schedules');
-Route::post('/recording/schedule', 'RecordingScheduleController@store')->name('recording.schedule.store');
-Route::post('/recording/schedule/cancel', 'RecordingScheduleController@cancel')->name('recording.schedule.cancel');
+// 録音予約関連ルート（認証必須）
+Route::middleware(['auth'])->group(function () {
+    Route::get('/recording/schedules', 'RecordingScheduleController@index')->name('recording.schedules');
+    Route::post('/recording/schedule', 'RecordingScheduleController@store')->name('recording.schedule.store');
+    Route::post('/recording/schedule/cancel', 'RecordingScheduleController@cancel')->name('recording.schedule.cancel');
+});
