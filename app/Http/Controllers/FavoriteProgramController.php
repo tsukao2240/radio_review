@@ -18,7 +18,7 @@ class FavoriteProgramController extends Controller
     // お気に入り一覧表示
     public function index()
     {
-        $favorites = Auth::user()->favoritePrograms()->orderBy('created_at', 'desc')->get();
+        $favorites = Auth::user()->favoritePrograms;
         return view('favorite.index', compact('favorites'));
     }
 

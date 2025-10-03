@@ -51,8 +51,7 @@ class ViewProgramDetailsController extends Controller
 
                         // N+1問題を回避: ループの外でクエリを実行するために、
                         // 最初の一致で取得して返す
-                        $program = RadioProgram::where('title', $title)->select('id')->first();
-                        $program_id = $program ? $program->id : null;
+                        $program_id = RadioProgram::where('title', $title)->value('id');
 
                         return ['type' => 'entries', 'data' => $entries, 'program_id' => $program_id];
                     }
@@ -65,6 +64,7 @@ class ViewProgramDetailsController extends Controller
             if (empty($entries)) {
                 $results = RadioProgram::where('title', $title)
                     ->select('title', 'cast', 'info', 'image', 'id', 'station_id')
+                    ->limit(1)
                     ->get();
                 return ['type' => 'results', 'data' => $results];
             }
