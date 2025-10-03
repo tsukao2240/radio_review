@@ -18,9 +18,9 @@ class RadioBroadcastController extends Controller
     public function getWeeklySchedule($id)
     {
         // キャッシュキーを生成（30分間隔でキャッシュ）
-        $cacheKey = 'weekly_schedule_' . $id . '_' . floor(time() / 1800);
+        $cacheKey = 'weekly_schedule_' . $id . '_' . floor(time() / 3600);
 
-        $data = Cache::remember($cacheKey, 1800, function () use ($id) {
+        $data = Cache::remember($cacheKey, 3600, function () use ($id) {
             return $this->fetchWeeklyScheduleFromAPI($id);
         });
 
