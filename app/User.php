@@ -56,6 +56,11 @@ class User extends Authenticatable implements MustVerifyEmailContact
         return $this->hasMany(RecordingSchedule::class)->orderBy('scheduled_start_time', 'desc');
     }
 
+    public function notifications()
+    {
+        return $this->hasMany(Notification::class)->orderBy('created_at', 'desc');
+    }
+
     //会員登録時の仮メール送信
     public function sendmailVerificationNotification()
     {

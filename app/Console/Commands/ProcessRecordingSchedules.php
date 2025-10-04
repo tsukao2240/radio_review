@@ -24,6 +24,14 @@ class ProcessRecordingSchedules extends Command
      */
     protected $description = '録音予約を処理し、開始時刻になった予約の録音を開始する';
 
+    protected $notificationService;
+
+    public function __construct(NotificationService $notificationService)
+    {
+        parent::__construct();
+        $this->notificationService = $notificationService;
+    }
+
     /**
      * Execute the console command.
      */
@@ -51,6 +59,16 @@ class ProcessRecordingSchedules extends Command
                 // 録音を開始
                 $this->startRecording($schedule);
 
+                // 録音開始通知を送信
+                $this->notificationService->notifyRecordingStart(
+                    $schedule->user,
+                    [
+                        'title' => $schedule->program_title,
+                        'station_id' => $schedule->station_id,
+                        'recording_id' => $schedule->recording_id
+                    ]
+                );
+
                 $this->info(sprintf('録音開始成功: %s', $schedule->program_title));
             } catch (\Exception $e) {
                 $this->error(sprintf('録音開始失敗: %s - %s', $schedule->program_title, $e->getMessage()));
@@ -63,6 +81,16 @@ class ProcessRecordingSchedules extends Command
                 $schedule->status = 'failed';
                 $schedule->error_message = $e->getMessage();
                 $schedule->save();
+
+                // 録音失敗通知を送信
+                $this->notificationService->notifyRecordingFailed(
+                    $schedule->user,
+                    [
+                        'title' => $schedule->program_title,
+                        'station_id' => $schedule->station_id
+                    ],
+                    $e->getMessage()
+                );
             }
         }
 
