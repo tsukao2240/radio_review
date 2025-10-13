@@ -19,4 +19,4 @@ use Illuminate\Support\Facades\Route;
 // });
 
 //番組タイトルで検索する(投稿画面)
-Route::get('/programs', 'Api\SearchController@index');
+Route::get('/programs', 'Api\SearchController@index')->middleware('throttle:api');
