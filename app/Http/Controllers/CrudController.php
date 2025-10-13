@@ -20,7 +20,7 @@ class CrudController extends Controller
             // キャッシュキーを生成（検索キーワードごとに30分間キャッシュ）
             $cacheKey = 'search_programs_' . md5($keyword);
             
-            $programs = Cache::remember($cacheKey, 1800, function () use ($keyword) {
+            $programs = Cache::remember($cacheKey, 3600, function () use ($keyword) {
                 // REGEXP一発で処理して効率化
                 $excludePattern = '\（新\）|\［新\］|\【新\】|\【新番組\】|\＜新番組\�|\（終\）|\［終\］|\≪終≫|\【終\】|\【最終回\】|\＜最終回\＞|\（再\）|\【再\】|\≪再≫|\[再\]|\（再放送\）|再放送';
                 

@@ -93,6 +93,10 @@
                             </li>
                             @endif
                             @if (Auth::check())
+                            <li class="nav-item active">
+                                <!-- 通知センター -->
+                                <div id="notification-center-mount"></div>
+                            </li>
                             <li class="nav-item dropdown active">
                                 <a class="hover nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button"
                                     aria-haspopup="true" aria-expanded="false">

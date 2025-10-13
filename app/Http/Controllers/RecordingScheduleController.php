@@ -18,10 +18,7 @@ class RecordingScheduleController extends Controller
     // 予約一覧表示
     public function index()
     {
-        $schedules = Auth::user()
-            ->recordingSchedules()
-            ->orderBy('scheduled_start_time', 'desc')
-            ->get();
+        $schedules = Auth::user()->recordingSchedules;
 
         return view('recording.schedules', compact('schedules'));
     }

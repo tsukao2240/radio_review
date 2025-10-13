@@ -13,7 +13,8 @@ class Kernel extends ConsoleKernel
      * @var array
      */
     protected $commands = [
-        //
+        Commands\ProcessRecordingSchedules::class,
+        Commands\CheckFavoriteProgramsBroadcast::class,
     ];
 
     /**
@@ -29,6 +30,9 @@ class Kernel extends ConsoleKernel
 
         // 録音予約処理を毎分実行
         $schedule->command('recording:process-schedules')->everyMinute();
+
+        // お気に入り番組の放送チェックを5分ごとに実行
+        $schedule->command('favorites:check-broadcast')->everyFiveMinutes();
     }
 
     /**
@@ -38,7 +42,7 @@ class Kernel extends ConsoleKernel
      */
     protected function commands()
     {
-        $this->load(__DIR__.'/Commands');
+        // コマンドは$commandsプロパティで登録
 
         require base_path('routes/console.php');
     }
