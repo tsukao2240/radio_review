@@ -24,19 +24,13 @@ class ProcessRecordingSchedules extends Command
      */
     protected $description = '録音予約を処理し、開始時刻になった予約の録音を開始する';
 
-    protected $notificationService;
-
-    public function __construct(NotificationService $notificationService)
-    {
-        parent::__construct();
-        $this->notificationService = $notificationService;
-    }
-
     /**
      * Execute the console command.
      */
     public function handle()
     {
+        $notificationService = app(\App\Services\NotificationService::class);
+
         $this->info('録音予約処理を開始します...');
 
         // 開始時刻になった予約を取得（現在時刻から1分以内に開始予定のもの）
@@ -60,7 +54,7 @@ class ProcessRecordingSchedules extends Command
                 $this->startRecording($schedule);
 
                 // 録音開始通知を送信
-                $this->notificationService->notifyRecordingStart(
+                $notificationService->notifyRecordingStart(
                     $schedule->user,
                     [
                         'title' => $schedule->program_title,
@@ -83,7 +77,7 @@ class ProcessRecordingSchedules extends Command
                 $schedule->save();
 
                 // 録音失敗通知を送信
-                $this->notificationService->notifyRecordingFailed(
+                $notificationService->notifyRecordingFailed(
                     $schedule->user,
                     [
                         'title' => $schedule->program_title,

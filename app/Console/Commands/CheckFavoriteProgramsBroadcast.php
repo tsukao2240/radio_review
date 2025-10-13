@@ -25,19 +25,13 @@ class CheckFavoriteProgramsBroadcast extends Command
      */
     protected $description = 'お気に入り番組の放送開始をチェックして通知する';
 
-    protected $notificationService;
-
-    public function __construct(NotificationService $notificationService)
-    {
-        parent::__construct();
-        $this->notificationService = $notificationService;
-    }
-
     /**
      * Execute the console command.
      */
     public function handle()
     {
+        $notificationService = app(\App\Services\NotificationService::class);
+
         $this->info('お気に入り番組の放送チェックを開始します...');
 
         // 全ユーザーのお気に入り番組を取得
@@ -68,7 +62,7 @@ class CheckFavoriteProgramsBroadcast extends Command
 
                 if ($programStart >= $now && $programStart <= $fiveMinutesLater) {
                     // 通知を送信
-                    $this->notificationService->notifyFavoriteProgramBroadcast(
+                    $notificationService->notifyFavoriteProgramBroadcast(
                         $favorite->user,
                         $favorite->program_title,
                         $favorite->station_id
