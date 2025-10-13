@@ -23,7 +23,7 @@ Auth::routes(['verify' => true]);
 Route::get('/schedule', 'RadioProgramController@fetchRecentProgram')->name('program.schedule');
 
 //番組タイトルで検索する
-Route::get('search', 'CrudController@index')->name('program.search');
+Route::get('search', 'CrudController@index')->name('program.search')->middleware('throttle:search');
 
 //番組の詳細情報を表示する
 Route::get('list/{station_id}/{title}', 'ViewProgramDetailsController@index')->name('program.detail');
@@ -45,7 +45,7 @@ Route::group(['middleware' => 'verified'], function () {
     //投稿画面
     Route::get('/review/{id}', 'PostController@review')->middleware('verified')->name('post.review');
     //レビューの投稿
-    Route::post('/review/{id}', 'PostController@store')->middleware('verified')->name('post.store');
+    Route::post('/review/{id}', 'PostController@store')->middleware(['verified', 'throttle:posts'])->name('post.store');
 });
 
 //自分が投稿したレビューを表示する
@@ -55,7 +55,7 @@ Route::get('/my', 'MypageController@index')->name('myreview.view');
 Route::get('/my/edit/{program_id}', 'MypageController@edit')->name('myreview.edit');
 
 //自分が投稿したレビューを編集する
-Route::post('/my/edit/{program_id}', 'MypageController@update')->name('myreview.update');
+Route::post('/my/edit/{program_id}', 'MypageController@update')->middleware('throttle:posts')->name('myreview.update');
 
 //自分が投稿したレビューを削除する
-Route::post('/my', 'MypageController@destroy')->name('myreview.delete');
+Route::post('/my', 'MypageController@destroy')->middleware('throttle:posts')->name('myreview.delete');
