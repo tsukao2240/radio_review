@@ -81,3 +81,15 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/recording/schedule', 'RecordingScheduleController@store')->name('recording.schedule.store');
     Route::post('/recording/schedule/cancel', 'RecordingScheduleController@cancel')->name('recording.schedule.cancel');
 });
+
+// 通知関連ルート（認証必須）
+Route::middleware(['auth'])->prefix('api')->group(function () {
+    Route::get('/notifications/unread', 'NotificationController@getUnread')->name('api.notifications.unread');
+    Route::get('/notifications/all', 'NotificationController@getAll')->name('api.notifications.all');
+    Route::post('/notifications/mark-read', 'NotificationController@markAsRead')->name('api.notifications.markRead');
+    Route::post('/notifications/mark-all-read', 'NotificationController@markAllAsRead')->name('api.notifications.markAllRead');
+});
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/notifications', 'NotificationController@index')->name('notifications.index');
+});

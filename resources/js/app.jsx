@@ -21,6 +21,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 import ToastComponent from './components/ToastComponent.jsx';
+import NotificationCenter from './components/NotificationCenter.jsx';
 
 // アプリケーションのメインコンポーネント
 const App = () => {
@@ -32,6 +33,15 @@ const App = () => {
     );
 };
 
+// NotificationCenterコンポーネントを別途マウント
+const mountNotificationCenter = () => {
+    const notificationContainer = document.getElementById('notification-center-mount');
+    if (notificationContainer) {
+        const root = createRoot(notificationContainer);
+        root.render(<NotificationCenter />);
+    }
+};
+
 // DOMが読み込まれた後にReactアプリを初期化
 document.addEventListener('DOMContentLoaded', () => {
     // ToastContainerのみを追加（既存のコンテンツを保持）
@@ -39,7 +49,10 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.appendChild(toastContainer);
     const root = createRoot(toastContainer);
     root.render(<App />);
-    
+
+    // NotificationCenterをマウント
+    mountNotificationCenter();
+
     // Bootstrapのドロップダウンを初期化
     const dropdownElementList = document.querySelectorAll('[data-toggle="dropdown"]');
     [...dropdownElementList].map(dropdownToggleEl => new Dropdown(dropdownToggleEl));
@@ -47,4 +60,5 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Reactコンポーネントをグローバルに使用可能にする
 window.ToastComponent = ToastComponent;
+window.NotificationCenter = NotificationCenter;
 window.React = React;

@@ -14,13 +14,11 @@ class AddIndexesToRadioProgramsTable extends Migration
     public function up()
     {
         Schema::table('radio_programs', function (Blueprint $table) {
-            // 検索パフォーマンスを向上させるためのインデックス
-            $table->index('station_id');
-            $table->index('title');
-            $table->index('cast');
-
             // タイムスタンプを追加（データ管理のため）
-            $table->timestamps();
+            // インデックスは2025_10_01_233230_add_performance_indexes_to_tables.phpで既に追加済み
+            if (!Schema::hasColumn('radio_programs', 'created_at')) {
+                $table->timestamps();
+            }
         });
     }
 
@@ -32,10 +30,9 @@ class AddIndexesToRadioProgramsTable extends Migration
     public function down()
     {
         Schema::table('radio_programs', function (Blueprint $table) {
-            $table->dropIndex(['station_id']);
-            $table->dropIndex(['title']);
-            $table->dropIndex(['cast']);
-            $table->dropTimestamps();
+            if (Schema::hasColumn('radio_programs', 'created_at')) {
+                $table->dropTimestamps();
+            }
         });
     }
 }

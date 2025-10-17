@@ -48,12 +48,17 @@ class User extends Authenticatable implements MustVerifyEmailContact
 
     public function favoritePrograms()
     {
-        return $this->hasMany('App\FavoriteProgram');
+        return $this->hasMany(FavoriteProgram::class)->orderBy('created_at', 'desc');
     }
 
     public function recordingSchedules()
     {
-        return $this->hasMany('App\RecordingSchedule');
+        return $this->hasMany(RecordingSchedule::class)->orderBy('scheduled_start_time', 'desc');
+    }
+
+    public function notifications()
+    {
+        return $this->hasMany(Notification::class)->orderBy('created_at', 'desc');
     }
 
     //会員登録時の仮メール送信
