@@ -20,8 +20,6 @@ return new class extends Migration
 
         // postsテーブルにインデックスを追加
         Schema::table('posts', function (Blueprint $table) {
-            $table->index('program_id');
-            $table->index('user_id');
             $table->index('created_at');
         });
 
@@ -53,8 +51,6 @@ return new class extends Migration
 
         // postsテーブルのインデックスを削除
         Schema::table('posts', function (Blueprint $table) {
-            $table->dropIndex(['program_id']);
-            $table->dropIndex(['user_id']);
             $table->dropIndex(['created_at']);
         });
 
