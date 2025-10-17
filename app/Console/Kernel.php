@@ -29,6 +29,9 @@ class Kernel extends ConsoleKernel
 
         // 録音予約処理を毎分実行
         $schedule->command('recording:process-schedules')->everyMinute();
+
+        // お気に入り番組の放送チェックを5分ごとに実行
+        $schedule->command('favorites:check-broadcast')->everyFiveMinutes();
     }
 
     /**
