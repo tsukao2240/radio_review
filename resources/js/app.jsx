@@ -8,6 +8,9 @@ import axios from 'axios';
 window.axios = axios;
 window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 
+// PWA機能をインポート
+import './pwa.js';
+
 // Bootstrapのドロップダウン機能のみをインポート
 import { Dropdown } from 'bootstrap';
 
