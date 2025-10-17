@@ -1,7 +1,7 @@
 <?php
 //トップページ
 
-use DaveJamesMiller\Breadcrumbs\Facades\Breadcrumbs;
+use Diglactic\Breadcrumbs\Breadcrumbs;
 
 Breadcrumbs::for('/', function ($trail) {
     $trail->push('ホーム', url('/'));

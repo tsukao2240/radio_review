@@ -13,7 +13,7 @@ use App\Http\Controllers\Log;
 class RadioProgram extends Model
 {
     use HasFactory;
-    //
+
     protected $fillable =
     [
         'station_id',
@@ -24,17 +24,9 @@ class RadioProgram extends Model
         'info',
         'url',
         'image',
-
     ];
 
     protected $table = 'radio_programs';
 
-    public function post()
-    {
-        return $this->belongsTo('App\Post');
-    }
-    public function radioProgram()
-    {
-        return $this->belongsTo('App\RadioProgram');
-    }
+    public $timestamps = false;
 }
