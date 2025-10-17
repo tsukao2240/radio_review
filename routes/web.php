@@ -19,7 +19,7 @@ Route::get('/', function () {
 });
 
 // 認証ルート
-Auth::routes();
+Auth::routes(['verify' => true]);
 
 //放送中の番組を取得する
 Route::get('/schedule', 'RadioProgramController@fetchRecentProgram')->name('program.schedule');
