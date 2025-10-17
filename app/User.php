@@ -8,10 +8,11 @@ use Illuminate\Contracts\Auth\MustVerifyEmail as MustVerifyEmailContact;
 use Illuminate\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class User extends Authenticatable implements MustVerifyEmailContact
 {
-    use Notifiable, MustVerifyEmail;
+    use Notifiable, MustVerifyEmail, HasFactory;
 
     /**
      * The attributes that are mass assignable.
@@ -43,6 +44,21 @@ class User extends Authenticatable implements MustVerifyEmailContact
     public function posts()
     {
         return $this->hasMany('App\Post');
+    }
+
+    public function favoritePrograms()
+    {
+        return $this->hasMany(FavoriteProgram::class)->orderBy('created_at', 'desc');
+    }
+
+    public function recordingSchedules()
+    {
+        return $this->hasMany(RecordingSchedule::class)->orderBy('scheduled_start_time', 'desc');
+    }
+
+    public function notifications()
+    {
+        return $this->hasMany(Notification::class)->orderBy('created_at', 'desc');
     }
 
     //会員登録時の仮メール送信

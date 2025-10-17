@@ -5,8 +5,28 @@
 /vendor
 .env
 .env.backup
+.env.local
+.env.production
 .phpunit.result.cache
 Homestead.json
 Homestead.yaml
 npm-debug.log
 yarn-error.log
+
+# ffmpeg binaries
+/ffmpeg/ffmpeg-master-latest-win64-gpl/
+/ffmpeg/ffmpeg-7.0.2-amd64-static/
+/ffmpeg/ffmpeg.exe
+/ffmpeg/ffmpeg
+/ffmpeg/ffmpeg-linux.tar.xz
+
+# 引き継ぎ資料
+引き継ぎ*.txt
+引き継ぎ*.md
+handover*.txt
+handover*.md
+HANDOVER*.md
+MIGRATION_NOTES.md
+PRIORITY_TASKS.md
+SECURITY_CHECKLIST.md
+ENV_SETUP.md
