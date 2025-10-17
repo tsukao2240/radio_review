@@ -1,0 +1,7 @@
+@import 'bootstrap';
+@import 'react-toastify/dist/ReactToastify.css';
+
+/* アプリケーション固有のスタイル */
+body {
+    font-family: 'Nunito', sans-serif;
+}

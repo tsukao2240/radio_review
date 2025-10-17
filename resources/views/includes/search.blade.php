@@ -1,10 +1,9 @@
-{{ csrf_field() }}
-{{ Form::open(['route' => 'program.search','method' => 'get']) }}
-<div class="mx-auto" style="width:400">
-    <div class="input-group">
-        {{ Form::text('title','',['class' => 'form-control','placeholder' => '番組名で検索する']) }}
-        {{ Form::button('<i class="fas fa-search"></i>',['class' => 'btn','type' => 'submit']) }}
+<form method="get" action="{{ route('program.search') }}">
+<div class="search-container">
+    <div class="input-group search-form">
+        <input type="text" name="title" class="form-control" placeholder="番組名で検索する" value="{{ request('title') }}">
+        <button type="submit" class="btn-search"><i class="fas fa-search"></i></button>
     </div>
 </div>
-{{ Form::close() }}
+</form>
 <br>

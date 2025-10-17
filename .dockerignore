@@ -1,0 +1,59 @@
+# Git関連
+.git
+.gitignore
+.gitattributes
+
+# IDE関連
+.vscode
+*.swp
+*.swo
+*~
+
+# ログファイル
+*.log
+logs
+
+# 依存関係
+node_modules
+vendor
+
+# ビルドファイル
+public/build
+public/hot
+public/storage
+
+# キャッシュ
+bootstrap/cache/*.php
+storage/app/*
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+storage/logs/*
+
+# 環境設定ファイル
+.env
+.env.backup
+.env.production
+
+# OS関連
+.DS_Store
+Thumbs.db
+
+# Dockerファイル自体
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# ドキュメント
+README.md
+*.md
+
+# テスト関連
+tests/
+phpunit.xml
+.phpunit.result.cache
+
+# その他の設定ファイル
+.editorconfig
+.styleci.yml
+*.code-workspace

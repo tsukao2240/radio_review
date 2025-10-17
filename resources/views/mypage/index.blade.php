@@ -13,51 +13,53 @@
 <span>
     {{ Breadcrumbs::render('my_review') }}
 </span>
-<h3 class="caption">{{ Auth::user()->name }}さんが投稿したレビュー</h3>
-<br>
-@foreach ($posts as $post)
+<div class="mypage-header">
+    <h3>{{ Auth::user()->name }}さんが投稿したレビュー</h3>
+</div>
+
 <div id="reviews">
-    <div class="card">
-        <div class="card-header"><a
-                href="{{ route('program.detail',['station_id' => $post->station_id,'title' => $post->program_title]) }}">{{ $post->program_title }}</a>
-            <div class="float-right">
-                <div class="btn-toolbar">
-                    <div class="btn-group">
-                        <div class="form-group">
-                            {{ Form::hidden('program_id',$post->program_id) }}
-                        </div>
-                        <a href="{{ route('myreview.edit',$post->id) }}"><button class="btn btn-primary">編集</button></a>
-                        {{ csrf_field() }}
-                        {{ Form::open(['route' => ['myreview.delete'],'method' => 'POST']) }}
-                        {{ Form::hidden('id',$post->id) }}
-                        {{ Form::submit('削除',['class' => 'btn btn-danger']) }}
-                        {{ Form::close() }}
-                    </div>
-                </div>
+    @foreach ($posts as $post)
+    <div class="review-card">
+        <div class="review-card-header">
+            <a href="{{ route('program.detail',['station_id' => $post->station_id,'title' => $post->program_title]) }}">
+                {{ $post->program_title }}
+            </a>
+            <div class="review-actions">
+                <a href="{{ route('myreview.edit',$post->id) }}" class="btn-edit">
+                    <i class="fas fa-edit"></i> 編集
+                </a>
+                <form method="POST" action="{{ route('myreview.delete') }}" style="display: inline;">
+                    @csrf
+                    <input type="hidden" name="id" value="{{ $post->id }}">
+                    <button type="submit" class="btn-delete-review" onclick="return confirm('このレビューを削除しますか？')">
+                        <i class="fas fa-trash"></i> 削除
+                    </button>
+                </form>
             </div>
         </div>
-        <div class="card-body card_review_body">
-            <dt>
-                {{ $post->title }}
-            </dt>
-            <dd>
-                {{ $post->body }}
-            </dd>
+        <div class="review-card-body">
+            <div class="review-title">{{ $post->title }}</div>
+            <div class="review-content">{{ $post->body }}</div>
         </div>
-        <div class="card-footer card_review_footer">
-            <span class="review_meta">
-                投稿日:{{ date('Y年m月d日',strtotime($post->created_at)) }}
+        <div class="review-card-footer">
+            <span class="review-meta">
+                <i class="far fa-clock"></i>
+                投稿日: {{ date('Y年m月d日',strtotime($post->created_at)) }}
             </span>
         </div>
-
     </div>
+    @endforeach
 </div>
-@endforeach
-{{ $posts->links() }}
+
+{{ $posts->links('vendor.pagination.custom') }}
 @else
 
-<h3 class="caption">
-    まだ投稿がありません
-</h3>
+<div class="empty-state">
+    <i class="far fa-edit"></i>
+    <p>まだ投稿がありません</p>
+    <a href="{{ route('program.schedule') }}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> レビューを投稿する
+    </a>
+</div>
 @endif
 @endsection
