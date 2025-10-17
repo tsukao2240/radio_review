@@ -13,31 +13,16 @@ return new class extends Migration
     {
         // radio_programsテーブルにインデックスを追加
         Schema::table('radio_programs', function (Blueprint $table) {
-            if (!$this->indexExists('radio_programs', 'idx_radio_programs_title')) {
-                $table->index('title', 'idx_radio_programs_title');
-            }
-            if (!$this->indexExists('radio_programs', 'idx_radio_programs_station_id')) {
-                $table->index('station_id', 'idx_radio_programs_station_id');
-            }
-            if (!$this->indexExists('radio_programs', 'idx_radio_programs_station_title')) {
-                $table->index(['station_id', 'title'], 'idx_radio_programs_station_title');
-            }
+            $table->index('title', 'idx_radio_programs_title');
+            $table->index('station_id', 'idx_radio_programs_station_id');
+            $table->index(['station_id', 'title'], 'idx_radio_programs_station_title');
         });
 
         // postsテーブルにインデックスを追加
-        // masterブランチの2025_10_14_000002と重複しないように
-        // インデックスが存在しない場合のみ追加
         Schema::table('posts', function (Blueprint $table) {
-            // 既にインデックスが存在する可能性があるのでチェック
-            if (!$this->hasIndexOnColumn('posts', 'program_id')) {
-                $table->index('program_id');  // Laravelのデフォルト命名: posts_program_id_index
-            }
-            if (!$this->hasIndexOnColumn('posts', 'user_id')) {
-                $table->index('user_id');  // Laravelのデフォルト命名: posts_user_id_index
-            }
-            if (!$this->hasIndexOnColumn('posts', 'created_at')) {
-                $table->index('created_at');  // Laravelのデフォルト命名: posts_created_at_index
-            }
+            $table->index('program_id');
+            $table->index('user_id');
+            $table->index('created_at');
         });
 
         // favorite_programsテーブルにインデックスを追加
@@ -68,9 +53,9 @@ return new class extends Migration
 
         // postsテーブルのインデックスを削除
         Schema::table('posts', function (Blueprint $table) {
-            $table->dropIndex(['program_id']);  // posts_program_id_index
-            $table->dropIndex(['user_id']);  // posts_user_id_index
-            $table->dropIndex(['created_at']);  // posts_created_at_index
+            $table->dropIndex(['program_id']);
+            $table->dropIndex(['user_id']);
+            $table->dropIndex(['created_at']);
         });
 
         // favorite_programsテーブルのインデックスを削除
@@ -85,23 +70,5 @@ return new class extends Migration
             $table->dropIndex('idx_recording_schedules_status');
             $table->dropIndex('idx_recording_schedules_start_time');
         });
-    }
-
-    /**
-     * インデックスが存在するかチェック
-     */
-    private function indexExists(string $table, string $indexName): bool
-    {
-        $indexes = \DB::select("SHOW INDEX FROM `{$table}` WHERE Key_name = ?", [$indexName]);
-        return count($indexes) > 0;
-    }
-
-    /**
-     * カラムにインデックスが存在するかチェック
-     */
-    private function hasIndexOnColumn(string $table, string $column): bool
-    {
-        $indexes = \DB::select("SHOW INDEX FROM `{$table}` WHERE Column_name = ?", [$column]);
-        return count($indexes) > 0;
     }
 };
