@@ -25,8 +25,13 @@ class MypageController extends Controller
     //自分が投稿したレビューの編集画面に遷移する
     public function edit($program_id)
     {
-        $program = RadioProgram::findOrFail($program_id);
-        $post = Post::where('program_id', $program_id)->where('user_id', Auth::id())->firstOrFail();
+        // RadioProgramとPostを一度のクエリで取得
+        $post = Post::with('radioProgram')
+            ->where('program_id', $program_id)
+            ->where('user_id', Auth::id())
+            ->firstOrFail();
+        
+        $program = $post->radioProgram;
         return view('mypage.edit', compact('post', 'program'));
     }
     //自分が投稿したレビューの編集画面に編集する

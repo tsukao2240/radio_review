@@ -33,6 +33,6 @@ class Post extends Model
 
     public function radioProgram()
     {
-        return $this->belongsTo('App\RadioProgram');
+        return $this->belongsTo(RadioProgram::class, 'program_id');
     }
 }
