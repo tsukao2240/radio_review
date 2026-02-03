@@ -138,18 +138,24 @@ class RadioRecordingController extends Controller
         }
     }
 
-    // radiko認証トークンを取得
-    private function getRadikoAuthToken(): ?string
+    // radiko認証トークンを取得（Web API + Android認証キー版 - rajiko方式）
+    private function getRadikoAuthToken(?string $areaId = null): ?string
     {
         try {
-            // 第1步: 認証トークンを取得（GETメソッドに変更）
+            // デバイス情報を生成（rajiko方式）
+            $appVersion = '8.2.4';
+            $userId = bin2hex(random_bytes(16)); // 32文字の16進数
+            $sdkVersion = '34'; // Android 14
+            $model = 'GooglePixel6';
+            $device = "{$sdkVersion}.{$model}";
+
+            // 第1步: auth1でトークンとキー情報を取得
             $response1 = $this->client->get('https://radiko.jp/v2/api/auth1', [
                 'headers' => [
-                    'User-Agent' => 'curl/7.52.1',
-                    'x-radiko-user' => 'dummy_user',
-                    'x-radiko-app' => 'pc_html5',
-                    'x-radiko-app-version' => '4.0.0',
-                    'x-radiko-device' => 'pc'
+                    'X-Radiko-App' => 'aSmartPhone8',
+                    'X-Radiko-App-Version' => $appVersion,
+                    'X-Radiko-Device' => $device,
+                    'X-Radiko-User' => $userId,
                 ],
                 'timeout' => 10
             ]);
@@ -158,8 +164,7 @@ class RadioRecordingController extends Controller
             $keyLength = (int)$response1->getHeaderLine('X-Radiko-KeyLength');
             $keyOffset = (int)$response1->getHeaderLine('X-Radiko-KeyOffset');
 
-            // keyOffsetは0も有効な値なので、isset()で確認
-            if (!$authToken || !$keyLength || $keyOffset === false || $keyOffset === null) {
+            if (!$authToken || !$keyLength) {
                 \Log::error('radiko auth1レスポンスヘッダーが不正', [
                     'auth_token' => $authToken ? 'あり' : 'なし',
                     'key_length' => $keyLength,
@@ -168,8 +173,26 @@ class RadioRecordingController extends Controller
                 return null;
             }
 
-            // 第2步: 固定認証キーから部分キーを取得
-            $authKey = 'bcd151073c03b352e1ef2fd66c32209da9ca0afa';
+            \Log::info('radiko auth1成功', [
+                'key_length' => $keyLength,
+                'key_offset' => $keyOffset
+            ]);
+
+            // 第2步: JPEG認証キーから部分キーを取得
+            $keyPath = storage_path('app/keys/radiko_auth_key.txt');
+            if (!file_exists($keyPath)) {
+                \Log::error('Radiko認証キーファイルが見つかりません', ['path' => $keyPath]);
+                return null;
+            }
+
+            $authKeyB64 = trim(file_get_contents($keyPath));
+            $authKey = base64_decode($authKeyB64);
+
+            \Log::info('JPEG認証キーを使用', [
+                'key_length' => strlen($authKey),
+                'offset' => $keyOffset,
+                'extract_length' => $keyLength
+            ]);
 
             // 部分キーを抽出
             if (strlen($authKey) < $keyOffset + $keyLength) {
@@ -183,33 +206,37 @@ class RadioRecordingController extends Controller
             $extractedKey = substr($authKey, $keyOffset, $keyLength);
             $partialKey = base64_encode($extractedKey);
 
-            \Log::info('部分キー計算', [
-                'auth_key' => $authKey,
-                'offset' => $keyOffset,
-                'length' => $keyLength,
-                'extracted' => $extractedKey,
-                'partial_key' => $partialKey
+            \Log::info('部分キー計算完了', [
+                'partial_key_length' => strlen($partialKey)
             ]);
 
-            // 第3步: 認証完了（GETメソッドに変更）
+            // GPS座標を生成（エリアフリー用）
+            $gpsLocation = $this->generateGpsLocation($areaId ?? 'JP13');
+
+            // 第3步: auth2で認証完了
             $response2 = $this->client->get('https://radiko.jp/v2/api/auth2', [
                 'headers' => [
+                    'X-Radiko-App' => 'aSmartPhone8',
+                    'X-Radiko-App-Version' => $appVersion,
+                    'X-Radiko-Device' => $device,
+                    'X-Radiko-User' => $userId,
                     'X-Radiko-AuthToken' => $authToken,
                     'X-Radiko-PartialKey' => $partialKey,
-                    'x-radiko-user' => 'dummy_user',
-                    'x-radiko-app' => 'pc_html5',
-                    'x-radiko-app-version' => '4.0.0',
-                    'x-radiko-device' => 'pc',
-                    'User-Agent' => 'curl/7.52.1'
+                    'X-Radiko-Location' => $gpsLocation,
                 ],
                 'timeout' => 10
             ]);
 
-            // auth2のレスポンスステータスを確認
             if ($response2->getStatusCode() !== 200) {
-                \Log::error('radiko auth2が失敗', ['status' => $response2->getStatusCode()]);
+                \Log::error('radiko auth2が失敗', [
+                    'status' => $response2->getStatusCode(),
+                    'body' => (string)$response2->getBody()
+                ]);
                 return null;
             }
+
+            $auth2Body = (string)$response2->getBody();
+            \Log::info('radiko auth2成功', ['response' => $auth2Body]);
 
             return $authToken;
 
@@ -220,6 +247,70 @@ class RadioRecordingController extends Controller
             ]);
             return null;
         }
+    }
+
+    // GPS座標を生成（エリアIDから）
+    private function generateGpsLocation(string $areaId): string
+    {
+        // 都道府県庁所在地の座標
+        $coordinates = [
+            'JP1' => [43.064615, 141.346807],  // 北海道
+            'JP2' => [40.824308, 140.739998],  // 青森
+            'JP3' => [39.703619, 141.152684],  // 岩手
+            'JP4' => [38.268837, 140.8721],    // 宮城
+            'JP5' => [39.718614, 140.102364],  // 秋田
+            'JP6' => [38.240436, 140.363633],  // 山形
+            'JP7' => [37.750299, 140.467551],  // 福島
+            'JP8' => [36.341811, 140.446793],  // 茨城
+            'JP9' => [36.565725, 139.883565],  // 栃木
+            'JP10' => [36.390668, 139.060406], // 群馬
+            'JP11' => [35.856999, 139.648849], // 埼玉
+            'JP12' => [35.605057, 140.123306], // 千葉
+            'JP13' => [35.689487, 139.691711], // 東京
+            'JP14' => [35.447507, 139.642342], // 神奈川
+            'JP15' => [37.902552, 139.023095], // 新潟
+            'JP16' => [36.695291, 137.211338], // 富山
+            'JP17' => [36.594682, 136.625573], // 石川
+            'JP18' => [36.065178, 136.221527], // 福井
+            'JP19' => [35.664158, 138.568449], // 山梨
+            'JP20' => [36.651299, 138.180956], // 長野
+            'JP21' => [35.391227, 136.722291], // 岐阜
+            'JP22' => [34.97712, 138.383084],  // 静岡
+            'JP23' => [35.180188, 136.906565], // 愛知
+            'JP24' => [34.730283, 136.508588], // 三重
+            'JP25' => [35.004531, 135.86859],  // 滋賀
+            'JP26' => [35.021247, 135.755597], // 京都
+            'JP27' => [34.686297, 135.519661], // 大阪
+            'JP28' => [34.691269, 135.183071], // 兵庫
+            'JP29' => [34.685334, 135.832742], // 奈良
+            'JP30' => [34.225987, 135.167506], // 和歌山
+            'JP31' => [35.503891, 134.237736], // 鳥取
+            'JP32' => [35.472295, 133.0505],   // 島根
+            'JP33' => [34.661751, 133.934406], // 岡山
+            'JP34' => [34.39656, 132.459622],  // 広島
+            'JP35' => [34.185956, 131.470649], // 山口
+            'JP36' => [34.065718, 134.55936],  // 徳島
+            'JP37' => [34.340149, 134.043444], // 香川
+            'JP38' => [33.841624, 132.765681], // 愛媛
+            'JP39' => [33.559706, 133.531079], // 高知
+            'JP40' => [33.606576, 130.418297], // 福岡
+            'JP41' => [33.249442, 130.299794], // 佐賀
+            'JP42' => [32.744839, 129.873756], // 長崎
+            'JP43' => [32.789827, 130.741667], // 熊本
+            'JP44' => [33.238172, 131.612619], // 大分
+            'JP45' => [31.911096, 131.423893], // 宮崎
+            'JP46' => [31.560146, 130.557978], // 鹿児島
+            'JP47' => [26.2124, 127.680932],   // 沖縄
+        ];
+
+        // デフォルトは東京
+        $coords = $coordinates[$areaId] ?? $coordinates['JP13'];
+
+        // 少しランダムにずらす（±0.025度 = 約2.5km）
+        $lat = $coords[0] + (mt_rand(-250, 250) / 10000);
+        $long = $coords[1] + (mt_rand(-250, 250) / 10000);
+
+        return sprintf('%.6f,%.6f,gps', $lat, $long);
     }
 
     // タイムフリー録音実行（高速版：PHPで直接並列ダウンロード）

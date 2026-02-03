@@ -35,9 +35,11 @@ class MypageController extends Controller
         return view('mypage.edit', compact('post', 'program'));
     }
     //自分が投稿したレビューの編集画面に編集する
-    public function update(Request $request)
+    public function update(Request $request, $program_id)
     {
-        $post = Post::findOrFail($request->id);
+        $post = Post::where('program_id', $program_id)
+            ->where('user_id', Auth::id())
+            ->firstOrFail();
         $post->title = $request->title;
         $post->body = $request->body;
         $post->save();
@@ -46,7 +48,9 @@ class MypageController extends Controller
     //自分が投稿したレビューを削除する
     public function destroy(Request $request)
     {
-        $post = Post::findOrFail($request->id);
+        $post = Post::where('program_id', $request->program_id)
+            ->where('user_id', Auth::id())
+            ->firstOrFail();
         $post->delete();
         return redirect()->back()->with('message','削除しました');
     }
