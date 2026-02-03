@@ -49,15 +49,15 @@ class PostController extends Controller
     public function store(ReviewCreateRequest $request)
     {
         try {
+            $user = Auth::user();
             $input = $request->all();
-            $user_id = $input['user_id'];
-            $user = User::findOrFail($user_id);
+            $input['user_id'] = $user->id;
             $user->posts()->create($input);
             return redirect()->back()->with('message', '投稿が完了しました');
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             throw $e; // Handler.phpで処理
         } catch (\Exception $e) {
-            \Log::error('レビュー投稿エラー', ['error' => $e->getMessage(), 'user_id' => $request->input('user_id')]);
+            \Log::error('レビュー投稿エラー', ['error' => $e->getMessage(), 'user_id' => Auth::id()]);
             throw new DatabaseException('投稿に失敗しました。もう一度お試しください', 0, $e);
         }
     }
@@ -65,11 +65,13 @@ class PostController extends Controller
     public function view()
     {
         try {
-            // N+1クエリを解消: Eloquentでwithを使用してリレーションをEager Load
-            $posts = Post::with(['user', 'radioProgram'])
-                ->orderBy('created_at', 'desc')
+            // N+1クエリを解消: JOINを使用してstation_idとtitleを直接取得
+            $posts = Post::select('posts.*', 'radio_programs.station_id', 'radio_programs.title as program_title', 'users.name')
+                ->join('radio_programs', 'posts.program_id', '=', 'radio_programs.id')
+                ->join('users', 'posts.user_id', '=', 'users.id')
+                ->orderBy('posts.created_at', 'desc')
                 ->paginate(10);
-                
+
             return view('post.list_all', compact('posts'));
         } catch (\Exception $e) {
             \Log::error('レビュー一覧取得エラー', ['error' => $e->getMessage()]);

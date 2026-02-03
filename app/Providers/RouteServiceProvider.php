@@ -2,7 +2,10 @@
 
 namespace App\Providers;
 
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvider;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 
 class RouteServiceProvider extends ServiceProvider
@@ -30,9 +33,39 @@ class RouteServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        //
+        $this->configureRateLimiting();
 
         parent::boot();
+    }
+
+    protected function configureRateLimiting()
+    {
+        RateLimiter::for('posts', function (Request $request) {
+            return Limit::perMinute(10)->by($request->user()?->id ?: $request->ip())
+                ->response(function () {
+                    return response()->json([
+                        'message' => '投稿が多すぎます。しばらく待ってから再度お試しください。'
+                    ], 429);
+                });
+        });
+
+        RateLimiter::for('search', function (Request $request) {
+            return Limit::perMinute(60)->by($request->ip())
+                ->response(function () {
+                    return response()->json([
+                        'message' => '検索リクエストが多すぎます。しばらく待ってから再度お試しください。'
+                    ], 429);
+                });
+        });
+
+        RateLimiter::for('api', function (Request $request) {
+            return Limit::perMinute(120)->by($request->user()?->id ?: $request->ip())
+                ->response(function () {
+                    return response()->json([
+                        'message' => 'リクエストが多すぎます。しばらく待ってから再度お試しください。'
+                    ], 429);
+                });
+        });
     }
 
     /**

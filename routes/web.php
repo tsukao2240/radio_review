@@ -19,13 +19,13 @@ Route::get('/', function () {
 });
 
 // 認証ルート
-Auth::routes();
+Auth::routes(['verify' => true]);
 
 //放送中の番組を取得する
 Route::get('/schedule', 'RadioProgramController@fetchRecentProgram')->name('program.schedule');
 
 //番組タイトルで検索する
-Route::get('search', 'CrudController@index')->name('program.search');
+Route::get('search', 'CrudController@index')->name('program.search')->middleware('throttle:search');
 
 //番組の詳細情報を表示する
 Route::get('list/{station_id}/{title}', 'ViewProgramDetailsController@index')->name('program.detail');
@@ -35,6 +35,10 @@ Route::get('list/{station_id}/{title}/review', 'PostController@list')->name('rev
 
 //放送局の週間番組表を取得する
 Route::get('schedule/{station_id}', 'RadioBroadcastController@getWeeklySchedule')->name('schedule.weekly');
+
+// 2週間番組表（タイムフリー録音用）
+Route::get('/timefree', 'RadioBroadcastController@getTwoWeekSchedule')->name('schedule.twoweek');
+Route::get('/timefree/{station_id}', 'RadioBroadcastController@getTwoWeekScheduleByStation')->name('schedule.twoweek.station');
 
 //投稿されているレビューをすべて表示する
 Route::get('/review/list', 'PostController@view')->name('review.view');
@@ -47,15 +51,15 @@ Route::group(['middleware' => 'verified'], function () {
     //投稿画面
     Route::get('/review/{id}', 'PostController@review')->middleware('verified')->name('post.review');
     //レビューの投稿
-    Route::post('/review/{id}', 'PostController@store')->middleware('verified')->name('post.store');
+    Route::post('/review/{id}', 'PostController@store')->middleware(['verified', 'throttle:posts'])->name('post.store');
 });
 
 //自分が投稿したレビューを表示する（認証必須）
 Route::middleware(['auth'])->group(function () {
     Route::get('/my', 'MypageController@index')->name('myreview.view');
     Route::get('/my/edit/{program_id}', 'MypageController@edit')->name('myreview.edit');
-    Route::post('/my/edit/{program_id}', 'MypageController@update')->name('myreview.update');
-    Route::post('/my', 'MypageController@destroy')->name('myreview.delete');
+    Route::post('/my/edit/{program_id}', 'MypageController@update')->middleware('throttle:posts')->name('myreview.update');
+    Route::post('/my', 'MypageController@destroy')->middleware('throttle:posts')->name('myreview.delete');
 });
 
 // タイムフリー録音関連ルート（認証不要）
