@@ -55,7 +55,7 @@ class RadioRecordingController extends Controller
 
         // 録音ファイル名を生成
         $timestamp = Carbon::now()->format('YmdHis');
-        $filename = "{$stationId}_{$startTime}_{$endTime}_{$timestamp}.m4a";
+        $filename = "{$stationId}_{$title}_{$startTime}_{$endTime}.m4a";
         $filepath = storage_path("app/recordings/{$filename}");
 
         // recordingsディレクトリを作成
@@ -852,12 +852,12 @@ class RadioRecordingController extends Controller
             // SCAN使用でメモリ効率的に取得（keys()よりパフォーマンスが良い）
             $cursor = null;
             $pattern = '*recording_*';
-            
+
             do {
                 $result = $redis->scan($cursor, ['MATCH' => $pattern, 'COUNT' => 100]);
                 $cursor = $result[0];
                 $keys = $result[1];
-                
+
                 foreach ($keys as $key) {
                     // すべてのプレフィックスを除去してrecording_で始まるキーを抽出
                     if (preg_match('/recording_[^:]+$/', $key, $matches)) {
@@ -903,11 +903,11 @@ class RadioRecordingController extends Controller
         // ディスク使用状況を取得（ファイル一覧取得を最適化）
         $recordingsPath = storage_path('app/recordings');
         $diskUsage = null;
-        
+
         if (is_dir($recordingsPath)) {
             $totalSize = 0;
             $iterator = new \FilesystemIterator($recordingsPath, \FilesystemIterator::SKIP_DOTS);
-            
+
             foreach ($iterator as $file) {
                 if ($file->isFile()) {
                     $totalSize += $file->getSize();
