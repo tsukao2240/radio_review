@@ -50,6 +50,49 @@ class Handler extends ExceptionHandler
      */
     public function render($request, Throwable $exception)
     {
+        // カスタム例外のハンドリング
+        if ($exception instanceof \App\Exceptions\DatabaseException) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $exception->getUserMessage()
+                ], 500);
+            }
+            return redirect()->back()->with('error', $exception->getUserMessage());
+        }
+
+        if ($exception instanceof \App\Exceptions\RecordingException) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $exception->getUserMessage()
+                ], 500);
+            }
+            return redirect()->back()->with('error', $exception->getUserMessage());
+        }
+
+        if ($exception instanceof \App\Exceptions\ExternalApiException) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $exception->getUserMessage()
+                ], 503);
+            }
+            return redirect()->back()->with('error', $exception->getUserMessage());
+        }
+
+        // ModelNotFoundExceptionのハンドリング
+        if ($exception instanceof \Illuminate\Database\Eloquent\ModelNotFoundException) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => '指定されたデータが見つかりません'
+                ], 404);
+            }
+            abort(404, '指定されたデータが見つかりません');
+        }
+
+        // ValidationExceptionは既存の処理を使用
         return parent::render($request, $exception);
     }
 }

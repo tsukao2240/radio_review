@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Facades\Cache;
+
 use App\RadioProgram;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -15,28 +17,18 @@ class CrudController extends Controller
         $keyword = $request->input('title');
 
         if (!empty($keyword)) {
-
-            $programs = DB::table('radio_programs')
-                ->where('title', 'LIKE', '%' . $keyword . '%')
-                ->Where('title','not like','%（新）%')
-                ->Where('title','not like','%［新］%')
-                ->Where('title','not like','%【新】%')
-                ->Where('title','not like','%【新番組】%')
-                ->Where('title','not like','%＜新番組＞%')
-                ->Where('title','not like','%（終）%')
-                ->Where('title','not like','%［終］%')
-                ->Where('title','not like','%≪終≫%')
-                ->Where('title','not like','%【終】%')
-                ->where('title','not like','%【最終回】%')
-                ->where('title','not like','%＜最終回＞%')
-                ->where('title','not like','%(再)%')
-                ->where('title','not like','%【再】%')
-                ->where('title','not like','%≪再≫%')
-                ->where('title','not like','%[再]%')
-                ->where('title','not like','%（再放送）%')
-                ->where('title','not like','%再放送%')
-                ->distinct()->select()->Paginate(10);
-
+            // キャッシュキーを生成（検索キーワードごとに30分間キャッシュ）
+            $cacheKey = 'search_programs_' . md5($keyword);
+            
+            $programs = Cache::remember($cacheKey, 3600, function () use ($keyword) {
+                // REGEXP一発で処理して効率化
+                $excludePattern = '\（新\）|\［新\］|\【新\】|\【新番組\】|\＜新番組\�|\（終\）|\［終\］|\≪終≫|\【終\】|\【最終回\】|\＜最終回\＞|\（再\）|\【再\】|\≪再≫|\[再\]|\（再放送\）|再放送';
+                
+                return RadioProgram::where('title', 'LIKE', '%' . $keyword . '%')
+                    ->whereRaw('title NOT REGEXP ?', [$excludePattern])
+                    ->distinct()
+                    ->paginate(10);
+            });
         } else {
             //キーワードが入力されていないときはページ遷移しない
             return back();
