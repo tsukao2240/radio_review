@@ -26,11 +26,14 @@ class RadioRecordingTest extends TestCase
      */
     public function test_start_timefree_recording_success()
     {
+        // 1日前の番組を指定（タイムフリー期間内）
+        $yesterday = Carbon::now()->subDay();
+
         $requestData = [
             'station_id' => 'TBS',
             'title' => 'テスト番組',
-            'start_time' => '202509292200',
-            'end_time' => '202509292230'
+            'start_time' => $yesterday->format('YmdHi'),
+            'end_time' => $yesterday->copy()->addMinutes(30)->format('YmdHi')
         ];
 
         // 認証をモック
