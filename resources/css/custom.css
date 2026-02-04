@@ -12,9 +12,26 @@ body {
 
 main {
     flex: 1;
+    padding-top: 70px; /* ヘッダーの高さ分 */
+    padding-bottom: 50px; /* フッターの高さ分 */
 }
 
+/* ヘッダー固定 */
+header, .head-animation {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1030;
+}
+
+/* フッター固定 */
 footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1030;
     margin-top: auto;
 }
 
@@ -62,16 +79,19 @@ footer {
 .review-card,
 .favorite-card,
 .recording-card {
-    background: white;
-    border: 1px solid #e0e0e0;
+    background: var(--bs-body-bg);
+    border: 1px solid var(--bs-border-color);
     border-radius: 12px;
     transition: all 0.3s ease;
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     margin-bottom: 20px;
 }
 
-.card {
+/* メインコンテンツのカードのみ幅を制限（グリッド内のカードは除外） */
+.container > .card,
+#reviews .card {
     width: 50rem;
+    max-width: 100%;
     margin: auto;
 }
 
@@ -97,8 +117,8 @@ footer {
     justify-content: space-between;
     align-items: flex-start;
     padding: 20px;
-    background: #f8f9fa;
-    border-bottom: 1px solid #e0e0e0;
+    background: var(--bs-tertiary-bg);
+    border-bottom: 1px solid var(--bs-border-color);
 }
 
 .favorite-card-header {
@@ -133,14 +153,14 @@ footer {
 .card-body,
 .review-card-body {
     padding: 20px;
-    background: #fff;
+    background: var(--bs-body-bg);
 }
 
 .card-footer,
 .review-card-footer {
-    background: #f8f9fa;
+    background: var(--bs-tertiary-bg);
     padding: 15px 20px;
-    border-top: 1px solid #e0e0e0;
+    border-top: 1px solid var(--bs-border-color);
 }
 
 /* ========================================
@@ -438,7 +458,7 @@ footer {
 }
 
 .tablebox {
-    background: white;
+    background: var(--bs-body-bg);
     border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.08);
     overflow: hidden;
@@ -457,13 +477,13 @@ footer {
 }
 
 .tablebox thead th {
-    background: #f8f9fa;
-    color: #333;
+    background: var(--bs-tertiary-bg);
+    color: var(--bs-body-color);
     font-weight: 600;
     font-size: 16px;
     text-align: center;
     padding: 15px;
-    border-bottom: 2px solid #dee2e6;
+    border-bottom: 2px solid var(--bs-border-color);
 }
 
 .tablebox tbody td {
@@ -515,6 +535,7 @@ footer {
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     border-radius: 8px;
     overflow: hidden;
+    background: var(--bs-body-bg);
 }
 
 .search-form .input-group {
@@ -585,9 +606,19 @@ footer {
 /* ホーム画面 */
 .img_body {
     background-image: url('/images/radio.png');
+    background-size: cover;
+    background-position: center;
+    height: 500px;
+}
+
+[data-bs-theme="light"] .img_body {
     background-color: rgba(255, 255, 255, 0.8);
     background-blend-mode: lighten;
-    height: 500px;
+}
+
+[data-bs-theme="dark"] .img_body {
+    background-color: rgba(0, 0, 0, 0.6);
+    background-blend-mode: darken;
 }
 
 /* レビュー画面 */
@@ -652,7 +683,7 @@ footer {
 }
 
 .card_review_footer {
-    background-color: white;
+    background-color: var(--bs-body-bg);
     padding: 5px 10px;
 }
 
