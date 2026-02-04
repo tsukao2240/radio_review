@@ -1,5 +1,15 @@
 <!doctype html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-bs-theme="auto">
+<script>
+    // システムのダークモード設定を検出して適用
+    (function() {
+        const theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-bs-theme', theme);
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+            document.documentElement.setAttribute('data-bs-theme', e.matches ? 'dark' : 'light');
+        });
+    })();
+</script>
 
 <head>
     <meta charset="utf-8">
@@ -12,6 +22,7 @@
 
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#f8f9fa">
+    <meta name="color-scheme" content="light dark">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -40,7 +51,7 @@
 <body>
     <div id="app">
         <header class="head-animation">
-            <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <nav class="navbar navbar-expand-lg bg-body-tertiary">
                 <div class="col-12 clearfix">
                     <div class="float-left">
                         <ul class="navbar-nav">

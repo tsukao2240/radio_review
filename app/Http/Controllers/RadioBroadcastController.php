@@ -267,9 +267,17 @@ class RadioBroadcastController extends Controller
 
                 $stations = [];
                 foreach ($xpath->query('//station') as $node) {
+                    $id = trim($xpath->evaluate('string(id)', $node));
+                    $name = trim($xpath->evaluate('string(name)', $node));
+
+                    // 空のエントリをスキップ
+                    if (empty($id) || empty($name)) {
+                        continue;
+                    }
+
                     $stations[] = [
-                        'id' => $xpath->evaluate('string(id)', $node),
-                        'name' => $xpath->evaluate('string(name)', $node),
+                        'id' => $id,
+                        'name' => $name,
                         'logo' => $xpath->evaluate('string(logo[@width="224"][@align="center"])', $node),
                     ];
                 }

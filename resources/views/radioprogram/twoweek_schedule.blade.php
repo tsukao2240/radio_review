@@ -162,7 +162,7 @@
             @endphp
 
             @if($showDateHeader)
-                <div class="date-header sticky-top bg-white py-2 border-bottom" id="date-{{ $entryDate }}">
+                <div class="date-header sticky-top py-2 border-bottom" id="date-{{ $entryDate }}">
                     <h5 class="mb-0 {{ $isSunday ? 'text-danger' : ($isSaturday ? 'text-primary' : '') }}">
                         <i class="fas fa-calendar-day"></i>
                         {{ $dateObj->format('Y年n月j日') }}（{{ $dayOfWeek }}）
@@ -260,7 +260,6 @@
 
 <style>
 .date-navigation {
-    background: #f8f9fa;
     padding: 10px;
     border-radius: 8px;
 }
@@ -270,6 +269,7 @@
 }
 .date-header {
     z-index: 100;
+    background-color: var(--bs-body-bg);
 }
 .program-card {
     transition: box-shadow 0.2s;
@@ -279,7 +279,6 @@
 }
 .program-card.border-danger {
     border-width: 2px;
-    background: #fff5f5;
 }
 .recording-controls {
     min-width: 200px;

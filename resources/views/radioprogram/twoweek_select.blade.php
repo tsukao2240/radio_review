@@ -35,28 +35,32 @@
     </div>
 
     <div class="card">
-        <div class="card-header">
-            <i class="fas fa-broadcast-tower"></i> 放送局一覧
+        <div class="card-header bg-secondary text-white">
+            <i class="fas fa-broadcast-tower"></i> 放送局一覧 ({{ count($stations) }}局)
         </div>
         <div class="card-body">
             @if(count($stations) > 0)
                 <div class="row">
                     @foreach($stations as $station)
+                        @if(!empty($station['id']) && !empty($station['name']))
                         <div class="col-6 col-md-4 col-lg-3 mb-3">
                             <a href="{{ route('schedule.twoweek.station', ['station_id' => $station['id'], 'area' => $selectedArea]) }}"
                                class="card h-100 text-decoration-none station-card">
                                 <div class="card-body text-center">
-                                    @if($station['logo'])
+                                    @if(!empty($station['logo']))
                                         <img src="{{ $station['logo'] }}"
                                              alt="{{ $station['name'] }}"
                                              class="img-fluid mb-2"
                                              style="max-height: 50px;">
+                                    @else
+                                        <i class="fas fa-broadcast-tower fa-3x text-muted mb-2"></i>
                                     @endif
                                     <h6 class="card-title mb-0">{{ $station['name'] }}</h6>
                                     <small class="text-muted">{{ $station['id'] }}</small>
                                 </div>
                             </a>
                         </div>
+                        @endif
                     @endforeach
                 </div>
             @else
@@ -86,7 +90,6 @@
 <style>
 .station-card {
     transition: transform 0.2s, box-shadow 0.2s;
-    border: 1px solid #dee2e6;
 }
 .station-card:hover {
     transform: translateY(-3px);

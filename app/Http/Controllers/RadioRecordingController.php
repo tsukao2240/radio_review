@@ -19,15 +19,18 @@ class RadioRecordingController extends Controller
     {
         $this->client = new Client([
             'timeout' => 30,
-            'connect_timeout' => 3,
+            'connect_timeout' => 2,
             'verify' => false,
             'http_errors' => false,
             'allow_redirects' => true,
             'decode_content' => false,
             'curl' => [
-                CURLOPT_MAXCONNECTS => 20, // 10並列に対応（サーバー負荷軽減）
-                CURLOPT_TCP_NODELAY => 1,
-                CURLOPT_FORBID_REUSE => 0 // 接続再利用
+                CURLOPT_MAXCONNECTS => 50, // 高速化のため接続数を増加
+                CURLOPT_TCP_NODELAY => 1, // Nagleアルゴリズム無効化
+                CURLOPT_FORBID_REUSE => 0, // 接続再利用
+                CURLOPT_TCP_KEEPALIVE => 1, // Keep-Alive有効
+                CURLOPT_TCP_KEEPIDLE => 10,
+                CURLOPT_TCP_KEEPINTVL => 5,
             ]
         ]);
     }
@@ -67,14 +70,7 @@ class RadioRecordingController extends Controller
                 return response()->json(['success' => false, 'message' => '認証に失敗しました']);
             }
 
-            // タイムフリーのプレイリストURLを構築
-            $playlistUrl = sprintf(
-                'https://radiko.jp/v2/api/ts/playlist.m3u8?station_id=%s&l=15&lsid=%s&ft=%s&to=%s',
-                $stationId,
-                bin2hex(random_bytes(16)),
-                $startTime . '00',
-                $endTime . '00'
-            );
+            $areaId = $request->input('area_id');
 
             // 録音情報をキャッシュに保存（録音開始前に保存）
             $recordingId = "{$stationId}_{$startTime}_{$timestamp}";
@@ -124,7 +120,7 @@ class RadioRecordingController extends Controller
             }
 
             // この後の処理はクライアントに返した後に実行される
-            $this->executeTimefreeRecording($playlistUrl, $filepath, $authToken, $recordingId);
+            $this->executeTimefreeRecording($stationId, $startTime, $endTime, $filepath, $authToken, $areaId, $recordingId);
 
             // 録音完了後、キャッシュを更新
             $recordingInfo['status'] = 'completed';
@@ -249,6 +245,100 @@ class RadioRecordingController extends Controller
         }
     }
 
+    // タイムフリープレイリストベースURL取得（v3 API）
+    private function getTimefreeBaseUrl(string $stationId, bool $isAreaFree = false): string
+    {
+        $streamInfoUrl = "https://radiko.jp/v3/station/stream/pc_html5/{$stationId}.xml";
+        $response = $this->client->get($streamInfoUrl);
+        $xml = (string)$response->getBody();
+
+        $dom = new \DOMDocument();
+        @$dom->loadXML($xml);
+        $xpath = new \DOMXPath($dom);
+
+        $timefreeAttr = '1';
+        $areafreeAttr = $isAreaFree ? '1' : '0';
+
+        // 適切なURLを選択
+        foreach ($xpath->query("//url[@timefree='{$timefreeAttr}'][@areafree='{$areafreeAttr}']/playlist_create_url") as $node) {
+            return $node->textContent;
+        }
+
+        // フォールバック
+        foreach ($xpath->query("//url[@timefree='1']/playlist_create_url") as $node) {
+            return $node->textContent;
+        }
+
+        throw new \Exception("タイムフリープレイリストURLが取得できませんでした: {$stationId}");
+    }
+
+    // 全セグメントURLを取得（rajiko方式：300秒チャンク）
+    private function getAllSegmentUrls(string $stationId, string $startTime, string $endTime, string $authToken, ?string $areaId = null): array
+    {
+        $isAreaFree = $areaId && $areaId !== 'JP13';
+        $baseUrl = $this->getTimefreeBaseUrl($stationId, $isAreaFree);
+        $lsid = bin2hex(random_bytes(16));
+
+        // 時刻をDateTimeに変換
+        $startDt = \Carbon\Carbon::createFromFormat('YmdHi', $startTime, 'Asia/Tokyo');
+        $endDt = \Carbon\Carbon::createFromFormat('YmdHi', $endTime, 'Asia/Tokyo');
+        $seekDt = clone $startDt;
+
+        $allSegments = [];
+        $chunkSeconds = 300; // 5分チャンク
+
+        \Log::info('セグメントURL収集開始', [
+            'station' => $stationId,
+            'start' => $startTime,
+            'end' => $endTime,
+            'duration_minutes' => $startDt->diffInMinutes($endDt)
+        ]);
+
+        while ($seekDt < $endDt) {
+            $params = [
+                'station_id' => $stationId,
+                'start_at' => $startDt->format('YmdHis'),
+                'ft' => $startDt->format('YmdHis'),
+                'end_at' => $endDt->format('YmdHis'),
+                'to' => $endDt->format('YmdHis'),
+                'seek' => $seekDt->format('YmdHis'),
+                'l' => (string)$chunkSeconds,
+                'lsid' => $lsid,
+                'type' => $isAreaFree ? 'c' : 'b',
+            ];
+
+            try {
+                // マスタープレイリスト取得
+                $playlistResp = $this->client->get($baseUrl . '?' . http_build_query($params), [
+                    'headers' => ['X-Radiko-AuthToken' => $authToken],
+                    'timeout' => 10
+                ]);
+                $masterContent = (string)$playlistResp->getBody();
+
+                // medialist URL抽出
+                if (preg_match('/(https:\/\/[^\s]+medialist[^\s]+)/', $masterContent, $m)) {
+                    $medialistResp = $this->client->get($m[1], [
+                        'headers' => ['X-Radiko-AuthToken' => $authToken],
+                        'timeout' => 10
+                    ]);
+                    $medialistContent = (string)$medialistResp->getBody();
+
+                    // AACセグメントURL抽出
+                    if (preg_match_all('/https:\/\/[^\s]+\.aac/', $medialistContent, $segs)) {
+                        $allSegments = array_merge($allSegments, $segs[0]);
+                    }
+                }
+            } catch (\Exception $e) {
+                \Log::warning('セグメント取得エラー', ['seek' => $seekDt->format('YmdHis'), 'error' => $e->getMessage()]);
+            }
+
+            $seekDt->addSeconds($chunkSeconds);
+        }
+
+        \Log::info('セグメントURL収集完了', ['total' => count($allSegments)]);
+        return array_unique($allSegments); // 重複除去
+    }
+
     // GPS座標を生成（エリアIDから）
     private function generateGpsLocation(string $areaId): string
     {
@@ -313,11 +403,18 @@ class RadioRecordingController extends Controller
         return sprintf('%.6f,%.6f,gps', $lat, $long);
     }
 
-    // タイムフリー録音実行（高速版：PHPで直接並列ダウンロード）
-    private function executeTimefreeRecording(string $playlistUrl, string $filepath, string $authToken, string $recordingId = null): void
+    // タイムフリー録音実行（高速版：rajiko方式）
+    private function executeTimefreeRecording(string $stationId, string $startTime, string $endTime, string $filepath, string $authToken, ?string $areaId = null, string $recordingId = null): void
     {
-        // 常に高速並列ダウンロードを使用（フォールバック無し）
-        $this->fastParallelDownload($playlistUrl, $filepath, $authToken, $recordingId);
+        // 全セグメントURLを取得
+        $segments = $this->getAllSegmentUrls($stationId, $startTime, $endTime, $authToken, $areaId);
+
+        if (empty($segments)) {
+            throw new \Exception('セグメントが見つかりませんでした');
+        }
+
+        // 高速並列ダウンロード
+        $this->fastParallelDownload($segments, $filepath, $authToken, $recordingId);
         return;
 
         // 以下はフォールバック用（エラー時のみ）
@@ -635,102 +732,14 @@ class RadioRecordingController extends Controller
         }
     }
 
-    // 高速並列ダウンロード（らくらじ2方式）
-    private function fastParallelDownload(string $playlistUrl, string $filepath, string $authToken, string $recordingId = null): void
+    // 高速並列ダウンロード（rajiko方式）
+    private function fastParallelDownload(array $segments, string $filepath, string $authToken, string $recordingId = null): void
     {
-        // メモリ制限を緩和
-        ini_set('memory_limit', '256M'); // 適切なメモリ設定
+        // メモリ制限を緩和（高速ダウンロード用）
+        ini_set('memory_limit', '512M');
         set_time_limit(600); // 10分タイムアウト
 
-        // m3u8プレイリストを取得
-        $response = $this->client->get($playlistUrl, [
-            'headers' => [
-                'X-Radiko-AuthToken' => $authToken
-            ]
-        ]);
-
-        $playlistContent = (string)$response->getBody();
-        // セグメントURLを抽出
-        $segments = [];
-        $lines = explode("\n", $playlistContent);
-        $baseUrl = dirname($playlistUrl);
-
-        // マスタープレイリストかチェック（複数の判定条件）
-        $isMasterPlaylist = false;
-        foreach ($lines as $line) {
-            if (str_contains($line, '#EXT-X-STREAM-INF') || str_contains($line, '#EXT-X-MEDIA')) {
-                $isMasterPlaylist = true;
-                break;
-            }
-        }
-
-        // マスタープレイリストでない場合も、.m3u8へのリンクがあればマスターとして扱う
-        if (!$isMasterPlaylist) {
-            foreach ($lines as $line) {
-                $line = trim($line);
-                if (!empty($line) && !str_starts_with($line, '#') && str_contains($line, '.m3u8')) {
-                    $isMasterPlaylist = true;
-                    \Log::info('m3u8リンク検出、マスタープレイリストとして処理');
-                    break;
-                }
-            }
-        }
-
-        if ($isMasterPlaylist) {
-            // マスタープレイリストから最高品質のURLを取得
-            $subPlaylistUrl = null;
-            foreach ($lines as $line) {
-                $line = trim($line);
-                if (!empty($line) && !str_starts_with($line, '#')) {
-                    if (str_starts_with($line, 'http')) {
-                        $subPlaylistUrl = $line;
-                    } else {
-                        $subPlaylistUrl = $baseUrl . '/' . $line;
-                    }
-                    break; // 最初のストリームを使用
-                }
-            }
-
-            if ($subPlaylistUrl) {
-                // サブプレイリストを取得
-                $response = $this->client->get($subPlaylistUrl, [
-                    'headers' => [
-                        'X-Radiko-AuthToken' => $authToken
-                    ]
-                ]);
-                $playlistContent = (string)$response->getBody();
-                $baseUrl = dirname($subPlaylistUrl);
-                $lines = explode("\n", $playlistContent); // 再解析
-                } else {
-                \Log::warning('サブプレイリストURLが見つかりませんでした');
-            }
-        }
-
-        // セグメントURLを抽出（.aacまたは.tsファイル）
-        foreach ($lines as $line) {
-            $line = trim($line);
-            if (!empty($line) && !str_starts_with($line, '#')) {
-                // セグメントファイルのみ（m3u8は除外）
-                if (str_ends_with($line, '.aac') || str_ends_with($line, '.ts') ||
-                    str_ends_with($line, '.m4s') || preg_match('/\.(aac|ts|m4s)\?/', $line)) {
-                    // 相対URLを絶対URLに変換
-                    if (str_starts_with($line, 'http')) {
-                        $segments[] = $line;
-                    } else {
-                        $segments[] = $baseUrl . '/' . $line;
-                    }
-                }
-            }
-        }
-
-        if (empty($segments)) {
-            \Log::error('セグメントが見つかりませんでした', [
-                'playlist_size' => strlen($playlistContent),
-                'lines_count' => count($lines),
-                'is_master_playlist' => $isMasterPlaylist
-            ]);
-            throw new \Exception('セグメントが見つかりませんでした');
-        }
+        \Log::info('高速ダウンロード開始', ['segments' => count($segments)]);
 
         // 一時ディレクトリ作成
         $tempDir = storage_path('app/temp_segments/' . basename($filepath, '.m4a'));
@@ -738,14 +747,19 @@ class RadioRecordingController extends Controller
             mkdir($tempDir, 0755, true);
         }
 
-        // 適度な並列ダウンロード（10並列：サーバー負荷を最小限に）
+        // 高速並列ダウンロード（rajiko方式：待機なし）
         $downloadStartTime = microtime(true);
-        $maxParallel = 10; // radikoサーバー保護のため控えめに設定
+        $maxParallel = 20; // 高速化のため並列数を増加
         $segmentFiles = [];
         $chunks = array_chunk($segments, $maxParallel);
 
+        \Log::info('セグメントダウンロード開始', [
+            'total_segments' => count($segments),
+            'parallel' => $maxParallel,
+            'chunks' => count($chunks)
+        ]);
+
         foreach ($chunks as $chunkIndex => $chunk) {
-            $chunkStartTime = microtime(true);
             $promises = [];
             foreach ($chunk as $index => $segmentUrl) {
                 $actualIndex = $chunkIndex * $maxParallel + $index;
@@ -756,39 +770,17 @@ class RadioRecordingController extends Controller
                     'headers' => [
                         'X-Radiko-AuthToken' => $authToken,
                         'Connection' => 'keep-alive',
-                        'Accept-Encoding' => 'gzip, deflate',
+                        'Accept-Encoding' => 'identity', // 圧縮なしで高速化
                         'User-Agent' => 'Mozilla/5.0'
                     ],
                     'sink' => $segmentFile,
-                    'timeout' => 10,
-                    'connect_timeout' => 1
+                    'timeout' => 15,
+                    'connect_timeout' => 2
                 ]);
             }
 
-            // 並列実行（settle使用でエラー耐性向上）
-            $results = \GuzzleHttp\Promise\Utils::settle($promises)->wait();
-
-            // ダウンロード結果を確認
-            $successCount = 0;
-            $failureCount = 0;
-            foreach ($results as $index => $result) {
-                if ($result['state'] === 'fulfilled') {
-                    $successCount++;
-                } else {
-                    $failureCount++;
-                    $actualIndex = $chunkIndex * $maxParallel + $index;
-                    \Log::warning('セグメントダウンロード失敗', [
-                        'segment_index' => $actualIndex,
-                        'reason' => $result['reason'] ?? 'unknown'
-                    ]);
-                }
-            }
-
-            $chunkTime = microtime(true) - $chunkStartTime;
-            // チャンク間で待機してサーバー負荷を分散
-            if ($chunkIndex < count($chunks) - 1) {
-                usleep(200000); // 0.2秒待機（サーバー保護）
-            }
+            // 並列実行（待機なし）
+            \GuzzleHttp\Promise\Utils::settle($promises)->wait();
         }
 
         $downloadTime = microtime(true) - $downloadStartTime;
