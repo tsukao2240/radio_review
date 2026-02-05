@@ -29,11 +29,11 @@ class CrudController extends Controller
                     ->distinct()
                     ->paginate(10);
             });
-        } else {
-            //キーワードが入力されていないときはページ遷移しない
-            return back();
+            
+            return view('search.index', compact('programs'));
         }
-
-        return view('post.index', compact('programs'));
+        
+        // キーワードが入力されていない場合は検索フォームのみ表示
+        return view('search.index');
     }
 }
