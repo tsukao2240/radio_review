@@ -46,12 +46,12 @@ Route::get('/review/list', 'PostController@view')->name('review.view');
 //検索画面
 Route::get('/program', 'PostController@index')->name('post.program');
 
-//メールアドレスの認証をしていないときは表示できなくする
-Route::group(['middleware' => 'verified'], function () {
+//レビュー投稿関連ルート（認証必須）
+Route::middleware(['auth'])->group(function () {
     //投稿画面
-    Route::get('/review/{id}', 'PostController@review')->middleware('verified')->name('post.review');
+    Route::get('/review/{id}', 'PostController@review')->name('post.review');
     //レビューの投稿
-    Route::post('/review/{id}', 'PostController@store')->middleware(['verified', 'throttle:posts'])->name('post.store');
+    Route::post('/review/{id}', 'PostController@store')->middleware('throttle:posts')->name('post.store');
 });
 
 //自分が投稿したレビューを表示する（認証必須）
