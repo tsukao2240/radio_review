@@ -63,6 +63,14 @@
                     <div class="float-right">
                         <ul class="navbar-nav mr-auto">
                             <li class="nav-item active">
+                                <a class="hover nav-link" href="{{ route('program.search') }}">
+                                    <i class="fas fa-search fa-fw fa-lg"></i>
+                                    <span class="text-center">
+                                        番組検索
+                                    </span>
+                                </a>
+                            </li>
+                            <li class="nav-item active">
                                 <a class="hover nav-link" href="{{ route('program.schedule') }}">
                                     <i class="fas fa-broadcast-tower fa-fw fa-lg"></i>
                                     <span class="text-center">
