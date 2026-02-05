@@ -46,6 +46,30 @@
             <button id="favorite-btn" class="btn btn-outline-danger mb-3" style="width: 100%;">
                 <i class="fas fa-heart"></i> お気に入りに追加
             </button>
+            
+            <!-- タイムフリー録音ボタン -->
+            @if($latestBroadcast)
+            <div class="timefree-recording-section mb-3">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> 直近の放送：{{ $latestBroadcast['date'] }} {{ $latestBroadcast['start'] }}～{{ $latestBroadcast['end'] }}
+                </div>
+                <button class="btn btn-success recording-btn"
+                        data-station-id="{{ $entry['id'] }}"
+                        data-station-name="{{ $entry['id'] }}"
+                        data-title="{{ $entry['title'] }}"
+                        data-cast="{{ $entry['cast'] }}"
+                        data-date="{{ $latestBroadcast['date'] }}"
+                        data-start="{{ $latestBroadcast['start'] }}"
+                        data-end="{{ $latestBroadcast['end'] }}">
+                    <i class="fas fa-microphone"></i> この放送を録音する
+                </button>
+            </div>
+            @else
+            <div class="alert alert-secondary mb-3">
+                <i class="fas fa-exclamation-circle"></i> タイムフリー期間内の放送がありません
+            </div>
+            @endif
+            
             @include('layouts.post_create',['program_id' => $program_id])
             @include('layouts.post_view',['station_id' => $entry['id'],'program_title' => $entry['title']])
         </section>
@@ -75,6 +99,30 @@
             <button id="favorite-btn" class="btn btn-outline-danger mb-3" style="width: 100%;">
                 <i class="fas fa-heart"></i> お気に入りに追加
             </button>
+            
+            <!-- タイムフリー録音ボタン -->
+            @if($latestBroadcast)
+            <div class="timefree-recording-section mb-3">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> 直近の放送：{{ $latestBroadcast['date'] }} {{ $latestBroadcast['start'] }}～{{ $latestBroadcast['end'] }}
+                </div>
+                <button class="btn btn-success recording-btn"
+                        data-station-id="{{ $result->station_id }}"
+                        data-station-name="{{ $result->station_id }}"
+                        data-title="{{ $result->title }}"
+                        data-cast="{{ $result->cast }}"
+                        data-date="{{ $latestBroadcast['date'] }}"
+                        data-start="{{ $latestBroadcast['start'] }}"
+                        data-end="{{ $latestBroadcast['end'] }}">
+                    <i class="fas fa-microphone"></i> この放送を録音する
+                </button>
+            </div>
+            @else
+            <div class="alert alert-secondary mb-3">
+                <i class="fas fa-exclamation-circle"></i> タイムフリー期間内の放送がありません
+            </div>
+            @endif
+            
             @include('layouts.post_create',['program_id' => $result->id])
             @include('layouts.post_view',['station_id' => $result->station_id,'program_title' => $result->title])
         </section>
@@ -158,6 +206,56 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     @endguest
+
+    // タイムフリー録音機能
+    const recordingBtn = document.querySelector('.recording-btn');
+    if (recordingBtn) {
+        recordingBtn.addEventListener('click', function() {
+            const stationId = this.dataset.stationId;
+            const stationName = this.dataset.stationName;
+            const title = this.dataset.title;
+            const cast = this.dataset.cast;
+            const date = this.dataset.date;
+            const startTime = this.dataset.start.replace(':', '');
+            const endTime = this.dataset.end.replace(':', '');
+
+            if (confirm(`「${title}」を録音しますか？`)) {
+                const requestBody = {
+                    station_id: stationId,
+                    station_name: stationName,
+                    title: title,
+                    cast: cast,
+                    start_time: date + startTime,
+                    end_time: date + endTime
+                };
+
+                fetch('{{ route("recording.timefree.start") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify(requestBody)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('録音を開始しました。録音履歴ページで進捗を確認できます。');
+                        // 録音履歴ページへ移動するか確認
+                        if (confirm('録音履歴ページを開きますか？')) {
+                            window.location.href = '{{ route("recording.history") }}';
+                        }
+                    } else {
+                        alert('エラー: ' + (data.message || '録音の開始に失敗しました'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('録音リクエスト中にエラーが発生しました。');
+                });
+            }
+        });
+    }
 });
 </script>
 @endsection
