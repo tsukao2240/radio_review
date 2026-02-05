@@ -59,7 +59,11 @@ class ViewProgramDetailsController extends Controller
 
                         // N+1問題を回避: ループの外でクエリを実行するために、
                         // 最初の一致で取得して返す
-                        $program_id = RadioProgram::where('title', $title)->value('id');
+                        // station_idとtitleの両方で検索してより正確にマッチング
+                        $stationIdFromApi = $xpath->evaluate('string(../../@id)', $node);
+                        $program_id = RadioProgram::where('station_id', $stationIdFromApi)
+                            ->where('title', $title)
+                            ->value('id');
 
                         return ['type' => 'entries', 'data' => $entries, 'program_id' => $program_id];
                     }
@@ -114,7 +118,9 @@ class ViewProgramDetailsController extends Controller
             return view('radioprogram.detail', compact('entries', 'program_id', 'latestBroadcast'));
         } else {
             $results = $result['data'];
-            return view('radioprogram.detail', compact('results', 'latestBroadcast'));
+            // DBから取得した場合もprogram_idを渡す
+            $program_id = $results->isNotEmpty() ? $results->first()->id : null;
+            return view('radioprogram.detail', compact('results', 'program_id', 'latestBroadcast'));
         }
     }
 }
