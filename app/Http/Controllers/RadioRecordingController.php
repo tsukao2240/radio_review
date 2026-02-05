@@ -1011,8 +1011,15 @@ class RadioRecordingController extends Controller
 
             do {
                 $result = $redis->scan($cursor, ['MATCH' => $pattern, 'COUNT' => 100]);
+                
+                // scanが失敗した場合のエラーハンドリング
+                if ($result === false || !is_array($result) || count($result) < 2) {
+                    \Log::warning('Redis scanが失敗しました', ['cursor' => $cursor, 'result' => $result]);
+                    break;
+                }
+                
                 $cursor = $result[0];
-                $keys = $result[1];
+                $keys = $result[1] ?? [];
 
                 foreach ($keys as $key) {
                     // すべてのプレフィックスを除去してrecording_で始まるキーを抽出
