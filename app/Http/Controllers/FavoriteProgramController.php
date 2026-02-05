@@ -7,19 +7,61 @@ use App\FavoriteProgram;
 use Illuminate\Support\Facades\Auth;
 use App\Exceptions\DatabaseException;
 use App\Http\Requests\FavoriteProgramRequest;
+use App\Services\RadikoApiService;
+use Carbon\Carbon;
 
 class FavoriteProgramController extends Controller
 {
-    public function __construct()
+    protected $radikoApiService;
+
+    public function __construct(RadikoApiService $radikoApiService)
     {
         $this->middleware('auth');
+        $this->radikoApiService = $radikoApiService;
     }
 
     // お気に入り一覧表示
     public function index()
     {
         $favorites = Auth::user()->favoritePrograms;
-        return view('favorite.index', compact('favorites'));
+
+        // 各お気に入り番組の直近放送情報を取得
+        $favoritesWithSchedule = $favorites->map(function($favorite) {
+            try {
+                // 週間番組表を取得
+                $schedule = $this->radikoApiService->getWeeklySchedule($favorite->station_id);
+
+                // 番組タイトルにマッチする直近の放送を検索
+                $latestBroadcast = null;
+                $now = Carbon::now();
+
+                foreach ($schedule['entries'] as $entry) {
+                    if ($entry['title'] === $favorite->program_title) {
+                        $programEndTime = Carbon::createFromFormat('Ymd H:i', $entry['date'] . ' ' . $entry['end']);
+
+                        // タイムフリー期間内（放送終了から7日以内）かつ、放送が終了済みの番組
+                        if ($programEndTime->isPast() && $programEndTime->diffInDays($now) <= 7) {
+                            $latestBroadcast = $entry;
+                            break; // 最初に見つかった直近の放送を使用
+                        }
+                    }
+                }
+
+                $favorite->latest_broadcast = $latestBroadcast;
+            } catch (\Exception $e) {
+                \Log::error('お気に入り番組の放送情報取得エラー', [
+                    'favorite_id' => $favorite->id,
+                    'station_id' => $favorite->station_id,
+                    'program_title' => $favorite->program_title,
+                    'error' => $e->getMessage()
+                ]);
+                $favorite->latest_broadcast = null;
+            }
+
+            return $favorite;
+        });
+
+        return view('favorite.index', ['favorites' => $favoritesWithSchedule]);
     }
 
     // お気に入り登録
