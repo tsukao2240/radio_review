@@ -4,6 +4,12 @@
 <title>番組検索</title>
 
 <div class="container">
+    @if(request('title'))
+        {{ Breadcrumbs::render('search.result', request('title')) }}
+    @else
+        {{ Breadcrumbs::render('search') }}
+    @endif
+    
     <div class="page-header">
         <h3>番組検索</h3>
         <p class="text-muted">番組名で検索できます</p>
@@ -35,7 +41,7 @@
                     @foreach ($programs as $item)
                     <div class="card">
                         <div class="card-header">
-                            <a href="{{ route('program.detail', ['station_id' => $item->station_id, 'title' => $item->title]) }}">
+                            <a href="{{ route('program.detail', ['station_id' => $item->station_id, 'title' => $item->title, 'from' => 'search', 'keyword' => request('title')]) }}">
                                 {{ $item->title }}
                             </a>
                         </div>

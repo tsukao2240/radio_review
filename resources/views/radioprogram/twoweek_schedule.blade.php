@@ -2,6 +2,10 @@
 @section('content')
 @include('includes.search')
 
+<span>
+    {{ Breadcrumbs::render('timefree') }}
+</span>
+
 <title>{{ $broadcast_name }} - 2週間番組表</title>
 
 <div class="container-fluid mt-3">
@@ -184,7 +188,7 @@
                             <small class="text-muted">〜{{ $entry['end'] }}</small>
                         </div>
                         <div class="col-md-7">
-                            <a href="{{ url('list/' . $entry['id'] . '/' . urlencode($entry['title'])) }}"
+                            <a href="{{ url('list/' . $entry['id'] . '/' . urlencode($entry['title'])) }}?from=timefree"
                                class="text-decoration-none">
                                 <strong>{{ $entry['title'] }}</strong>
                             </a>

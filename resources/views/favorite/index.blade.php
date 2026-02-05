@@ -1,6 +1,10 @@
 @extends('layouts.header')
 @section('content')
 
+<span>
+    {{ Breadcrumbs::render('favorites') }}
+</span>
+
 <title>お気に入り番組</title>
 
 <div class="container mt-4">

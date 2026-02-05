@@ -6,14 +6,46 @@
 @foreach ($entries as $entry)
 <title>{{ $entry['title'] }}</title>
 @include('includes.search')
-{{ Breadcrumbs::render('detail',$entry['id'],$entry['title']) }}
+@if(request('from') === 'search' && request('keyword'))
+    {{ Breadcrumbs::render('detail.from_search', $entry['id'], $entry['title'], request('keyword')) }}
+@elseif(request('from') === 'schedule')
+    {{ Breadcrumbs::render('detail.from_schedule', $entry['id'], $entry['title']) }}
+@elseif(request('from') === 'weekly' && request('station_id'))
+    {{ Breadcrumbs::render('detail.from_weekly', $entry['id'], $entry['title']) }}
+@elseif(request('from') === 'timefree')
+    {{ Breadcrumbs::render('detail.from_timefree', $entry['id'], $entry['title']) }}
+@elseif(request('from') === 'mypage')
+    {{ Breadcrumbs::render('detail.from_mypage', $entry['id'], $entry['title']) }}
+@elseif(request('from') === 'review')
+    {{ Breadcrumbs::render('detail.from_review', $entry['id'], $entry['title']) }}
+@elseif(request('from') === 'favorites')
+    {{ Breadcrumbs::render('detail.from_favorites', $entry['id'], $entry['title']) }}
+@else
+    {{ Breadcrumbs::render('detail', $entry['id'], $entry['title']) }}
+@endif
 @endforeach
 <!--APIから取得できず、DBからデータを取得した場合-->
 @elseif(isset($results))
 @foreach ($results as $result)
 <title>{{ $result->title }}</title>
 @include('includes.search')
-{{ Breadcrumbs::render('detail',$result->station_id,$result->title) }}
+@if(request('from') === 'search' && request('keyword'))
+    {{ Breadcrumbs::render('detail.from_search', $result->station_id, $result->title, request('keyword')) }}
+@elseif(request('from') === 'schedule')
+    {{ Breadcrumbs::render('detail.from_schedule', $result->station_id, $result->title) }}
+@elseif(request('from') === 'weekly' && request('station_id'))
+    {{ Breadcrumbs::render('detail.from_weekly', $result->station_id, $result->title) }}
+@elseif(request('from') === 'timefree')
+    {{ Breadcrumbs::render('detail.from_timefree', $result->station_id, $result->title) }}
+@elseif(request('from') === 'mypage')
+    {{ Breadcrumbs::render('detail.from_mypage', $result->station_id, $result->title) }}
+@elseif(request('from') === 'review')
+    {{ Breadcrumbs::render('detail.from_review', $result->station_id, $result->title) }}
+@elseif(request('from') === 'favorites')
+    {{ Breadcrumbs::render('detail.from_favorites', $result->station_id, $result->title) }}
+@else
+    {{ Breadcrumbs::render('detail', $result->station_id, $result->title) }}
+@endif
 @endforeach
 @endif
 

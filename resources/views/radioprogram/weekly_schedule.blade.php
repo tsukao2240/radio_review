@@ -2,7 +2,7 @@
 @section('content')
 @include('includes.search')
 <span>
-    {{ Breadcrumbs::render('weekly_schedule') }}
+    {{ Breadcrumbs::render('weekly_schedule', $station_id) }}
 </span>
 <title>{{ $broadcast_name }}の週間番組表</title>
 <div class="schedule-header">
@@ -74,7 +74,7 @@
                     @if ($shouldDisplay)
                     <tr>
                         <td>
-                            <a href="{{ url('list/' . $entry['id'] . '/' . $entry['title'])}}">{{$entry['title']}}</a>
+                            <a href="{{ url('list/' . $entry['id'] . '/' . $entry['title']) }}?from=weekly&station_id={{ $station_id }}">{{$entry['title']}}</a>
                             @if ($entry['cast'] !== '')
                             <br>
                             {{ $entry['cast'] }}

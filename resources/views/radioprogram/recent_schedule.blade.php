@@ -25,7 +25,7 @@
             <tr>
                 <td><a href="{{ url('schedule/' . $result['station_id']) }}">{{$result['station']}}</a></td>
                 <td>
-                    <a href="{{ url('list/' . $result['station_id'] . '/' . $result['title'])}}">{{$result['title']}}</a>
+                    <a href="{{ url('list/' . $result['station_id'] . '/' . $result['title']) }}?from=schedule">{{$result['title']}}</a>
                 </td>
                 <td style="width:25%">{{ $result['cast'] }}</td>
                 <td style="white-space: nowrap">{{$result['start'] . ' ' . '-' . ' '. $result['end']}}</td>

@@ -15,7 +15,7 @@
     <div class="card">
         @foreach ($posts as $post)
         <div class="card-header">
-            <a href="{{ route('program.detail',['station_id' => $post->station_id,'title' => $post->program_title]) }}">{{ $post->program_title }}
+            <a href="{{ route('program.detail',['station_id' => $post->station_id,'title' => $post->program_title, 'from' => 'review']) }}">{{ $post->program_title }}
             </a>
         </div>
         <div class="card-body card_review_body">
