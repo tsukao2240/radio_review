@@ -88,6 +88,84 @@ class RadikoApiService
     }
 
     /**
+     * 指定された放送局の2週間番組表を取得する（過去7日+未来7日）
+     * タイムフリー録音機能用に過去の番組も含める
+     * キャッシュ有効期限: 30分
+     *
+     * @param string $stationId
+     * @return array
+     * @throws \Exception
+     */
+    public function getTwoWeekSchedule($stationId)
+    {
+        $cacheKey = 'radiko_two_week_schedule_' . $stationId;
+
+        return Cache::remember($cacheKey, 1800, function () use ($stationId) {
+            try {
+                $entries = [];
+                $broadcastName = '';
+
+                // 7日前の日付を計算（午前5時基準）
+                $sevenDaysAgo = new \DateTime();
+                $sevenDaysAgo->modify('-7 days');
+                if (intval($sevenDaysAgo->format('H')) < 5) {
+                    $sevenDaysAgo->modify('-1 days');
+                }
+                $startDate = $sevenDaysAgo->format('Ymd');
+
+                $url = 'http://radiko.jp/v3/program/station/weekly/' . $stationId . '.xml';
+
+                $dom = new DOMDocument();
+                @$dom->load($url);
+
+                if (!$dom->documentElement) {
+                    throw new \Exception('Failed to load XML from Radiko API');
+                }
+
+                $xpath = new DOMXPath($dom);
+
+                foreach ($xpath->query('//radiko/stations/station/progs/prog') as $node) {
+                    $programDate = substr($xpath->evaluate('string(./@ft)', $node), 0, 8);
+
+                    // 7日前以降の番組をすべて取得（過去7日+未来の番組）
+                    if (intval($startDate) <= intval($programDate)) {
+                        $entries[] = [
+                            'id' => $xpath->evaluate('string(../../@id)', $node),
+                            'date' => $programDate,
+                            'title' => $xpath->evaluate('string(title)', $node),
+                            'cast' => $xpath->evaluate('string(pfm)', $node),
+                            'start' => substr_replace($xpath->evaluate('string(./@ftl)', $node), ':', 2, 0),
+                            'end' => substr_replace($xpath->evaluate('string(./@tol)', $node), ':', 2, 0),
+                        ];
+
+                        if (empty($broadcastName)) {
+                            $broadcastName = $xpath->evaluate('string(../.././name)', $node);
+                        }
+                    }
+                }
+
+                Log::info('Two-week schedule retrieved from Radiko API', [
+                    'station_id' => $stationId,
+                    'start_date' => $startDate,
+                    'programs_count' => count($entries)
+                ]);
+
+                return [
+                    'entries' => $entries,
+                    'broadcast_name' => $broadcastName
+                ];
+
+            } catch (\Exception $e) {
+                Log::error('Error fetching two-week schedule from Radiko API: ' . $e->getMessage(), [
+                    'station_id' => $stationId,
+                    'trace' => $e->getTraceAsString()
+                ]);
+                throw $e;
+            }
+        });
+    }
+
+    /**
      * 番組の詳細情報を取得する
      * キャッシュ有効期限: 30分
      *

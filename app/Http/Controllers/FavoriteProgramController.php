@@ -28,21 +28,26 @@ class FavoriteProgramController extends Controller
         // 各お気に入り番組の直近放送情報を取得
         $favoritesWithSchedule = $favorites->map(function($favorite) {
             try {
-                // 週間番組表を取得
-                $schedule = $this->radikoApiService->getWeeklySchedule($favorite->station_id);
+                // 2週間番組表を取得（過去7日+未来7日）
+                $schedule = $this->radikoApiService->getTwoWeekSchedule($favorite->station_id);
 
                 // 番組タイトルにマッチする直近の放送を検索
                 $latestBroadcast = null;
+                $latestEndTime = null;
                 $now = Carbon::now();
+                $timefreeLimitDate = $now->copy()->subDays(7);
 
                 foreach ($schedule['entries'] as $entry) {
                     if ($entry['title'] === $favorite->program_title) {
                         $programEndTime = Carbon::createFromFormat('Ymd H:i', $entry['date'] . ' ' . $entry['end']);
 
                         // タイムフリー期間内（放送終了から7日以内）かつ、放送が終了済みの番組
-                        if ($programEndTime->isPast() && $programEndTime->diffInDays($now) <= 7) {
-                            $latestBroadcast = $entry;
-                            break; // 最初に見つかった直近の放送を使用
+                        if ($programEndTime->isPast() && $programEndTime->isAfter($timefreeLimitDate)) {
+                            // より新しい放送を優先
+                            if ($latestEndTime === null || $programEndTime->isAfter($latestEndTime)) {
+                                $latestBroadcast = $entry;
+                                $latestEndTime = $programEndTime;
+                            }
                         }
                     }
                 }
