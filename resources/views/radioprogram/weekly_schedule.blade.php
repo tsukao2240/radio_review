@@ -91,7 +91,7 @@
                                 @if (Auth::check())
                                     <button class="btn btn-sm btn-warning schedule-recording-btn"
                                             data-station-id="{{ $entry['id'] }}"
-                                            data-station-name="{{ $id }}"
+                                            data-station-name="{{ $station_id }}"
                                             data-title="{{ $entry['title'] }}"
                                             data-cast="{{ $entry['cast'] ?? '' }}"
                                             data-start="{{ $entry['date'] . str_replace(':', '', $entry['start']) }}"
@@ -170,7 +170,7 @@
                                         </select>
                                         <button class="btn btn-sm btn-success recording-btn"
                                                 data-station-id="{{ $entry['id'] }}"
-                                                data-station-name="{{ $id }}"
+                                                data-station-name="{{ $station_id }}"
                                                 data-title="{{ $entry['title'] }}"
                                                 data-cast="{{ $entry['cast'] ?? '' }}"
                                                 data-date="{{ $entry['date'] }}"
