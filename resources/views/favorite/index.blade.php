@@ -105,7 +105,9 @@
                                 </select>
                                 <button class="btn btn-sm btn-success recording-btn"
                                         data-station-id="{{ $broadcast['id'] }}"
+                                        data-station-name="{{ $favorite->station_id }}"
                                         data-title="{{ $broadcast['title'] }}"
+                                        data-cast="{{ $broadcast['cast'] ?? '' }}"
                                         data-date="{{ $broadcast['date'] }}"
                                         data-start="{{ str_replace(':', '', $broadcast['start']) }}"
                                         data-end="{{ str_replace(':', '', $broadcast['end']) }}">
@@ -205,7 +207,9 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.recording-btn').forEach(function(btn) {
         btn.addEventListener('click', function() {
             const stationId = this.dataset.stationId;
+            const stationName = this.dataset.stationName;
             const title = this.dataset.title;
+            const cast = this.dataset.cast;
             const date = this.dataset.date;
             const startTime = this.dataset.start;
             const endTime = this.dataset.end;
@@ -238,7 +242,9 @@ document.addEventListener('DOMContentLoaded', function() {
             // リクエストボディを構築
             const requestBody = {
                 station_id: stationId,
+                station_name: stationName,
                 title: title,
+                cast: cast,
                 start_time: date + startTime,
                 end_time: date + endTime
             };

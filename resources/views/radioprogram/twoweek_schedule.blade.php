@@ -202,7 +202,9 @@
                                 <div class="recording-controls" data-entry-id="{{ $entry['ft'] }}">
                                     <button class="btn btn-sm btn-success timefree-btn"
                                             data-station-id="{{ $entry['id'] }}"
+                                            data-station-name="{{ $station_id }}"
                                             data-title="{{ $entry['title'] }}"
+                                            data-cast="{{ $entry['cast'] ?? '' }}"
                                             data-ft="{{ $entry['ft'] }}"
                                             data-to="{{ $entry['to'] }}">
                                         <i class="fas fa-download"></i> タイムフリー録音
@@ -315,7 +317,9 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.timefree-btn').forEach(btn => {
         btn.addEventListener('click', function() {
             const stationId = this.dataset.stationId;
+            const stationName = this.dataset.stationName;
             const title = this.dataset.title;
+            const cast = this.dataset.cast;
             const ft = this.dataset.ft;
             const to = this.dataset.to;
             const areaId = document.getElementById('global-area-select').value;
@@ -336,7 +340,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 },
                 body: JSON.stringify({
                     station_id: stationId,
+                    station_name: stationName,
                     title: title,
+                    cast: cast,
                     start_time: ft.substring(0, 12),
                     end_time: to.substring(0, 12),
                     area_id: areaId || null

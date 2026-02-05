@@ -95,7 +95,9 @@ class RadioRecordingController extends Controller
     public function startTimefreeRecording(Request $request): JsonResponse
     {
         $stationId = $request->input('station_id');
+        $stationName = $request->input('station_name');
         $title = $request->input('title');
+        $cast = $request->input('cast');
         $startTime = $request->input('start_time'); // YYYYMMDDHHMM形式
         $endTime = $request->input('end_time'); // YYYYMMDDHHMM形式
 
@@ -144,7 +146,9 @@ class RadioRecordingController extends Controller
             $recordingId = "{$stationId}_{$startTime}_{$timestamp}";
             $recordingInfo = [
                 'station_id' => $stationId,
+                'station_name' => $stationName,
                 'title' => $title,
+                'cast' => $cast,
                 'filename' => $filename,
                 'filepath' => $filepath,
                 'start_time' => $startTime,
@@ -866,7 +870,8 @@ class RadioRecordingController extends Controller
 
         $downloadTime = microtime(true) - $downloadStartTime;
         // セグメントを結合（stream_copy_to_streamで高速化）
-        $outputHandle = fopen($filepath, 'wb');
+        $tempFilepath = $tempDir . '/temp.m4a';
+        $outputHandle = fopen($tempFilepath, 'wb');
         foreach ($segmentFiles as $segmentFile) {
             if (file_exists($segmentFile)) {
                 $inputHandle = fopen($segmentFile, 'rb');
@@ -877,10 +882,80 @@ class RadioRecordingController extends Controller
         }
         fclose($outputHandle);
 
+        // メタデータを埋め込む（FFmpeg使用）
+        if ($recordingId) {
+            $this->addMetadataToFile($tempFilepath, $filepath, $recordingId);
+        } else {
+            // 録音IDがない場合はそのまま移動
+            rename($tempFilepath, $filepath);
+        }
+
         // 一時ディレクトリ削除
         @rmdir($tempDir);
 
         }
+
+    // メタデータを埋め込む
+    private function addMetadataToFile(string $inputPath, string $outputPath, string $recordingId): void
+    {
+        // 録音情報を取得
+        $recordingInfo = Cache::get("recording_{$recordingId}");
+        if (!$recordingInfo) {
+            \Log::warning('録音情報が見つかりません。メタデータなしで保存します。', ['recording_id' => $recordingId]);
+            rename($inputPath, $outputPath);
+            return;
+        }
+
+        // FFmpegを探す
+        $ffmpegPath = $this->findFFmpeg();
+        if (!$ffmpegPath) {
+            \Log::warning('ffmpegが見つかりません。メタデータなしで保存します。');
+            rename($inputPath, $outputPath);
+            return;
+        }
+
+        // メタデータを作成
+        $title = $recordingInfo['title'] ?? '';
+        $artist = $recordingInfo['cast'] ?? '';
+        $album = $recordingInfo['station_name'] ?? $recordingInfo['station_id'] ?? '';
+
+        // パスを正規化
+        $normalizedFFmpegPath = $this->normalizePath($ffmpegPath);
+        $normalizedInputPath = $this->normalizePath($inputPath);
+        $normalizedOutputPath = $this->normalizePath($outputPath);
+
+        // FFmpegコマンドを構築（メタデータ埋め込み）
+        $command = sprintf(
+            '"%s" -i "%s" -metadata title="%s" -metadata artist="%s" -metadata album="%s" -c copy -movflags +faststart "%s" -y',
+            $normalizedFFmpegPath,
+            $normalizedInputPath,
+            addslashes($title),
+            addslashes($artist),
+            addslashes($album),
+            $normalizedOutputPath
+        );
+
+        \Log::info('FFmpegメタデータ埋め込み実行', [
+            'command' => $command,
+            'title' => $title,
+            'artist' => $artist,
+            'album' => $album
+        ]);
+
+        exec($command, $output, $returnCode);
+
+        if ($returnCode !== 0) {
+            \Log::error('FFmpegメタデータ埋め込み失敗', [
+                'return_code' => $returnCode,
+                'output' => $output
+            ]);
+            // 失敗した場合はメタデータなしで保存
+            rename($inputPath, $outputPath);
+        } else {
+            // 成功した場合は一時ファイルを削除
+            @unlink($inputPath);
+        }
+    }
 
     // 録音ファイルダウンロード
     public function downloadRecording(Request $request)

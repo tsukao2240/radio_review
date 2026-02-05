@@ -91,7 +91,9 @@
                                 @if (Auth::check())
                                     <button class="btn btn-sm btn-warning schedule-recording-btn"
                                             data-station-id="{{ $entry['id'] }}"
+                                            data-station-name="{{ $id }}"
                                             data-title="{{ $entry['title'] }}"
+                                            data-cast="{{ $entry['cast'] ?? '' }}"
                                             data-start="{{ $entry['date'] . str_replace(':', '', $entry['start']) }}"
                                             data-end="{{ $entry['date'] . str_replace(':', '', $entry['end']) }}">
                                         録音予約
@@ -168,7 +170,9 @@
                                         </select>
                                         <button class="btn btn-sm btn-success recording-btn"
                                                 data-station-id="{{ $entry['id'] }}"
+                                                data-station-name="{{ $id }}"
                                                 data-title="{{ $entry['title'] }}"
+                                                data-cast="{{ $entry['cast'] ?? '' }}"
                                                 data-date="{{ $entry['date'] }}"
                                                 data-start="{{ str_replace(':', '', $entry['start']) }}"
                                                 data-end="{{ str_replace(':', '', $entry['end']) }}">
@@ -267,7 +271,9 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.recording-btn').forEach(function(btn) {
         btn.addEventListener('click', function() {
             const stationId = this.dataset.stationId;
+            const stationName = this.dataset.stationName;
             const title = this.dataset.title;
+            const cast = this.dataset.cast;
             const date = this.dataset.date;
             const startTime = this.dataset.start;
             const endTime = this.dataset.end;
@@ -300,7 +306,9 @@ document.addEventListener('DOMContentLoaded', function() {
             // リクエストボディを構築
             const requestBody = {
                 station_id: stationId,
+                station_name: stationName,
                 title: title,
+                cast: cast,
                 start_time: date + startTime,
                 end_time: date + endTime
             };
