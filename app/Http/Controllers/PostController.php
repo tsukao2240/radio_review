@@ -15,14 +15,30 @@ use Illuminate\Support\Facades\Auth;
 class PostController extends Controller
 {
     //"レビューを投稿する"画面で初期表示ですべての番組を表示する
-    public function index()
+    public function index(Request $request)
     {
         try {
             // LIKE句を使わずにNOT REGEXP一発で処理して効率化
             $excludePattern = '\uff08\u65b0\uff09|\uff3b\u65b0\uff3d|\u3010\u65b0\u3011|\u3010\u65b0\u756a\u7d44\u3011|\uff1c\u65b0\u756a\u7d44\uff1e|\uff08\u7d42\uff09|\uff3b\u7d42\uff3d|\u226a\u7d42\u226b|\u3010\u7d42\u3011|\u3010\u6700\u7d42\u56de\u3011|\uff1c\u6700\u7d42\u56de\uff1e|\uff08\u518d\uff09|\u3010\u518d\u3011|\u226a\u518d\u226b|\[\u518d\]|\uff08\u518d\u653e\u9001\uff09|\u518d\u653e\u9001';
 
-            $results = RadioProgram::whereRaw('title NOT REGEXP ?', [$excludePattern])
-                ->paginate(10);
+            // ページネーション件数（デフォルト50件、選択可能：10, 25, 50, 100件）
+            $perPage = $request->input('per_page', 50);
+            if (!in_array($perPage, [10, 25, 50, 100])) {
+                $perPage = 50;
+            }
+
+            $query = RadioProgram::whereRaw('title NOT REGEXP ?', [$excludePattern]);
+
+            // 検索機能
+            if ($request->filled('search')) {
+                $searchTerm = $request->input('search');
+                $query->where(function($q) use ($searchTerm) {
+                    $q->where('title', 'LIKE', '%' . $searchTerm . '%')
+                      ->orWhere('cast', 'LIKE', '%' . $searchTerm . '%');
+                });
+            }
+
+            $results = $query->paginate($perPage)->appends($request->except('page'));
         } catch (\Exception $e) {
             \Log::error('番組一覧取得エラー', ['error' => $e->getMessage()]);
             throw new DatabaseException('番組一覧の取得に失敗しました', 0, $e);
