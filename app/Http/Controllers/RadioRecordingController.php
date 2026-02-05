@@ -53,9 +53,10 @@ class RadioRecordingController extends Controller
             return response()->json(['success' => false, 'message' => 'タイムフリー期間（1週間）を過ぎています']);
         }
 
-        // 録音ファイル名を生成
+        // 録音ファイル名を生成（ファイル名として使えない文字をサニタイズ）
         $timestamp = Carbon::now()->format('YmdHis');
-        $filename = "{$stationId}_{$title}_{$startTime}_{$endTime}.m4a";
+        $sanitizedTitle = preg_replace('/[\/\\\:\*\?\"\<\>\|]/', '_', $title);
+        $filename = "{$stationId}_{$sanitizedTitle}_{$startTime}.m4a";
         $filepath = storage_path("app/recordings/{$filename}");
 
         // recordingsディレクトリを作成
