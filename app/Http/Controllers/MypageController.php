@@ -14,8 +14,8 @@ class MypageController extends Controller
     public function index()
     {
         $user_id = Auth::id();
-        // JOINを使用してstation_idを取得（N+1問題を回避）
-        $posts = Post::select('posts.*', 'radio_programs.station_id')
+        // JOINを使用してstation_idとprogram_titleを取得（N+1問題を回避）
+        $posts = Post::select('posts.*', 'radio_programs.station_id', 'radio_programs.title as program_title')
             ->join('radio_programs', 'posts.program_id', '=', 'radio_programs.id')
             ->where('posts.user_id', $user_id)
             ->orderBy('posts.created_at', 'desc')
