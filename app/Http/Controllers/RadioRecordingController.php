@@ -15,6 +15,62 @@ class RadioRecordingController extends Controller
 {
     private $client;
 
+    // 放送局ID → 主エリアID（本社所在地）のマッピング
+    private const STATION_AREA_MAP = [
+        // 北海道・東北
+        'HBC' => 'JP1', 'STV' => 'JP1', 'AIR-G' => 'JP1', 'NORTHWAVE' => 'JP1', // 北海道
+        'RAB' => 'JP2', // 青森
+        'IBC' => 'JP3', 'FMI' => 'JP3', // 岩手
+        'TBC' => 'JP4', 'DATEFM' => 'JP4', // 宮城
+        'ABS' => 'JP5', 'AFM' => 'JP5', // 秋田
+        'YBC' => 'JP6', 'YFM' => 'JP6', // 山形
+        'RFC' => 'JP7', 'FMF' => 'JP7', // 福島
+        // 関東
+        'JOQR' => 'JP13', 'TBS' => 'JP13', 'JORF' => 'JP13', 'INT' => 'JP13',
+        'J-WAVE' => 'JP13', 'FMT' => 'JP13', 'HOUSOU-DAIGAKU' => 'JP13',
+        'QRR' => 'JP13', 'LFR' => 'JP13', 'RN1' => 'JP13', 'RN2' => 'JP13',
+        'CRT' => 'JP12', 'BAYFM78' => 'JP12', // 千葉
+        'YFM' => 'JP14', 'FMY' => 'JP14', // 神奈川
+        'NACK5' => 'JP11', 'FMN' => 'JP11', // 埼玉
+        'CRK' => 'JP8', 'RCC' => 'JP9', 'FM-GUNMA' => 'JP10', // 茨城・栃木・群馬
+        // 中部
+        'BSN' => 'JP15', 'FM-NIIGATA' => 'JP15', // 新潟
+        'KNB' => 'JP16', 'FMT' => 'JP16', // 富山
+        'MRO' => 'JP17', 'HELLO FIVE' => 'JP17', // 石川
+        'FBC' => 'JP18', 'FM-FUKUI' => 'JP18', // 福井
+        'YBS' => 'JP19', 'FM-FUJI' => 'JP19', // 山梨
+        'SBC' => 'JP20', 'FMN' => 'JP20', // 長野
+        'CBC' => 'JP23', 'SF' => 'JP23', 'ZIP-FM' => 'JP23', '@FM' => 'JP23', // 愛知
+        'GBS' => 'JP21', 'FMG' => 'JP21', // 岐阜
+        'SBS' => 'JP22', 'K-MIX' => 'JP22', // 静岡
+        // 関西
+        'MBS' => 'JP27', 'ABC' => 'JP27', 'OBC' => 'JP27',
+        'FM802' => 'JP27', 'FMO' => 'JP27', 'FM-COCOLO' => 'JP27',
+        'CCL' => 'JP28', 'CRK' => 'JP28', 'FMOH' => 'JP28', 'KISS FM' => 'JP28', // 兵庫
+        'KBS' => 'JP26', 'α-STATION' => 'JP26', // 京都
+        'WBS' => 'JP30', 'FMW' => 'JP30', // 和歌山
+        'FMNARA' => 'JP29', 'MIE-FM' => 'JP24', 'BBC' => 'JP25', 'e-radio' => 'JP25',
+        // 中国
+        'BSS' => 'JP31', // 鳥取・島根
+        'RSK' => 'JP33', 'FM-OKAYAMA' => 'JP33', // 岡山
+        'RCC' => 'JP34', 'HFM' => 'JP34', 'FM-FUKUYAMA' => 'JP34', // 広島
+        'KRY' => 'JP35', 'FMY' => 'JP35', // 山口
+        // 四国
+        'JRT' => 'JP36', 'FMT' => 'JP36', // 徳島
+        'RNC' => 'JP37', 'FM-KAGAWA' => 'JP37', // 香川
+        'RNB' => 'JP38', 'JOEU-FM' => 'JP38', // 愛媛
+        'RKC' => 'JP39', 'HI-SIX' => 'JP39', // 高知
+        // 九州・沖縄
+        'KBC' => 'JP40', 'RKB' => 'JP40', 'LOVE-FM' => 'JP40', 'FM-FUKUOKA' => 'JP40', 'CROSS FM' => 'JP40',
+        'STS' => 'JP41', // 佐賀
+        'NBC' => 'JP42', 'FM-NAGASAKI' => 'JP42', // 長崎
+        'RKK' => 'JP43', 'FMK' => 'JP43', // 熊本
+        'OBS' => 'JP44', 'FM-OITA' => 'JP44', // 大分
+        'MRT' => 'JP45', 'JOY-FM' => 'JP45', // 宮崎
+        'MBC' => 'JP46', 'μFM' => 'JP46', // 鹿児島
+        'RBC' => 'JP47', 'ROK' => 'JP47', 'FM-OKINAWA' => 'JP47', 'FM21' => 'JP47', // 沖縄
+    ];
+
     public function __construct()
     {
         $this->client = new Client([
@@ -65,13 +121,24 @@ class RadioRecordingController extends Controller
         }
 
         try {
-            // 認証トークンを取得
-            $authToken = $this->getRadikoAuthToken();
+            // エリアIDを取得（未指定の場合は放送局IDから自動判定）
+            $areaId = $request->input('area_id');
+            if (empty($areaId)) {
+                $areaId = $this->getAreaIdFromStationId($stationId);
+            }
+
+            \Log::info('タイムフリー録音リクエスト受信', [
+                'station_id' => $stationId,
+                'area_id' => $areaId,
+                'auto_detected' => empty($request->input('area_id')),
+                'title' => $title
+            ]);
+
+            // 認証トークンを取得（エリアフリー対応）
+            $authToken = $this->getRadikoAuthToken($areaId);
             if (!$authToken) {
                 return response()->json(['success' => false, 'message' => '認証に失敗しました']);
             }
-
-            $areaId = $request->input('area_id');
 
             // 録音情報をキャッシュに保存（録音開始前に保存）
             $recordingId = "{$stationId}_{$startTime}_{$timestamp}";
@@ -292,7 +359,10 @@ class RadioRecordingController extends Controller
             'station' => $stationId,
             'start' => $startTime,
             'end' => $endTime,
-            'duration_minutes' => $startDt->diffInMinutes($endDt)
+            'duration_minutes' => $startDt->diffInMinutes($endDt),
+            'area_id' => $areaId,
+            'is_area_free' => $isAreaFree,
+            'base_url' => $baseUrl
         ]);
 
         while ($seekDt < $endDt) {
@@ -310,11 +380,19 @@ class RadioRecordingController extends Controller
 
             try {
                 // マスタープレイリスト取得
-                $playlistResp = $this->client->get($baseUrl . '?' . http_build_query($params), [
+                $playlistUrl = $baseUrl . '?' . http_build_query($params);
+                $playlistResp = $this->client->get($playlistUrl, [
                     'headers' => ['X-Radiko-AuthToken' => $authToken],
                     'timeout' => 10
                 ]);
                 $masterContent = (string)$playlistResp->getBody();
+
+                \Log::info('プレイリスト取得', [
+                    'seek' => $seekDt->format('YmdHis'),
+                    'status' => $playlistResp->getStatusCode(),
+                    'content_length' => strlen($masterContent),
+                    'content_preview' => substr($masterContent, 0, 200)
+                ]);
 
                 // medialist URL抽出
                 if (preg_match('/(https:\/\/[^\s]+medialist[^\s]+)/', $masterContent, $m)) {
@@ -328,6 +406,8 @@ class RadioRecordingController extends Controller
                     if (preg_match_all('/https:\/\/[^\s]+\.aac/', $medialistContent, $segs)) {
                         $allSegments = array_merge($allSegments, $segs[0]);
                     }
+                } else {
+                    \Log::warning('medialistURL未検出', ['seek' => $seekDt->format('YmdHis')]);
                 }
             } catch (\Exception $e) {
                 \Log::warning('セグメント取得エラー', ['seek' => $seekDt->format('YmdHis'), 'error' => $e->getMessage()]);
@@ -961,5 +1041,16 @@ class RadioRecordingController extends Controller
             \Log::error('録音ファイル削除エラー', ['error' => $e->getMessage(), 'filename' => $filename]);
             throw new RecordingException('録音ファイルの削除に失敗しました', 0, $e);
         }
+    }
+
+    // 放送局IDから主エリアID（本社所在地）を取得
+    private function getAreaIdFromStationId(string $stationId): string
+    {
+        if (isset(self::STATION_AREA_MAP[$stationId])) {
+            return self::STATION_AREA_MAP[$stationId];
+        }
+
+        \Log::warning('放送局IDからエリアIDを判定できませんでした', ['station_id' => $stationId]);
+        return 'JP13'; // デフォルト: 東京
     }
 }
