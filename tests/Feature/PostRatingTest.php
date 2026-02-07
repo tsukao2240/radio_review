@@ -94,29 +94,32 @@ class PostRatingTest extends TestCase
         $user = User::factory()->create(['email_verified_at' => now()]);
         
         // 異なる評価の投稿を作成
+        $program1 = RadioProgram::factory()->create();
         Post::factory()->create([
             'user_id' => $user->id,
-            'program_id' => 'program1',
+            'program_id' => $program1->id,
             'program_title' => '番組1',
             'rating' => 5.0,
         ]);
         
+        $program2 = RadioProgram::factory()->create();
         Post::factory()->create([
             'user_id' => $user->id,
-            'program_id' => 'program2',
+            'program_id' => $program2->id,
             'program_title' => '番組2',
             'rating' => 3.0,
         ]);
         
+        $program3 = RadioProgram::factory()->create();
         Post::factory()->create([
             'user_id' => $user->id,
-            'program_id' => 'program3',
+            'program_id' => $program3->id,
             'program_title' => '番組3',
             'rating' => 2.0,
         ]);
 
         // 4つ星以上でフィルタ
-        $response = $this->actingAs($user)->get(route('post.view') . '?min_rating=4');
+        $response = $this->actingAs($user)->get(route('review.view') . '?min_rating=4');
         
         $response->assertStatus(200);
         $response->assertSee('番組1');
@@ -129,29 +132,32 @@ class PostRatingTest extends TestCase
     {
         $user = User::factory()->create(['email_verified_at' => now()]);
         
+        $program1 = RadioProgram::factory()->create();
         $post1 = Post::factory()->create([
             'user_id' => $user->id,
-            'program_id' => 'program1',
+            'program_id' => $program1->id,
             'program_title' => '低評価番組',
             'rating' => 2.0,
         ]);
         
+        $program2 = RadioProgram::factory()->create();
         $post2 = Post::factory()->create([
             'user_id' => $user->id,
-            'program_id' => 'program2',
+            'program_id' => $program2->id,
             'program_title' => '高評価番組',
             'rating' => 5.0,
         ]);
         
+        $program3 = RadioProgram::factory()->create();
         $post3 = Post::factory()->create([
             'user_id' => $user->id,
-            'program_id' => 'program3',
+            'program_id' => $program3->id,
             'program_title' => '中評価番組',
             'rating' => 3.5,
         ]);
 
         // 評価順でソート（降順）
-        $response = $this->actingAs($user)->get(route('post.view') . '?sort_by=rating_desc');
+        $response = $this->actingAs($user)->get(route('review.view') . '?sort_by=rating_desc');
         
         $response->assertStatus(200);
         
@@ -172,22 +178,23 @@ class PostRatingTest extends TestCase
         $user2 = User::factory()->create(['email_verified_at' => now()]);
         
         // 同じ番組に複数のレビュー
+        $testProgram = RadioProgram::factory()->create();
         Post::factory()->create([
             'user_id' => $user1->id,
-            'program_id' => 'test_program',
+            'program_id' => $testProgram->id,
             'program_title' => 'テスト番組',
             'rating' => 5.0,
         ]);
         
         Post::factory()->create([
             'user_id' => $user2->id,
-            'program_id' => 'test_program',
+            'program_id' => $testProgram->id,
             'program_title' => 'テスト番組',
             'rating' => 3.0,
         ]);
 
         // 平均評価APIをテスト
-        $response = $this->actingAs($user1)->get(route('api.program.rating', ['program_id' => 'test_program']));
+        $response = $this->actingAs($user1)->get(route('api.program.rating', ['program_id' => $testProgram->id]));
         
         $response->assertStatus(200);
         $response->assertJson([
@@ -232,11 +239,12 @@ class PostRatingTest extends TestCase
     {
         // マイグレーションで既存の投稿には3.0のデフォルト評価が付与される
         $user = User::factory()->create();
+        $testProgram = RadioProgram::factory()->create();
         
         // 評価なしで投稿を直接作成（マイグレーション前の状態をシミュレート）
         $post = Post::create([
             'user_id' => $user->id,
-            'program_id' => 'test_program',
+            'program_id' => $testProgram->id,
             'program_title' => 'テスト番組',
             'title' => 'テストタイトル',
             'body' => 'テスト本文',

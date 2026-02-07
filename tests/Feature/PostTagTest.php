@@ -118,7 +118,7 @@ class PostTagTest extends TestCase
         ]);
 
         // タグ1でフィルタ
-        $response = $this->actingAs($user)->get(route('post.view') . '?tag_id=' . $tag1->id);
+        $response = $this->actingAs($user)->get(route('review.view') . '?tag_id=' . $tag1->id);
         
         $response->assertStatus(200);
         $response->assertSee('感動番組');
@@ -232,7 +232,7 @@ class PostTagTest extends TestCase
         ]);
         $post->tags()->attach($tag->id);
 
-        $response = $this->actingAs($user)->get(route('post.view'));
+        $response = $this->actingAs($user)->get(route('review.view'));
         
         $response->assertStatus(200);
         $response->assertSee('感動した');
@@ -253,7 +253,7 @@ class PostTagTest extends TestCase
         ]);
         $post->tags()->attach($tag->id);
 
-        $response = $this->actingAs($user)->get(route('myreview'));
+        $response = $this->actingAs($user)->get(route('myreview.view'));
         
         $response->assertStatus(200);
         $response->assertSee('笑った');
