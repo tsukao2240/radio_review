@@ -38,3 +38,4 @@ PRIORITY_TASKS.md
 SECURITY_CHECKLIST.md
 ENV_SETUP.md
 .claude/settings.local.json
+.env.testing.local
