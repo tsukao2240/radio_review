@@ -293,7 +293,11 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const activeRecordings = new Map();
+    // 録音APIのルートURLを設定（共通モジュールで使用）
+    window.recordingStatusUrl = '{{ route("recording.status") }}';
+    window.recordingStopUrl = '{{ route("recording.stop") }}';
+    window.recordingDownloadUrl = '{{ route("recording.download") }}';
+
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
     // 通知許可をリクエスト
@@ -301,7 +305,7 @@ document.addEventListener('DOMContentLoaded', function() {
         Notification.requestPermission();
     }
 
-    // 日付にスクロール
+    // 日付にスクロール（画面固有の関数）
     window.scrollToDate = function(date) {
         const element = document.getElementById('date-' + date);
         if (element) {
@@ -357,15 +361,21 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (data.success) {
                     this.style.display = 'none';
                     progressDiv.style.display = 'block';
-                    progressDiv.querySelector('.stop-btn').style.display = 'inline-block';
 
                     // 録音時間を計算
                     const startMinutes = parseInt(ft.substring(8, 10)) * 60 + parseInt(ft.substring(10, 12));
                     const endMinutes = parseInt(to.substring(8, 10)) * 60 + parseInt(to.substring(10, 12));
                     const durationMinutes = endMinutes - startMinutes;
 
-                    // 監視開始
-                    startMonitor(data.recording_id, controls, this, data.filename, durationMinutes);
+                    // 共通モジュールの監視関数を呼び出し
+                    window.startRecordingMonitor(data.recording_id, this, data.filename, progressDiv, durationMinutes);
+
+                    // 停止ボタンのイベント設定
+                    const stopBtn = progressDiv.querySelector('.stop-btn');
+                    stopBtn.style.display = 'inline-block';
+                    stopBtn.onclick = function() {
+                        window.stopRecording(data.recording_id, btn, progressDiv);
+                    };
                 } else {
                     this.disabled = false;
                     this.innerHTML = '<i class="fas fa-download"></i> タイムフリー録音';
@@ -423,144 +433,6 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     });
-
-    // 録音監視開始
-    function startMonitor(recordingId, controls, btn, filename, durationMinutes) {
-        const progressDiv = controls.querySelector('.recording-progress');
-        const progressBar = progressDiv.querySelector('.progress-bar');
-        const fileSizeSpan = progressDiv.querySelector('.file-size');
-        const elapsedSpan = progressDiv.querySelector('.elapsed-time');
-        const stopBtn = progressDiv.querySelector('.stop-btn');
-        const downloadBtn = progressDiv.querySelector('.download-btn');
-
-        const startTime = Date.now();
-
-        activeRecordings.set(recordingId, { intervalId: null });
-
-        // 停止ボタンのイベント
-        stopBtn.onclick = function() {
-            if (!confirm('録音を停止しますか？')) return;
-
-            fetch('{{ route("recording.stop") }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken
-                },
-                body: JSON.stringify({ recording_id: recordingId })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    clearInterval(activeRecordings.get(recordingId).intervalId);
-                    activeRecordings.delete(recordingId);
-                    progressDiv.style.display = 'none';
-                    btn.style.display = 'inline-block';
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fas fa-download"></i> タイムフリー録音';
-                }
-            });
-        };
-
-        // ダウンロードボタンのイベント
-        downloadBtn.onclick = function() {
-            downloadRecording(recordingId, filename);
-        };
-
-        // 状態チェック
-        function checkStatus() {
-            fetch('{{ route("recording.status") }}?' + new URLSearchParams({ recording_id: recordingId }))
-            .then(res => res.json())
-            .then(data => {
-                if (!activeRecordings.has(recordingId)) return;
-
-                if (data.success) {
-                    const progress = data.progress_percentage || 0;
-                    progressBar.style.width = Math.floor(progress) + '%';
-                    progressBar.textContent = Math.floor(progress) + '%';
-
-                    if (data.file_size) {
-                        fileSizeSpan.textContent = data.file_size_formatted || formatFileSize(data.file_size);
-                    }
-
-                    const elapsed = Math.floor((Date.now() - startTime) / 1000);
-                    elapsedSpan.textContent = formatTime(elapsed);
-
-                    // 完了チェック
-                    if (data.status === 'completed' || (data.file_exists && !data.is_recording)) {
-                        clearInterval(activeRecordings.get(recordingId).intervalId);
-                        activeRecordings.delete(recordingId);
-
-                        stopBtn.style.display = 'none';
-                        downloadBtn.style.display = 'inline-block';
-
-                        showNotification('録音完了', filename + ' の録音が完了しました');
-                    }
-                }
-            });
-        }
-
-        // 即座にチェック開始
-        checkStatus();
-        activeRecordings.get(recordingId).intervalId = setInterval(checkStatus, 500);
-    }
-
-    // ファイルダウンロード
-    async function downloadRecording(recordingId, filename) {
-        try {
-            const response = await fetch('{{ route("recording.download") }}?' + new URLSearchParams({ recording_id: recordingId }));
-            if (!response.ok) throw new Error('ダウンロードに失敗しました');
-
-            const blob = await response.blob();
-
-            if ('showSaveFilePicker' in window) {
-                try {
-                    const fileHandle = await window.showSaveFilePicker({
-                        suggestedName: filename || recordingId + '.m4a',
-                        types: [{
-                            description: '音声ファイル',
-                            accept: { 'audio/mp4': ['.m4a'] }
-                        }]
-                    });
-                    const writable = await fileHandle.createWritable();
-                    await writable.write(blob);
-                    await writable.close();
-                    return;
-                } catch (e) { }
-            }
-
-            // フォールバック
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename || recordingId + '.m4a';
-            document.body.appendChild(a);
-            a.click();
-            URL.revokeObjectURL(url);
-            document.body.removeChild(a);
-        } catch (err) {
-            alert('ダウンロードエラー: ' + err.message);
-        }
-    }
-
-    // ユーティリティ関数
-    function formatTime(seconds) {
-        const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        return String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
-    }
-
-    function formatFileSize(bytes) {
-        if (bytes < 1024) return bytes + ' B';
-        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(0) + ' KB';
-        return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
-    }
-
-    function showNotification(title, body) {
-        if ('Notification' in window && Notification.permission === 'granted') {
-            new Notification(title, { body, icon: '/favicon.ico' });
-        }
-    }
 });
 </script>
 @endsection

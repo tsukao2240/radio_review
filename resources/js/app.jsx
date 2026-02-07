@@ -11,6 +11,9 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 // PWA機能をインポート
 import './pwa.js';
 
+// 録音処理の共通モジュールをインポート
+import './recording.js';
+
 // Bootstrapのドロップダウン機能のみをインポート
 import { Dropdown } from 'bootstrap';
 
