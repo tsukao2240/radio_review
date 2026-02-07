@@ -17,6 +17,9 @@ package-lock.json
 # Docker関連
 docker/nginx/*.backup
 
+# Viteビルド成果物（Gitで管理）
+# public/build/ は含める
+
 # ffmpeg binaries
 /ffmpeg/ffmpeg-master-latest-win64-gpl/
 /ffmpeg/ffmpeg-7.0.2-amd64-static/

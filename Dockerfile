@@ -59,11 +59,12 @@ RUN chown -R www-data:www-data /var/www
 # Laravelのセッション・ログ・キャッシュ用
 RUN chmod -R 775 /var/www/storage /var/www/bootstrap/cache
 
-# 実行ユーザーを www-data に変更（セキュリティとセッション書き込みの安定化）
-USER www-data
+# Entrypointスクリプトをコピーして実行権限付与
+COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
 # ポートを公開
 EXPOSE 9000
 
-# PHP-FPMを起動
-CMD ["php-fpm"]
+# Entrypointを設定（マイグレーション・DB登録を自動実行）
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

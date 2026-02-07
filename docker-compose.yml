@@ -11,7 +11,6 @@ services:
     volumes:
       - .:/var/www
       - /var/www/node_modules # ホストの空フォルダで上書きされないよう保護
-      - vite_assets:/var/www/public/build # ビルド成果物を共有
     networks:
       - radio_review_network
 
@@ -25,21 +24,6 @@ services:
     volumes:
       - .:/var/www
       - ./docker/nginx:/etc/nginx/conf.d
-      - vite_assets:/var/www/public/build
-    networks:
-      - radio_review_network
-
-  # Vite (Asset Builder) - ビルドはDockerイメージ作成時に完了
-  vite:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: radio_review_vite
-    working_dir: /var/www
-    volumes:
-      - vite_assets:/var/www/public/build:ro # ビルド済みアセットを読み取り専用で提供
-    # ビルドは既にDockerfile内で完了しているため、何もせずに起動
-    command: sh -c "echo 'Vite assets ready' && tail -f /dev/null"
     networks:
       - radio_review_network
 
@@ -75,5 +59,3 @@ networks:
 
 volumes:
   db_data:
-  # ビルド成果物を他コンテナと安全に共有するためのボリューム
-  vite_assets:
