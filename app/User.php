@@ -61,6 +61,16 @@ class User extends Authenticatable implements MustVerifyEmailContact
         return $this->hasMany(Notification::class)->orderBy('created_at', 'desc');
     }
 
+    public function postLikes()
+    {
+        return $this->hasMany(PostLike::class);
+    }
+
+    public function postComments()
+    {
+        return $this->hasMany(PostComment::class);
+    }
+
     //会員登録時の仮メール送信
     public function sendmailVerificationNotification()
     {
