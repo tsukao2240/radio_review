@@ -101,6 +101,8 @@ export function checkRecordingStatus(recordingId, button, filename, statusDiv, i
 
             // 録音完了判定
             if (data.status === 'completed' || (data.file_exists && !data.is_recording)) {
+                console.log('録音完了:', recordingId);
+
                 // 録音情報を削除（重複実行防止）
                 const recording = window.activeRecordings.get(recordingId);
                 window.activeRecordings.delete(recordingId);
@@ -113,23 +115,52 @@ export function checkRecordingStatus(recordingId, button, filename, statusDiv, i
                 // 進行状況表示を非表示
                 statusDiv.style.display = 'none';
 
-                // ボタンラッパーを再表示してダウンロードボタンに変更
-                const btnWrapper = button.closest('.recording-btn-wrapper');
+                // ボタンとラッパーを確実に取得して再表示
+                const controlsWrapper = statusDiv.parentElement;
+                console.log('Controls wrapper:', controlsWrapper);
+
+                // recording-btn-wrapper を探す
+                let btnWrapper = controlsWrapper ? controlsWrapper.querySelector('.recording-btn-wrapper') : null;
+                console.log('btnWrapper found:', btnWrapper);
+
+                // ボタンを再取得（元のbutton参照が失われている可能性があるため）
+                let recordingButton = button;
                 if (btnWrapper) {
-                    btnWrapper.style.display = 'flex';
+                    const foundButton = btnWrapper.querySelector('.recording-btn, .timefree-btn');
+                    if (foundButton) {
+                        recordingButton = foundButton;
+                        console.log('Button re-found:', recordingButton);
+                    }
                 }
 
-                button.textContent = 'ダウンロード';
-                button.classList.remove('btn-success', 'btn-warning');
-                button.classList.add('btn-primary');
-                button.disabled = false;
+                // ラッパーを再表示
+                if (btnWrapper) {
+                    btnWrapper.style.display = 'flex';
+                    btnWrapper.style.visibility = 'visible';
+                    console.log('btnWrapper displayed');
+                }
 
                 // ボタンをダウンロードボタンに変更
-                button.onclick = function() {
-                    downloadRecording(recordingId, filename);
-                };
+                if (recordingButton) {
+                    recordingButton.textContent = 'ダウンロード';
+                    recordingButton.classList.remove('btn-success', 'btn-warning');
+                    recordingButton.classList.add('btn-primary');
+                    recordingButton.disabled = false;
+                    recordingButton.style.display = 'inline-block';
 
-                // ブラウザ通知を表示
+                    // クリックイベントを設定
+                    recordingButton.onclick = function(e) {
+                        e.preventDefault();
+                        downloadRecording(recordingId, filename);
+                    };
+
+                    console.log('Button updated to download button');
+                }
+
+                // 目立つ完了ポップアップを表示
+                showRecordingCompletePopup(filename, recordingId);
+
+                // ブラウザ通知も表示
                 showBrowserNotification('録音完了', filename + ' の録音が完了しました');
             }
         }
@@ -414,6 +445,68 @@ function showSaveSuccessPopup(filename) {
 }
 
 /**
+ * 録音完了ポップアップを表示
+ * @param {string} filename - ファイル名
+ * @param {string} recordingId - 録音ID
+ */
+function showRecordingCompletePopup(filename, recordingId) {
+    const popup = document.createElement('div');
+    popup.style.cssText = `
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 30px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+        z-index: 10002;
+        text-align: center;
+        min-width: 400px;
+        animation: popupSlideIn 0.3s ease-out;
+    `;
+
+    popup.innerHTML = `
+        <style>
+            @keyframes popupSlideIn {
+                from {
+                    transform: translate(-50%, -60%);
+                    opacity: 0;
+                }
+                to {
+                    transform: translate(-50%, -50%);
+                    opacity: 1;
+                }
+            }
+        </style>
+        <div style="font-size: 48px; margin-bottom: 15px;">🎉</div>
+        <h3 style="color: white; margin-bottom: 15px; font-weight: bold;">録音完了！</h3>
+        <p style="margin-bottom: 20px; font-size: 16px; word-break: break-all; line-height: 1.6;">
+            <strong style="background: rgba(255,255,255,0.2); padding: 5px 10px; border-radius: 5px;">${filename}</strong><br>
+            <span style="font-size: 14px; opacity: 0.9; margin-top: 10px; display: block;">の録音が完了しました</span>
+        </p>
+        <button id="closeRecordingPopup" class="btn btn-light" style="font-weight: bold; padding: 10px 30px;">
+            ダウンロードボタンを確認
+        </button>
+    `;
+
+    document.body.appendChild(popup);
+
+    // OKボタンのイベント
+    document.getElementById('closeRecordingPopup').onclick = function() {
+        document.body.removeChild(popup);
+    };
+
+    // 8秒後に自動で閉じる
+    setTimeout(() => {
+        if (document.body.contains(popup)) {
+            document.body.removeChild(popup);
+        }
+    }, 8000);
+}
+
+/**
  * ブラウザダウンロードの案内表示
  */
 function showBrowserDownloadInfo() {
@@ -466,3 +559,4 @@ window.getFilenameFromRecordingId = getFilenameFromRecordingId;
 window.formatTime = formatTime;
 window.formatFileSize = formatFileSize;
 window.showBrowserNotification = showBrowserNotification;
+window.showRecordingCompletePopup = showRecordingCompletePopup;
