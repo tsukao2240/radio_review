@@ -23,13 +23,34 @@
     </h2>
     <div class="row g-4">
         <div class="col-lg-4 col-md-6">
-            <div class="card h-100 text-center" style="border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.1); transition: transform 0.3s ease;" onmouseover="this.style.transform='translateY(-10px)'" onmouseout="this.style.transform='translateY(0)'">
+            <div class="card h-100 text-center" style="border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.1); transition: transform 0.3s ease; position: relative; overflow: visible;" onmouseover="this.style.transform='translateY(-10px)'" onmouseout="this.style.transform='translateY(0)'">
+                <!-- エリアフリー対応バッジ -->
+                <div style="position: absolute; top: -12px; right: -12px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: 700; box-shadow: 0 4px 15px rgba(245, 87, 108, 0.4); z-index: 10; animation: pulse 2s infinite;">
+                    <i class="fas fa-globe-asia"></i> エリアフリー対応
+                </div>
+                <style>
+                    @keyframes pulse {
+                        0%, 100% { transform: scale(1); }
+                        50% { transform: scale(1.05); }
+                    }
+                </style>
                 <div class="card-body" style="padding: 40px 30px;">
                     <div class="mb-4">
                         <i class="fas fa-microphone fa-3x" style="color: #667eea;"></i>
                     </div>
-                    <h5 class="card-title fw-bold mb-3">タイムフリー録音</h5>
-                    <p class="card-text" style="color: #6c757d;">過去1週間の番組を簡単に録音。お気に入りの回を聞き逃しても大丈夫</p>
+                    <h5 class="card-title fw-bold mb-3">
+                        タイムフリー・エリアフリー録音
+                    </h5>
+                    <p class="card-text" style="color: #6c757d; margin-bottom: 15px;">
+                        <strong style="color: #667eea;">過去1週間の番組を簡単に録音</strong>。<br>
+                        聞き逃しても大丈夫！
+                    </p>
+                    <div style="background: linear-gradient(135deg, #f093fb15 0%, #f5576c15 100%); padding: 12px; border-radius: 8px; margin-bottom: 15px; border-left: 3px solid #f5576c;">
+                        <p style="margin: 0; font-size: 13px; color: #f5576c; font-weight: 600;">
+                            <i class="fas fa-globe-asia"></i> エリアフリー会員なら<br>
+                            <span style="font-size: 12px; color: #6c757d;">全国のラジオ番組を録音可能！</span>
+                        </p>
+                    </div>
                     <a href="{{ route('schedule.twoweek') }}" class="btn btn-primary mt-3">
                         <i class="fas fa-arrow-right"></i> 録音する
                     </a>
