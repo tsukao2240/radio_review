@@ -23,6 +23,12 @@ class Post extends Model
         'comments_count',
     ];
 
+    protected $attributes = [
+        'rating' => 3.0,
+        'likes_count' => 0,
+        'comments_count' => 0,
+    ];
+
 
     public function post()
     {

@@ -87,11 +87,20 @@ class PostController extends Controller
     public function view(Request $request)
     {
         try {
+            // sort_byパラメータが「_desc」「_asc」サフィックスを含む場合は分解
+            $sortBy = $request->input('sort_by', 'created_at');
+            $sortOrder = $request->input('sort_order', 'desc');
+            
+            if (preg_match('/^(.+)_(desc|asc)$/', $sortBy, $matches)) {
+                $sortBy = $matches[1];
+                $sortOrder = $matches[2];
+            }
+            
             $filters = [
                 'min_rating' => $request->input('min_rating'),
                 'tag_id' => $request->input('tag_id'),
-                'sort_by' => $request->input('sort_by', 'created_at'),
-                'sort_order' => $request->input('sort_order', 'desc'),
+                'sort_by' => $sortBy,
+                'sort_order' => $sortOrder,
             ];
 
             $posts = $this->postService->getPostsFiltered($filters, 10);

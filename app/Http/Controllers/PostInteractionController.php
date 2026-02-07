@@ -102,7 +102,12 @@ class PostInteractionController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $comments,
+            'data' => [
+                'comments' => $comments->items(),
+                'total' => $comments->total(),
+                'per_page' => $comments->perPage(),
+                'current_page' => $comments->currentPage(),
+            ],
         ]);
     }
 
@@ -122,7 +127,7 @@ class PostInteractionController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => ['has_liked' => $hasLiked],
+            'data' => ['liked' => $hasLiked],
         ]);
     }
 }

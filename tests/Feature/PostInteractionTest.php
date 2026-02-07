@@ -309,18 +309,19 @@ class PostInteractionTest extends TestCase
         $user2 = User::factory()->create(['email_verified_at' => now(), 'name' => 'ユーザー2']);
         $post = Post::factory()->create(['rating' => 4.0]);
         
-        PostComment::create([
+        // 古いコメント
+        $comment1 = PostComment::create([
             'post_id' => $post->id,
             'user_id' => $user1->id,
             'body' => '最初のコメント',
-            'created_at' => now()->subHours(2),
         ]);
         
-        PostComment::create([
+        // 新しいコメント（後に作成）
+        sleep(1); // タイムスタンプの違いを確実にする
+        $comment2 = PostComment::create([
             'post_id' => $post->id,
             'user_id' => $user2->id,
             'body' => '2番目のコメント',
-            'created_at' => now()->subHours(1),
         ]);
 
         $response = $this->actingAs($user1)->getJson('/api/posts/comments?post_id=' . $post->id);
@@ -333,7 +334,7 @@ class PostInteractionTest extends TestCase
         $comments = $response->json('data.comments');
         $this->assertCount(2, $comments);
         
-        // 新しいコメントが最初に表示される
+        // 新しいコメントが最初に表示される（created_at降順）
         $this->assertEquals('2番目のコメント', $comments[0]['body']);
         $this->assertEquals('最初のコメント', $comments[1]['body']);
     }
