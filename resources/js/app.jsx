@@ -25,6 +25,10 @@ import 'react-toastify/dist/ReactToastify.css';
 
 import ToastComponent from './components/ToastComponent.jsx';
 import NotificationCenter from './components/NotificationCenter.jsx';
+import StarRating from './components/StarRating.jsx';
+import TagSelector from './components/TagSelector.jsx';
+import LikeButton from './components/LikeButton.jsx';
+import CommentSection from './components/CommentSection.jsx';
 
 // アプリケーションのメインコンポーネント
 const App = () => {
@@ -64,4 +68,9 @@ document.addEventListener('DOMContentLoaded', () => {
 // Reactコンポーネントをグローバルに使用可能にする
 window.ToastComponent = ToastComponent;
 window.NotificationCenter = NotificationCenter;
+window.StarRating = StarRating;
+window.TagSelector = TagSelector;
+window.LikeButton = LikeButton;
+window.CommentSection = CommentSection;
 window.React = React;
+window.createRoot = createRoot;

@@ -72,6 +72,10 @@ const NotificationCenter = () => {
                 return '❌';
             case 'favorite_broadcast':
                 return '⭐';
+            case 'post_liked':
+                return '❤️';
+            case 'post_commented':
+                return '💬';
             default:
                 return '🔔';
         }
@@ -88,6 +92,10 @@ const NotificationCenter = () => {
                 return 'danger';
             case 'favorite_broadcast':
                 return 'warning';
+            case 'post_liked':
+                return 'danger';
+            case 'post_commented':
+                return 'primary';
             default:
                 return 'secondary';
         }
