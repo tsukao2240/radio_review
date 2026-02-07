@@ -88,27 +88,30 @@ class PostTagTest extends TestCase
         $tag2 = PostTag::where('name', '笑った')->first();
         
         // タグ1を持つ投稿
+        $program1 = RadioProgram::factory()->create();
         $post1 = Post::factory()->create([
             'user_id' => $user->id,
-            'program_id' => 'program1',
+            'program_id' => $program1->id,
             'program_title' => '感動番組',
             'rating' => 5.0,
         ]);
         $post1->tags()->attach($tag1->id);
         
         // タグ2を持つ投稿
+        $program2 = RadioProgram::factory()->create();
         $post2 = Post::factory()->create([
             'user_id' => $user->id,
-            'program_id' => 'program2',
+            'program_id' => $program2->id,
             'program_title' => 'お笑い番組',
             'rating' => 4.0,
         ]);
         $post2->tags()->attach($tag2->id);
         
         // タグなしの投稿
+        $program3 = RadioProgram::factory()->create();
         $post3 = Post::factory()->create([
             'user_id' => $user->id,
-            'program_id' => 'program3',
+            'program_id' => $program3->id,
             'program_title' => 'その他番組',
             'rating' => 3.0,
         ]);
@@ -196,11 +199,12 @@ class PostTagTest extends TestCase
     public function tags_validation_requires_valid_tag_ids()
     {
         $user = User::factory()->create(['email_verified_at' => now()]);
+        $program = RadioProgram::factory()->create();
         
         // 存在しないタグIDで投稿
-        $response = $this->actingAs($user)->post(route('post.store', ['id' => 'test_program']), [
+        $response = $this->actingAs($user)->post(route('post.store', ['id' => $program->id]), [
             'user_id' => $user->id,
-            'program_id' => 'test_program',
+            'program_id' => $program->id,
             'program_title' => 'テスト番組',
             'title' => 'テストレビュー',
             'body' => 'テスト本文',
@@ -217,10 +221,11 @@ class PostTagTest extends TestCase
     {
         $user = User::factory()->create(['email_verified_at' => now()]);
         $tag = PostTag::where('name', '感動した')->first();
+        $program = RadioProgram::factory()->create();
         
         $post = Post::factory()->create([
             'user_id' => $user->id,
-            'program_id' => 'test_program',
+            'program_id' => $program->id,
             'program_title' => 'テスト番組',
             'rating' => 5.0,
         ]);
@@ -237,10 +242,11 @@ class PostTagTest extends TestCase
     {
         $user = User::factory()->create(['email_verified_at' => now()]);
         $tag = PostTag::where('name', '笑った')->first();
+        $program = RadioProgram::factory()->create();
         
         $post = Post::factory()->create([
             'user_id' => $user->id,
-            'program_id' => 'test_program',
+            'program_id' => $program->id,
             'program_title' => 'テスト番組',
             'rating' => 4.0,
         ]);
