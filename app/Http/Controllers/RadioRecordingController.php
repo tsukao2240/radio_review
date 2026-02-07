@@ -895,7 +895,7 @@ class RadioRecordingController extends Controller
 
         }
 
-    // メタデータを埋め込む
+    // メタデータを埋め込む（日本語対応）
     private function addMetadataToFile(string $inputPath, string $outputPath, string $recordingId): void
     {
         // 録音情報を取得
@@ -914,7 +914,7 @@ class RadioRecordingController extends Controller
             return;
         }
 
-        // メタデータを作成
+        // メタデータを作成（日本語を含む可能性あり）
         $title = $recordingInfo['title'] ?? '';
         $artist = $recordingInfo['cast'] ?? '';
         $album = $recordingInfo['station_name'] ?? $recordingInfo['station_id'] ?? '';
@@ -924,37 +924,108 @@ class RadioRecordingController extends Controller
         $normalizedInputPath = $this->normalizePath($inputPath);
         $normalizedOutputPath = $this->normalizePath($outputPath);
 
-        // FFmpegコマンドを構築（メタデータ埋め込み）
-        $command = sprintf(
-            '"%s" -i "%s" -metadata title="%s" -metadata artist="%s" -metadata album="%s" -c copy -movflags +faststart "%s" -y',
-            $normalizedFFmpegPath,
-            $normalizedInputPath,
-            addslashes($title),
-            addslashes($artist),
-            addslashes($album),
-            $normalizedOutputPath
-        );
+        // メタデータファイルを作成（UTF-8で保存）
+        $metadataFile = dirname($inputPath) . '/metadata_' . uniqid() . '.txt';
+        $metadataContent = ";FFMETADATA1\n";
+        $metadataContent .= "title=" . $this->escapeMetadataValue($title) . "\n";
+        $metadataContent .= "artist=" . $this->escapeMetadataValue($artist) . "\n";
+        $metadataContent .= "album=" . $this->escapeMetadataValue($album) . "\n";
+        
+        // UTF-8で明示的に保存（日本語対応）
+        file_put_contents($metadataFile, $metadataContent, LOCK_EX);
 
-        \Log::info('FFmpegメタデータ埋め込み実行', [
+        // FFmpegコマンドを構築（メタデータファイルを使用、UTF-8明示）
+        // -y: 上書き確認なし
+        // リダイレクトはエスケープ後に追加
+        $commandParts = [
+            escapeshellarg($normalizedFFmpegPath),
+            '-i', escapeshellarg($normalizedInputPath),
+            '-i', escapeshellarg($metadataFile),
+            '-map_metadata', '1',
+            '-c', 'copy',
+            '-movflags', '+faststart',
+            escapeshellarg($normalizedOutputPath),
+            '-y'
+        ];
+        
+        $command = implode(' ', $commandParts) . ' 2>&1';
+
+        \Log::info('FFmpegメタデータ埋め込み実行（日本語対応）', [
             'command' => $command,
             'title' => $title,
             'artist' => $artist,
-            'album' => $album
+            'album' => $album,
+            'metadata_file' => $metadataFile,
+            'title_length' => mb_strlen($title),
+            'encoding' => mb_detect_encoding($title, ['UTF-8', 'ASCII', 'ISO-8859-1'], true)
         ]);
 
-        exec($command, $output, $returnCode);
+        try {
+            exec($command, $output, $returnCode);
 
-        if ($returnCode !== 0) {
-            \Log::error('FFmpegメタデータ埋め込み失敗', [
+            \Log::info('FFmpegコマンド実行完了', [
                 'return_code' => $returnCode,
-                'output' => $output
+                'output' => implode("\n", $output)
             ]);
-            // 失敗した場合はメタデータなしで保存
-            rename($inputPath, $outputPath);
-        } else {
-            // 成功した場合は一時ファイルを削除
-            @unlink($inputPath);
+
+            // メタデータファイルを削除
+            @unlink($metadataFile);
+
+            if ($returnCode !== 0) {
+                \Log::error('FFmpegメタデータ埋め込み失敗', [
+                    'return_code' => $returnCode,
+                    'output' => $output,
+                    'title' => $title
+                ]);
+                // 失敗した場合はメタデータなしで保存
+                if (file_exists($outputPath)) {
+                    // 既に出力ファイルが作成されている場合は一時ファイルを削除
+                    @unlink($inputPath);
+                } else {
+                    // 出力ファイルが作成されていない場合は一時ファイルを移動
+                    rename($inputPath, $outputPath);
+                }
+            } else {
+                \Log::info('FFmpegメタデータ埋め込み成功', [
+                    'output_file' => $outputPath,
+                    'file_size' => file_exists($outputPath) ? filesize($outputPath) : 0
+                ]);
+                // 成功した場合は一時ファイルを削除
+                @unlink($inputPath);
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('exec()失敗、メタデータなしで保存', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            // メタデータファイルを削除
+            @unlink($metadataFile);
+            // exec()自体が失敗した場合もメタデータなしで保存
+            if (file_exists($inputPath)) {
+                rename($inputPath, $outputPath);
+            }
         }
+    }
+
+    // FFmpegメタデータ用の値をエスケープ（日本語対応）
+    private function escapeMetadataValue(string $value): string
+    {
+        // 空文字の場合はそのまま返す
+        if (empty($value)) {
+            return '';
+        }
+
+        // FFmpegメタデータファイル形式での特殊文字をエスケープ
+        // 日本語（マルチバイト文字）はそのまま保持
+        // =, ;, #, \, および改行のみエスケープ
+        $value = str_replace('\\', '\\\\', $value); // バックスラッシュ
+        $value = str_replace('=', '\\=', $value);    // イコール
+        $value = str_replace(';', '\\;', $value);    // セミコロン
+        $value = str_replace('#', '\\#', $value);    // ハッシュ
+        $value = str_replace("\n", '\\n', $value);   // 改行
+        $value = str_replace("\r", '', $value);      // キャリッジリターン削除
+        
+        return $value;
     }
 
     // 録音ファイルダウンロード
