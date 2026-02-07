@@ -5,11 +5,11 @@
 
 <!-- ヒーローセクション -->
 <div class="img_body">
-    <div class="container text-center" style="padding-top: 80px;">
-        <h1 class="display-4 fw-bold mb-4" style="color: var(--bs-body-color); text-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-            <i class="fas fa-radio" style="color: #667eea;"></i> RadioProgram Review
+    <div class="container text-center" style="padding-top: 80px; position: relative; z-index: 1;">
+        <h1 class="display-4 fw-bold mb-4" style="color: white; text-shadow: 0 4px 20px rgba(0,0,0,0.3), 0 2px 10px rgba(0,0,0,0.2);">
+            <i class="fas fa-radio" style="color: #ffd700;"></i> RadioProgram Review
         </h1>
-        <p class="lead mb-4" style="color: var(--bs-body-color); font-size: 1.25rem; max-width: 700px; margin: 0 auto 30px;">
+        <p class="lead mb-4" style="color: rgba(255,255,255,0.95); font-size: 1.25rem; max-width: 700px; margin: 0 auto 30px; text-shadow: 0 2px 8px rgba(0,0,0,0.3);">
             お気に入りのラジオ番組を見つけて、録音して、レビューを共有しよう
         </p>
         @include('includes.search')

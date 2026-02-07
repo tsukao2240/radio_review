@@ -605,20 +605,73 @@ footer {
 
 /* ホーム画面 */
 .img_body {
-    background-image: url('/images/radio.png');
-    background-size: cover;
-    background-position: center;
+    position: relative;
     height: 500px;
+    overflow: hidden;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.img_body::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: 
+        radial-gradient(circle at 20% 50%, rgba(102, 126, 234, 0.3) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(118, 75, 162, 0.3) 0%, transparent 50%),
+        radial-gradient(circle at 40% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 30%);
+    animation: gradientShift 15s ease infinite;
+}
+
+.img_body::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: 
+        repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255, 255, 255, 0.03) 10px, rgba(255, 255, 255, 0.03) 20px),
+        url('/images/radio.png');
+    background-size: auto, cover;
+    background-position: center, center;
+    opacity: 0.15;
+    mix-blend-mode: overlay;
+}
+
+@keyframes gradientShift {
+    0%, 100% {
+        transform: scale(1) rotate(0deg);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.1) rotate(5deg);
+        opacity: 0.8;
+    }
 }
 
 [data-bs-theme="light"] .img_body {
-    background-color: rgba(255, 255, 255, 0.8);
-    background-blend-mode: lighten;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+}
+
+[data-bs-theme="light"] .img_body::before {
+    background-image: 
+        radial-gradient(circle at 20% 50%, rgba(102, 126, 234, 0.4) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(240, 147, 251, 0.4) 0%, transparent 50%),
+        radial-gradient(circle at 40% 20%, rgba(255, 255, 255, 0.2) 0%, transparent 30%);
 }
 
 [data-bs-theme="dark"] .img_body {
-    background-color: rgba(0, 0, 0, 0.6);
-    background-blend-mode: darken;
+    background: linear-gradient(135deg, #4a5568 0%, #2d3748 50%, #1a202c 100%);
+}
+
+[data-bs-theme="dark"] .img_body::before {
+    background-image: 
+        radial-gradient(circle at 20% 50%, rgba(102, 126, 234, 0.2) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(118, 75, 162, 0.2) 0%, transparent 50%),
+        radial-gradient(circle at 40% 20%, rgba(255, 255, 255, 0.05) 0%, transparent 30%);
 }
 
 /* レビュー画面 */
