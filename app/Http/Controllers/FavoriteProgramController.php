@@ -8,16 +8,21 @@ use Illuminate\Support\Facades\Auth;
 use App\Exceptions\DatabaseException;
 use App\Http\Requests\FavoriteProgramRequest;
 use App\Services\RadikoApiService;
+use App\Services\RecommendationService;
 use Carbon\Carbon;
 
 class FavoriteProgramController extends Controller
 {
     protected $radikoApiService;
+    protected $recommendationService;
 
-    public function __construct(RadikoApiService $radikoApiService)
-    {
+    public function __construct(
+        RadikoApiService $radikoApiService,
+        RecommendationService $recommendationService
+    ) {
         $this->middleware('auth');
         $this->radikoApiService = $radikoApiService;
+        $this->recommendationService = $recommendationService;
     }
 
     // お気に入り一覧表示
@@ -93,6 +98,9 @@ class FavoriteProgramController extends Controller
                 'program_title' => $request->program_title
             ]);
 
+            // レコメンデーションキャッシュをクリア
+            $this->recommendationService->clearUserCache(Auth::id());
+
             return response()->json([
                 'success' => true,
                 'message' => 'お気に入りに登録しました'
@@ -123,6 +131,9 @@ class FavoriteProgramController extends Controller
                     'message' => 'お気に入りが見つかりません'
                 ], 404);
             }
+
+            // レコメンデーションキャッシュをクリア
+            $this->recommendationService->clearUserCache(Auth::id());
 
             return response()->json([
                 'success' => true,

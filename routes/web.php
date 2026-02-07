@@ -97,3 +97,23 @@ Route::middleware(['auth'])->prefix('api')->group(function () {
 Route::middleware(['auth'])->group(function () {
     Route::get('/notifications', 'NotificationController@index')->name('notifications.index');
 });
+
+// 番組評価API
+Route::get('/program/{program_id}/rating', 'PostController@getProgramRating')->name('api.program.rating');
+
+// 投稿インタラクション関連ルート（認証必須）
+Route::middleware(['auth'])->prefix('api/posts')->group(function () {
+    Route::post('/like', 'PostInteractionController@like')->name('api.posts.like');
+    Route::post('/unlike', 'PostInteractionController@unlike')->name('api.posts.unlike');
+    Route::post('/comment', 'PostInteractionController@comment')->name('api.posts.comment');
+    Route::post('/comment/delete', 'PostInteractionController@deleteComment')->name('api.posts.comment.delete');
+    Route::get('/comments', 'PostInteractionController@getComments')->name('api.posts.comments');
+    Route::get('/check-like', 'PostInteractionController@checkLike')->name('api.posts.check-like');
+});
+
+// レコメンデーション関連ルート（認証必須）
+Route::middleware(['auth'])->group(function () {
+    Route::get('/recommendations', 'RecommendationController@index')->name('recommendations.index');
+    Route::get('/api/recommendations', 'RecommendationController@getRecommendations')->name('api.recommendations');
+    Route::post('/api/recommendations/refresh', 'RecommendationController@refresh')->name('api.recommendations.refresh');
+});
