@@ -97,15 +97,15 @@ docker-compose exec app php artisan test --filter="PostRatingTest|PostTagTest|Po
 ```
 
 **現在のテスト状況:**
-- ✅ 21/42テスト成功（基本CRUD機能）
-- ⚠️ 21/42テスト失敗（高度な機能、要修正）
+- ✅ 27/42テスト成功 (64%) （基本機能・コア機能）
+- ⚠️ 15/42テスト失敗 (36%) （ビュー/ルート関連、要実装）
 
 ### 5. ドキュメント整備
 
 - [x] `PHASE8_CHECKLIST.md` - このファイル
-- [ ] `README.md` - 新機能の説明追加
-- [ ] `TESTING.md` - テスト結果の記録
-- [ ] `CHANGELOG.md` - 変更履歴の記録
+- [x] `README.md` - 新機能の説明追加
+- [x] `TESTING.md` - テスト結果の記録
+- [x] `CHANGELOG.md` - 変更履歴の記録
 
 ---
 
