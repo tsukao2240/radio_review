@@ -15,6 +15,7 @@ class Post extends Model
         'user_id',
         'program_id',
         'program_title',
+        'station_id',
         'title',
         'body',
         'rating',
