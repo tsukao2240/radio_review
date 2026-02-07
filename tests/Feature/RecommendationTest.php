@@ -9,6 +9,7 @@ use App\FavoriteProgram;
 use App\Services\RecommendationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
+use PHPUnit\Framework\Attributes\Test;
 
 class RecommendationTest extends TestCase
 {
@@ -23,7 +24,7 @@ class RecommendationTest extends TestCase
         $this->recommendationService = app(RecommendationService::class);
     }
 
-    /** @test */
+    #[Test]
     public function new_user_gets_popular_programs_as_recommendations()
     {
         $user1 = User::factory()->create(['email_verified_at' => now()]);
@@ -53,7 +54,7 @@ class RecommendationTest extends TestCase
         $this->assertEquals('人気番組', $recommendations[0]['program_title']);
     }
 
-    /** @test */
+    #[Test]
     public function recommendations_are_based_on_user_favorites()
     {
         $user = User::factory()->create(['email_verified_at' => now()]);
@@ -86,7 +87,7 @@ class RecommendationTest extends TestCase
         $this->assertTrue(in_array('ニュース特集', $titles));
     }
 
-    /** @test */
+    #[Test]
     public function recommendations_are_based_on_high_rated_reviews()
     {
         $user = User::factory()->create(['email_verified_at' => now()]);
@@ -119,7 +120,7 @@ class RecommendationTest extends TestCase
         $this->assertTrue(in_array('音楽ライブ特集', $titles));
     }
 
-    /** @test */
+    #[Test]
     public function already_favorited_programs_are_excluded_from_recommendations()
     {
         $user = User::factory()->create(['email_verified_at' => now()]);
@@ -149,7 +150,7 @@ class RecommendationTest extends TestCase
         $this->assertFalse(in_array($favoriteProgram->id, $titles));
     }
 
-    /** @test */
+    #[Test]
     public function trending_programs_shows_recently_reviewed_high_rated_programs()
     {
         $user = User::factory()->create(['email_verified_at' => now()]);
@@ -191,7 +192,7 @@ class RecommendationTest extends TestCase
         $this->assertFalse(in_array('古い番組', $titles));
     }
 
-    /** @test */
+    #[Test]
     public function popular_programs_have_minimum_review_count()
     {
         $user1 = User::factory()->create(['email_verified_at' => now()]);
@@ -238,7 +239,7 @@ class RecommendationTest extends TestCase
         $this->assertFalse(in_array('1レビュー番組', $titles));
     }
 
-    /** @test */
+    #[Test]
     public function recommendations_are_cached()
     {
         $user = User::factory()->create(['email_verified_at' => now()]);
@@ -265,7 +266,7 @@ class RecommendationTest extends TestCase
         $this->assertEquals($recommendations1, $recommendations2);
     }
 
-    /** @test */
+    #[Test]
     public function cache_is_cleared_when_user_adds_favorite()
     {
         $user = User::factory()->create(['email_verified_at' => now()]);
@@ -282,7 +283,7 @@ class RecommendationTest extends TestCase
         $this->assertFalse(Cache::has($cacheKey));
     }
 
-    /** @test */
+    #[Test]
     public function authenticated_user_can_access_recommendations_page()
     {
         $user = User::factory()->create(['email_verified_at' => now()]);
@@ -293,7 +294,7 @@ class RecommendationTest extends TestCase
         $response->assertViewIs('recommendations.index');
     }
 
-    /** @test */
+    #[Test]
     public function guest_cannot_access_recommendations_page()
     {
         $response = $this->get(route('recommendations.index'));
@@ -301,7 +302,7 @@ class RecommendationTest extends TestCase
         $response->assertRedirect(route('login'));
     }
 
-    /** @test */
+    #[Test]
     public function user_can_get_recommendations_via_api()
     {
         $user = User::factory()->create(['email_verified_at' => now()]);
@@ -324,7 +325,7 @@ class RecommendationTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function user_can_refresh_recommendations_cache()
     {
         $user = User::factory()->create(['email_verified_at' => now()]);
@@ -349,7 +350,7 @@ class RecommendationTest extends TestCase
         $this->assertFalse(Cache::has($cacheKey));
     }
 
-    /** @test */
+    #[Test]
     public function keyword_extraction_works_correctly()
     {
         $user = User::factory()->create(['email_verified_at' => now()]);

@@ -8,6 +8,7 @@ use App\Post;
 use App\PostTag;
 use App\RadioProgram;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
 
 class PostTagTest extends TestCase
 {
@@ -26,7 +27,7 @@ class PostTagTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function user_can_create_post_with_tags()
     {
         $user = User::factory()->create(['email_verified_at' => now()]);
@@ -56,7 +57,7 @@ class PostTagTest extends TestCase
         $this->assertTrue($post->tags->contains('name', '笑った'));
     }
 
-    /** @test */
+    #[Test]
     public function user_can_create_post_without_tags()
     {
         $user = User::factory()->create(['email_verified_at' => now()]);
@@ -80,7 +81,7 @@ class PostTagTest extends TestCase
         $this->assertEquals(0, $post->tags->count());
     }
 
-    /** @test */
+    #[Test]
     public function user_can_filter_posts_by_tag()
     {
         $user = User::factory()->create(['email_verified_at' => now()]);
@@ -125,7 +126,7 @@ class PostTagTest extends TestCase
         $response->assertDontSee('その他番組');
     }
 
-    /** @test */
+    #[Test]
     public function user_can_update_tags_on_existing_post()
     {
         $user = User::factory()->create(['email_verified_at' => now()]);
@@ -163,7 +164,7 @@ class PostTagTest extends TestCase
         $this->assertTrue($post->tags->contains('id', $tag3->id));
     }
 
-    /** @test */
+    #[Test]
     public function user_can_remove_all_tags_from_post()
     {
         $user = User::factory()->create(['email_verified_at' => now()]);
@@ -195,7 +196,7 @@ class PostTagTest extends TestCase
         $this->assertEquals(0, $post->tags->count());
     }
 
-    /** @test */
+    #[Test]
     public function tags_validation_requires_valid_tag_ids()
     {
         $user = User::factory()->create(['email_verified_at' => now()]);
@@ -216,7 +217,7 @@ class PostTagTest extends TestCase
         $response->assertSessionHasErrors('tags.0');
     }
 
-    /** @test */
+    #[Test]
     public function tags_are_displayed_in_post_list()
     {
         $user = User::factory()->create(['email_verified_at' => now()]);
@@ -237,7 +238,7 @@ class PostTagTest extends TestCase
         $response->assertSee('感動した');
     }
 
-    /** @test */
+    #[Test]
     public function tags_are_displayed_in_mypage()
     {
         $user = User::factory()->create(['email_verified_at' => now()]);
@@ -258,7 +259,7 @@ class PostTagTest extends TestCase
         $response->assertSee('笑った');
     }
 
-    /** @test */
+    #[Test]
     public function tags_are_ordered_by_display_order()
     {
         $tags = PostTag::ordered()->get();

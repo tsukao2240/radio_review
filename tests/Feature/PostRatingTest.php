@@ -8,6 +8,7 @@ use App\Post;
 use App\PostTag;
 use App\RadioProgram;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
 
 class PostRatingTest extends TestCase
 {
@@ -25,7 +26,7 @@ class PostRatingTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function user_can_create_review_with_rating()
     {
         $user = User::factory()->create(['email_verified_at' => now()]);
@@ -54,7 +55,7 @@ class PostRatingTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function rating_must_be_between_1_and_5()
     {
         $user = User::factory()->create(['email_verified_at' => now()]);
@@ -87,7 +88,7 @@ class PostRatingTest extends TestCase
         $response->assertSessionHasErrors('rating');
     }
 
-    /** @test */
+    #[Test]
     public function user_can_filter_posts_by_minimum_rating()
     {
         $user = User::factory()->create(['email_verified_at' => now()]);
@@ -123,7 +124,7 @@ class PostRatingTest extends TestCase
         $response->assertDontSee('番組3');
     }
 
-    /** @test */
+    #[Test]
     public function posts_can_be_sorted_by_rating()
     {
         $user = User::factory()->create(['email_verified_at' => now()]);
@@ -164,7 +165,7 @@ class PostRatingTest extends TestCase
         $this->assertTrue($pos2 < $pos3);
     }
 
-    /** @test */
+    #[Test]
     public function program_average_rating_is_calculated_correctly()
     {
         $user1 = User::factory()->create(['email_verified_at' => now()]);
@@ -198,7 +199,7 @@ class PostRatingTest extends TestCase
         $this->assertEquals(2, $data['review_count']);
     }
 
-    /** @test */
+    #[Test]
     public function user_can_update_rating_on_existing_post()
     {
         $user = User::factory()->create(['email_verified_at' => now()]);
@@ -226,7 +227,7 @@ class PostRatingTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function existing_posts_have_default_rating()
     {
         // マイグレーションで既存の投稿には3.0のデフォルト評価が付与される

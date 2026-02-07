@@ -9,12 +9,13 @@ use App\PostLike;
 use App\PostComment;
 use App\Notification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
 
 class PostInteractionTest extends TestCase
 {
     use RefreshDatabase;
 
-    /** @test */
+    #[Test]
     public function user_can_like_a_post()
     {
         $user = User::factory()->create(['email_verified_at' => now()]);
@@ -52,7 +53,7 @@ class PostInteractionTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function user_can_unlike_a_post()
     {
         $user = User::factory()->create(['email_verified_at' => now()]);
@@ -90,7 +91,7 @@ class PostInteractionTest extends TestCase
         $this->assertEquals(0, $post->likes_count);
     }
 
-    /** @test */
+    #[Test]
     public function user_cannot_like_same_post_twice()
     {
         $user = User::factory()->create(['email_verified_at' => now()]);
@@ -122,7 +123,7 @@ class PostInteractionTest extends TestCase
         $this->assertEquals(1, $post->likes_count);
     }
 
-    /** @test */
+    #[Test]
     public function user_can_check_if_they_liked_a_post()
     {
         $user = User::factory()->create(['email_verified_at' => now()]);
@@ -153,7 +154,7 @@ class PostInteractionTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function user_cannot_like_without_authentication()
     {
         $post = Post::factory()->create(['rating' => 4.0]);
@@ -165,7 +166,7 @@ class PostInteractionTest extends TestCase
         $response->assertStatus(401);
     }
 
-    /** @test */
+    #[Test]
     public function user_can_add_comment_to_post()
     {
         $user = User::factory()->create(['email_verified_at' => now()]);
@@ -205,7 +206,7 @@ class PostInteractionTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function comment_body_is_required()
     {
         $user = User::factory()->create(['email_verified_at' => now()]);
@@ -220,7 +221,7 @@ class PostInteractionTest extends TestCase
         $response->assertJsonValidationErrors('body');
     }
 
-    /** @test */
+    #[Test]
     public function comment_body_cannot_exceed_1000_characters()
     {
         $user = User::factory()->create(['email_verified_at' => now()]);
@@ -235,7 +236,7 @@ class PostInteractionTest extends TestCase
         $response->assertJsonValidationErrors('body');
     }
 
-    /** @test */
+    #[Test]
     public function user_can_delete_own_comment()
     {
         $user = User::factory()->create(['email_verified_at' => now()]);
@@ -269,7 +270,7 @@ class PostInteractionTest extends TestCase
         $this->assertEquals(0, $post->comments_count);
     }
 
-    /** @test */
+    #[Test]
     public function user_cannot_delete_others_comment()
     {
         $user1 = User::factory()->create(['email_verified_at' => now()]);
@@ -301,7 +302,7 @@ class PostInteractionTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function user_can_get_comments_for_post()
     {
         $user1 = User::factory()->create(['email_verified_at' => now(), 'name' => 'ユーザー1']);
@@ -337,7 +338,7 @@ class PostInteractionTest extends TestCase
         $this->assertEquals('最初のコメント', $comments[1]['body']);
     }
 
-    /** @test */
+    #[Test]
     public function liking_own_post_does_not_create_notification()
     {
         $user = User::factory()->create(['email_verified_at' => now()]);
@@ -361,7 +362,7 @@ class PostInteractionTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function commenting_on_own_post_does_not_create_notification()
     {
         $user = User::factory()->create(['email_verified_at' => now()]);
