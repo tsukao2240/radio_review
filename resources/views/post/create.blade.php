@@ -39,6 +39,22 @@
             @endif
         </div>
         <div class="form-group">
+            <label for="rating">評価</label>
+            <div id="rating-container"></div>
+            <input type="hidden" name="rating" id="rating" value="{{ old('rating', 3) }}">
+            @if ($errors->has('rating'))
+            <span class="text-danger">{{ $errors->first('rating')}}</span>
+            @endif
+        </div>
+        <div class="form-group">
+            <label for="tags">タグ（複数選択可）</label>
+            <div id="tags-container"></div>
+            <input type="hidden" name="tags" id="tags" value="">
+            @if ($errors->has('tags'))
+            <span class="text-danger">{{ $errors->first('tags')}}</span>
+            @endif
+        </div>
+        <div class="form-group">
             <button type="submit" class="btn btn-primary">投稿する</button>
         </div>
         </form>
@@ -46,3 +62,52 @@
 </div>
 @endsection
 
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // StarRatingコンポーネント
+    const ratingContainer = document.getElementById('rating-container');
+    const ratingInput = document.getElementById('rating');
+    if (ratingContainer && window.StarRating && window.React && window.createRoot) {
+        const root = window.createRoot(ratingContainer);
+        root.render(
+            window.React.createElement(window.StarRating, {
+                value: parseInt(ratingInput.value) || 3,
+                onChange: (value) => {
+                    ratingInput.value = value;
+                },
+                size: 24
+            })
+        );
+    }
+
+    // TagSelectorコンポーネント
+    const tagsContainer = document.getElementById('tags-container');
+    const tagsInput = document.getElementById('tags');
+    const availableTags = @json($tags ?? []);
+    
+    if (tagsContainer && window.TagSelector && window.React && window.createRoot) {
+        const root = window.createRoot(tagsContainer);
+        root.render(
+            window.React.createElement(window.TagSelector, {
+                availableTags: availableTags,
+                selectedTags: [],
+                onChange: (selectedIds) => {
+                    // 配列をJSON形式で格納し、サーバー側でデコード
+                    const form = tagsInput.closest('form');
+                    // 既存のhidden inputsを削除
+                    form.querySelectorAll('input[name="tags[]"]').forEach(el => el.remove());
+                    // 新しいhidden inputsを追加
+                    selectedIds.forEach(id => {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = 'tags[]';
+                        input.value = id;
+                        form.appendChild(input);
+                    });
+                }
+            })
+        );
+    }
+});
+</script>

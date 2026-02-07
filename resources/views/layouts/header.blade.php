@@ -113,6 +113,14 @@
                                     </span>
                                 </a>
                             </li>
+                            <li class="nav-item active">
+                                <a class="hover nav-link" href="{{ route('recommendations.index') }}">
+                                    <i class="fas fa-star fa-fw fa-lg"></i>
+                                    <span class="text-center">
+                                        おすすめ
+                                    </span>
+                                </a>
+                            </li>
                             @endif
                             <li class="nav-item active">
                                 <a class="hover nav-link" href="{{ route('review.view') }}">

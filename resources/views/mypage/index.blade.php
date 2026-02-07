@@ -40,6 +40,22 @@
         <div class="review-card-body">
             <div class="review-title">{{ $post->title }}</div>
             <div class="review-content">{{ $post->body }}</div>
+            
+            <!-- 評価表示 -->
+            @if($post->rating)
+            <div class="mt-2">
+                <div id="rating-display-{{ $post->id }}"></div>
+            </div>
+            @endif
+            
+            <!-- タグ表示 -->
+            @if($post->tags && $post->tags->count() > 0)
+            <div class="post-tags mt-2">
+                @foreach($post->tags as $tag)
+                    <span class="badge">{{ $tag->name }}</span>
+                @endforeach
+            </div>
+            @endif
         </div>
         <div class="review-card-footer">
             <span class="review-meta">
@@ -63,3 +79,23 @@
 </div>
 @endif
 @endsection
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    @foreach ($posts as $post)
+        @if($post->rating)
+        const ratingContainer{{ $post->id }} = document.getElementById('rating-display-{{ $post->id }}');
+        if (ratingContainer{{ $post->id }} && window.StarRating && window.React && window.createRoot) {
+            const root{{ $post->id }} = window.createRoot(ratingContainer{{ $post->id }});
+            root{{ $post->id }}.render(
+                window.React.createElement(window.StarRating, {
+                    value: {{ $post->rating }},
+                    readOnly: true,
+                    size: 18
+                })
+            );
+        }
+        @endif
+    @endforeach
+});
+</script>
