@@ -303,7 +303,7 @@ class RecommendationTest extends TestCase
             'rating' => 5.0,
         ]);
 
-        $response = $this->actingAs($user)->getJson(route('recommendations.api'));
+        $response = $this->actingAs($user)->getJson(route('api.recommendations'));
         
         $response->assertStatus(200);
         $response->assertJsonStructure([
@@ -327,7 +327,7 @@ class RecommendationTest extends TestCase
         $this->assertTrue(Cache::has($cacheKey));
 
         // キャッシュをリフレッシュ
-        $response = $this->actingAs($user)->postJson(route('recommendations.refresh'));
+        $response = $this->actingAs($user)->postJson(route('api.recommendations.refresh'));
         
         $response->assertStatus(200);
         $response->assertJson([

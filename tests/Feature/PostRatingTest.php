@@ -186,7 +186,7 @@ class PostRatingTest extends TestCase
         ]);
 
         // 平均評価APIをテスト
-        $response = $this->actingAs($user1)->get(route('program.rating', ['program_id' => 'test_program']));
+        $response = $this->actingAs($user1)->get(route('api.program.rating', ['program_id' => 'test_program']));
         
         $response->assertStatus(200);
         $response->assertJson([
