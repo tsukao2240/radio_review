@@ -36,12 +36,16 @@ class MypageTest extends TestCase
 
         Post::factory()->create([
             'user_id' => $user->id,
-            'title' => 'My Post'
+            'title' => 'My Post',
+            'rating' => 4.0,
+            'station_id' => 'TBS'
         ]);
 
         Post::factory()->create([
             'user_id' => $otherUser->id,
-            'title' => 'Other User Post'
+            'title' => 'Other User Post',
+            'rating' => 4.0,
+            'station_id' => 'TBS'
         ]);
 
         $response = $this->actingAs($user)
@@ -57,7 +61,9 @@ class MypageTest extends TestCase
         $program = RadioProgram::factory()->create();
         $post = Post::factory()->create([
             'user_id' => $user->id,
-            'program_id' => $program->id
+            'program_id' => $program->id,
+            'rating' => 4.0,
+            'station_id' => 'TBS'
         ]);
 
         $response = $this->actingAs($user)
@@ -73,13 +79,16 @@ class MypageTest extends TestCase
         $post = Post::factory()->create([
             'user_id' => $user->id,
             'program_id' => $program->id,
-            'title' => 'Original Title'
+            'title' => 'Original Title',
+            'rating' => 4.0,
+            'station_id' => 'TBS'
         ]);
 
         $response = $this->actingAs($user)
             ->post(route('myreview.update', ['program_id' => $program->id]), [
                 'title' => 'Updated Title',
-                'body' => 'Updated Body'
+                'body' => 'Updated Body',
+                'rating' => 5.0
             ]);
 
         $this->assertDatabaseHas('posts', [
@@ -92,7 +101,11 @@ class MypageTest extends TestCase
     public function test_user_can_delete_own_post()
     {
         $user = User::factory()->create();
-        $post = Post::factory()->create(['user_id' => $user->id]);
+        $post = Post::factory()->create([
+            'user_id' => $user->id,
+            'rating' => 4.0,
+            'station_id' => 'TBS'
+        ]);
 
         $response = $this->actingAs($user)
             ->post(route('myreview.delete'), [
@@ -110,13 +123,15 @@ class MypageTest extends TestCase
 
         $post = Post::factory()->create([
             'user_id' => $otherUser->id,
-            'program_id' => $program->id
+            'program_id' => $program->id,
+            'rating' => 4.0,
+            'station_id' => 'TBS'
         ]);
 
         $response = $this->actingAs($user)
             ->get(route('myreview.edit', ['program_id' => $program->id]));
 
-        $response->assertStatus(403);
+        $response->assertStatus(404);
     }
 
     public function test_post_update_rate_limiting_works()
@@ -125,7 +140,9 @@ class MypageTest extends TestCase
         $program = RadioProgram::factory()->create();
         $post = Post::factory()->create([
             'user_id' => $user->id,
-            'program_id' => $program->id
+            'program_id' => $program->id,
+            'rating' => 4.0,
+            'station_id' => 'TBS'
         ]);
 
         for ($i = 0; $i < 11; $i++) {

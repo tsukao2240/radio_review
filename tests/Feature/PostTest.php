@@ -43,7 +43,10 @@ class PostTest extends TestCase
                 'title' => 'Test Post Title',
                 'body' => 'Test Post Body',
                 'program_id' => $program->id,
-                'program_title' => $program->title
+                'program_title' => $program->title,
+                'user_id' => $user->id,
+                'rating' => 4.0,
+                'station_id' => 'TBS'
             ]);
 
         $this->assertDatabaseHas('posts', [

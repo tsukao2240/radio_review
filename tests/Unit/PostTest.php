@@ -14,7 +14,7 @@ class PostTest extends TestCase
 
     public function test_post_has_fillable_attributes()
     {
-        $fillable = ['id', 'user_id', 'program_id', 'program_title', 'title', 'body'];
+        $fillable = ['id', 'user_id', 'program_id', 'program_title', 'station_id', 'title', 'body', 'rating', 'likes_count', 'comments_count'];
         $post = new Post();
 
         $this->assertEquals($fillable, $post->getFillable());
@@ -48,7 +48,9 @@ class PostTest extends TestCase
             'program_id' => $program->id,
             'program_title' => $program->title,
             'title' => 'Test Post',
-            'body' => 'Test Body'
+            'body' => 'Test Body',
+            'rating' => 3.0,
+            'station_id' => 'TBS'
         ]);
 
         $this->assertDatabaseHas('posts', [

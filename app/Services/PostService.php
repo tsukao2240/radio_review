@@ -180,13 +180,28 @@ class PostService
     {
         try {
             $post = Post::findOrFail($postId);
+
+            // 基本フィールドの更新
             $post->title = $data['title'];
             $post->body = $data['body'];
+
+            // 評価の更新（提供されている場合）
+            if (isset($data['rating'])) {
+                $post->rating = $data['rating'];
+            }
+
             $post->save();
+
+            // タグの同期（提供されている場合）
+            if (array_key_exists('tags', $data)) {
+                $post->tags()->sync($data['tags'] ?? []);
+            }
 
             Log::info('Post updated', [
                 'post_id' => $postId,
-                'user_id' => $post->user_id
+                'user_id' => $post->user_id,
+                'rating_updated' => isset($data['rating']),
+                'tags_updated' => array_key_exists('tags', $data),
             ]);
 
             return $post;

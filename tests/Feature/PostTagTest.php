@@ -144,7 +144,7 @@ class PostTagTest extends TestCase
         $this->assertEquals(2, $post->tags->count());
 
         // タグ2とタグ3に更新
-        $response = $this->actingAs($user)->post(route('myreview.update', $post->id), [
+        $response = $this->actingAs($user)->post(route('myreview.update', $post->program_id), [
             'id' => $post->id,
             'user_id' => $user->id,
             'program_id' => $post->program_id,
@@ -179,7 +179,7 @@ class PostTagTest extends TestCase
         $this->assertEquals(1, $post->tags->count());
 
         // タグを空で更新
-        $response = $this->actingAs($user)->post(route('myreview.update', $post->id), [
+        $response = $this->actingAs($user)->post(route('myreview.update', $post->program_id), [
             'id' => $post->id,
             'user_id' => $user->id,
             'program_id' => $post->program_id,

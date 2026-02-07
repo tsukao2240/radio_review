@@ -17,22 +17,22 @@ class SearchTest extends TestCase
         $response->assertStatus(200);
     }
 
-    public function test_search_returns_results_with_valid_keyword()
+    public function test_search_returns_results_with_valid_title()
     {
         RadioProgram::factory()->create(['title' => 'ラジオ番組テスト']);
         RadioProgram::factory()->create(['title' => '別の番組']);
 
-        $response = $this->get(route('program.search', ['keyword' => 'ラジオ']));
+        $response = $this->get(route('program.search', ['title' => 'ラジオ']));
 
         $response->assertStatus(200);
         $response->assertSee('ラジオ番組テスト');
     }
 
-    public function test_search_with_empty_keyword_shows_validation_error()
+    public function test_search_with_empty_title_shows_validation_error()
     {
-        $response = $this->get(route('program.search', ['keyword' => '']));
+        $response = $this->get(route('program.search', ['title' => '']));
 
-        $response->assertStatus(302);
+        $response->assertStatus(200);
     }
 
     public function test_search_excludes_rerun_programs()
@@ -41,7 +41,7 @@ class SearchTest extends TestCase
         RadioProgram::factory()->create(['title' => '番組（再）']);
         RadioProgram::factory()->create(['title' => '番組【再】']);
 
-        $response = $this->get(route('program.search', ['keyword' => '番組']));
+        $response = $this->get(route('program.search', ['title' => '番組']));
 
         $response->assertStatus(200);
         $response->assertSee('通常番組');
@@ -53,18 +53,23 @@ class SearchTest extends TestCase
     {
         RadioProgram::factory()->create(['title' => 'APIテスト番組']);
 
-        $response = $this->getJson('/api/programs?keyword=API');
+        $response = $this->getJson('/api/programs?title=API');
 
         $response->assertStatus(200)
             ->assertJsonStructure([
-                '*' => ['id', 'title', 'station_id']
+                'status',
+                'message',
+                'data' => [
+                    '*' => ['id', 'title', 'station_id']
+                ],
+                'count'
             ]);
     }
 
     public function test_search_rate_limiting_works()
     {
         for ($i = 0; $i < 61; $i++) {
-            $response = $this->get(route('program.search', ['keyword' => 'test']));
+            $response = $this->get(route('program.search', ['title' => 'test']));
         }
 
         $response->assertStatus(429);

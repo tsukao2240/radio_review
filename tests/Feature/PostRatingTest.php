@@ -216,7 +216,7 @@ class PostRatingTest extends TestCase
             'rating' => 3.0,
         ]);
 
-        $response = $this->actingAs($user)->post(route('myreview.update', $post->id), [
+        $response = $this->actingAs($user)->post(route('myreview.update', $post->program_id), [
             'id' => $post->id,
             'user_id' => $user->id,
             'program_id' => $post->program_id,
