@@ -11,6 +11,9 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 // PWA機能をインポート
 import './pwa.js';
 
+// モバイルメニュー機能をインポート
+import './mobile-menu.js';
+
 // 録音処理の共通モジュールをインポート
 import './recording.js';
 
@@ -29,6 +32,7 @@ import StarRating from './components/StarRating.jsx';
 import TagSelector from './components/TagSelector.jsx';
 import LikeButton from './components/LikeButton.jsx';
 import CommentSection from './components/CommentSection.jsx';
+import SearchAutocomplete from './components/SearchAutocomplete.jsx';
 
 // アプリケーションのメインコンポーネント
 const App = () => {
@@ -72,5 +76,6 @@ window.StarRating = StarRating;
 window.TagSelector = TagSelector;
 window.LikeButton = LikeButton;
 window.CommentSection = CommentSection;
+window.SearchAutocomplete = SearchAutocomplete;
 window.React = React;
 window.createRoot = createRoot;
