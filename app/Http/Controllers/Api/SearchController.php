@@ -148,7 +148,7 @@ class SearchController extends Controller
 
             $suggestions = Cache::remember($cacheKey, 600, function () use ($query) {
                 return RadioProgram::where('title', 'LIKE', "%{$query}%")
-                    ->whereNotRegexp('title', '【新】|【終】|【最終回】|（再）|再放送')
+                    ->whereRaw("title NOT REGEXP ?", ['【新】|【終】|【最終回】|（再）|再放送'])
                     ->select('title', 'cast', 'station_id')
                     ->distinct()
                     ->limit(10)

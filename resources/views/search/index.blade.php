@@ -32,7 +32,7 @@
                         name="title"
                         value="{{ request('title') }}"
                         placeholder="番組名を入力してください"
-                        class="flex-1 px-4 py-3 md:px-6 md:py-4 text-base md:text-lg focus:outline-none bg-transparent text-gray-800 dark:text-white border-0"
+                        class="flex-1 px-4 py-3 md:px-6 md:py-4 text-base md:text-lg focus:outline-none bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 border-0"
                         autocomplete="off"
                         autofocus
                     />
@@ -63,20 +63,113 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     放送局
                 </label>
-                <div class="flex flex-wrap gap-2">
-                    @foreach(['TBS' => 'TBSラジオ', 'QRR' => '文化放送', 'LFR' => 'ニッポン放送', 'RN1' => 'ラジオNIKKEI第1', 'RN2' => 'ラジオNIKKEI第2'] as $stationId => $stationName)
-                    <label class="inline-flex items-center touch-target px-4 py-2 rounded-lg border-2 cursor-pointer transition
-                        {{ in_array($stationId, (array)request('stations', [])) ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300' : 'border-gray-300 dark:border-gray-600 hover:border-primary-300 text-gray-700 dark:text-gray-300' }}">
-                        <input
-                            type="checkbox"
-                            name="stations[]"
-                            value="{{ $stationId }}"
-                            {{ in_array($stationId, (array)request('stations', [])) ? 'checked' : '' }}
-                            class="mr-2 text-primary-500 focus:ring-primary-500"
-                        >
-                        <span class="text-sm font-medium">{{ $stationName }}</span>
-                    </label>
-                    @endforeach
+                <div class="space-y-3">
+                    <!-- 関東エリア -->
+                    <div>
+                        <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">関東</h4>
+                        <div class="flex flex-wrap gap-2">
+                            @foreach([
+                                'TBS' => 'TBSラジオ',
+                                'QRR' => '文化放送',
+                                'LFR' => 'ニッポン放送',
+                                'RN1' => 'ラジオNIKKEI第1',
+                                'RN2' => 'ラジオNIKKEI第2',
+                                'JOAK' => 'NHKラジオ第1',
+                                'JOAB' => 'NHK-FM',
+                                'FMT' => 'TOKYO FM',
+                                'FMJ' => 'J-WAVE',
+                                'INT' => 'interfm'
+                            ] as $stationId => $stationName)
+                            <label class="inline-flex items-center touch-target px-3 py-2 rounded-lg border-2 cursor-pointer transition text-sm
+                                {{ in_array($stationId, (array)request('stations', [])) ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300' : 'border-gray-300 dark:border-gray-600 hover:border-primary-300 text-gray-700 dark:text-gray-300' }}">
+                                <input
+                                    type="checkbox"
+                                    name="stations[]"
+                                    value="{{ $stationId }}"
+                                    {{ in_array($stationId, (array)request('stations', [])) ? 'checked' : '' }}
+                                    class="mr-2 text-primary-500 focus:ring-primary-500"
+                                >
+                                <span class="text-xs md:text-sm font-medium">{{ $stationName }}</span>
+                            </label>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    <!-- 関西エリア -->
+                    <div>
+                        <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">関西</h4>
+                        <div class="flex flex-wrap gap-2">
+                            @foreach([
+                                'MBS' => 'MBSラジオ',
+                                'ABC' => 'ABCラジオ',
+                                'OBC' => 'ラジオ大阪',
+                                'CCL' => 'FM COCOLO',
+                                'FM802' => 'FM802',
+                                'FMO' => 'FM OSAKA'
+                            ] as $stationId => $stationName)
+                            <label class="inline-flex items-center touch-target px-3 py-2 rounded-lg border-2 cursor-pointer transition text-sm
+                                {{ in_array($stationId, (array)request('stations', [])) ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300' : 'border-gray-300 dark:border-gray-600 hover:border-primary-300 text-gray-700 dark:text-gray-300' }}">
+                                <input
+                                    type="checkbox"
+                                    name="stations[]"
+                                    value="{{ $stationId }}"
+                                    {{ in_array($stationId, (array)request('stations', [])) ? 'checked' : '' }}
+                                    class="mr-2 text-primary-500 focus:ring-primary-500"
+                                >
+                                <span class="text-xs md:text-sm font-medium">{{ $stationName }}</span>
+                            </label>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    <!-- 中京エリア -->
+                    <div>
+                        <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">中京</h4>
+                        <div class="flex flex-wrap gap-2">
+                            @foreach([
+                                'CBC' => 'CBCラジオ',
+                                'SF' => '東海ラジオ',
+                                'FMNA' => 'FM AICHI'
+                            ] as $stationId => $stationName)
+                            <label class="inline-flex items-center touch-target px-3 py-2 rounded-lg border-2 cursor-pointer transition text-sm
+                                {{ in_array($stationId, (array)request('stations', [])) ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300' : 'border-gray-300 dark:border-gray-600 hover:border-primary-300 text-gray-700 dark:text-gray-300' }}">
+                                <input
+                                    type="checkbox"
+                                    name="stations[]"
+                                    value="{{ $stationId }}"
+                                    {{ in_array($stationId, (array)request('stations', [])) ? 'checked' : '' }}
+                                    class="mr-2 text-primary-500 focus:ring-primary-500"
+                                >
+                                <span class="text-xs md:text-sm font-medium">{{ $stationName }}</span>
+                            </label>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    <!-- その他主要都市 -->
+                    <div>
+                        <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">その他</h4>
+                        <div class="flex flex-wrap gap-2">
+                            @foreach([
+                                'HBC' => 'HBCラジオ',
+                                'RKK' => 'RKKラジオ',
+                                'RBC' => 'RBCiラジオ',
+                                'FMF' => 'FM福岡'
+                            ] as $stationId => $stationName)
+                            <label class="inline-flex items-center touch-target px-3 py-2 rounded-lg border-2 cursor-pointer transition text-sm
+                                {{ in_array($stationId, (array)request('stations', [])) ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300' : 'border-gray-300 dark:border-gray-600 hover:border-primary-300 text-gray-700 dark:text-gray-300' }}">
+                                <input
+                                    type="checkbox"
+                                    name="stations[]"
+                                    value="{{ $stationId }}"
+                                    {{ in_array($stationId, (array)request('stations', [])) ? 'checked' : '' }}
+                                    class="mr-2 text-primary-500 focus:ring-primary-500"
+                                >
+                                <span class="text-xs md:text-sm font-medium">{{ $stationName }}</span>
+                            </label>
+                            @endforeach
+                        </div>
+                    </div>
                 </div>
             </div>
 

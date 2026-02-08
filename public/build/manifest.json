@@ -40,7 +40,7 @@
     "src": "node_modules/@fortawesome/fontawesome-free/webfonts/fa-v4compatibility.woff2"
   },
   "resources/css/app.css": {
-    "file": "assets/app-CbpsdHm5.css",
+    "file": "assets/app-XDw9a7SR.css",
     "src": "resources/css/app.css",
     "isEntry": true
   },
@@ -50,7 +50,7 @@
     "isEntry": true
   },
   "resources/js/app.jsx": {
-    "file": "assets/app-_OzPoJKJ.js",
+    "file": "assets/app-DH02P-fI.js",
     "name": "app",
     "src": "resources/js/app.jsx",
     "isEntry": true,

@@ -200,7 +200,20 @@ export function stopRecording(recordingId, button, statusDiv) {
             recording_id: recordingId
         })
     })
-    .then(response => response.json())
+    .then(response => {
+        // レスポンスのステータスコードをチェック
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        // Content-Typeを確認
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            throw new Error('サーバーから無効なレスポンスが返されました');
+        }
+        
+        return response.json();
+    })
     .then(data => {
         if (data.success) {
             // 監視を停止
@@ -227,11 +240,12 @@ export function stopRecording(recordingId, button, statusDiv) {
 
             alert('録音を停止しました');
         } else {
-            alert('録音停止に失敗しました: ' + data.message);
+            alert('録音停止に失敗しました: ' + (data.message || '不明なエラー'));
         }
     })
     .catch(error => {
-        alert('エラーが発生しました: ' + error);
+        console.error('録音停止エラー:', error);
+        alert('エラーが発生しました: ' + error.message);
     });
 }
 
