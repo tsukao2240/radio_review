@@ -1,29 +1,59 @@
 @extends('layouts.header')
 @section('content')
 @include('includes.search')
-<span>
-    {{ Breadcrumbs::render('weekly_schedule', $station_id) }}
-</span>
+
+<x-breadcrumbs :items="[
+    ['label' => '放送中の番組', 'url' => route('program.schedule')],
+    ['label' => $broadcast_name . ' 週間番組表']
+]" />
+
 <title>{{ $broadcast_name }}の週間番組表</title>
-<div class="schedule-header">
-    <h3>週間番組表（{{ $broadcast_name }}）</h3>
-</div>
-<div class="timetable">
-    @for ($i = 0; $i < count($thisWeek); $i++)
+
+<div class="max-w-7xl mx-auto">
+    <h1 class="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white mb-6">
+        <i class="fas fa-calendar-week mr-2"></i>{{ $broadcast_name }} 週間番組表
+    </h1>
+
+    <!-- 日付ナビゲーション（横スクロール） -->
+    <div class="mb-8 -mx-4 px-4 md:mx-0 md:px-0">
+        <div class="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide space-x-2 pb-2">
+            @foreach($thisWeek as $index => $date)
+            @php
+                $dateObj = \Carbon\Carbon::createFromFormat('Ymd', $date);
+                $dayOfWeek = ['日', '月', '火', '水', '木', '金', '土'][$dateObj->dayOfWeek];
+                $isToday = $date === \Carbon\Carbon::now()->format('Ymd');
+                $isSunday = $dateObj->dayOfWeek === 0;
+                $isSaturday = $dateObj->dayOfWeek === 6;
+            @endphp
+            <a href="#date-{{ $date }}"
+               class="snap-start flex-shrink-0 touch-target px-4 py-3 rounded-lg text-center font-medium transition min-w-[100px]
+                   {{ $isToday ? 'bg-primary-500 text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-primary-100 dark:hover:bg-primary-900' }}">
+                <div class="text-xs {{ $isSunday ? 'text-red-500' : ($isSaturday ? 'text-blue-500' : '') }} {{ $isToday ? 'text-white' : '' }}">
+                    {{ $dateObj->format('m月d日') }}
+                </div>
+                <div class="text-sm font-bold {{ $isSunday ? 'text-red-600' : ($isSaturday ? 'text-blue-600' : '') }} {{ $isToday ? 'text-white' : '' }}">
+                    ({{ $dayOfWeek }})
+                </div>
+                @if($isToday)
+                <div class="text-xs mt-1 bg-yellow-400 text-gray-800 rounded px-1">今日</div>
+                @endif
+            </a>
+            @endforeach
+        </div>
+    </div>
+
+    <!-- 番組カードグリッド -->
+    @foreach($thisWeek as $date)
     @php
-        // この曜日に表示すべき番組があるかチェック
-        $currentDate = $thisWeek[$i];
+        // この日に表示すべき番組があるかチェック
+        $currentDate = $date;
         $nextDate = date('Ymd', strtotime($currentDate . ' +1 day'));
         $hasPrograms = false;
         
         foreach ($entries as $entry) {
             $entryDate = $entry['date'];
             $startTimeInt = (int)str_replace(':', '', $entry['start']);
-            
-            // 当日の5:00〜23:59の番組
             $isCurrentDayProgram = ($currentDate === $entryDate && $startTimeInt >= 500 && $startTimeInt < 2400);
-            
-            // 当日の24:00〜28:59の深夜番組
             $isCurrentDayLateNightProgram = ($entryDate === $nextDate && $startTimeInt >= 2400 && $startTimeInt < 2900);
             
             if ($isCurrentDayProgram || $isCurrentDayLateNightProgram) {
@@ -31,183 +61,198 @@
                 break;
             }
         }
+
+        $dateObj = \Carbon\Carbon::createFromFormat('Ymd', $date);
+        $dayOfWeek = ['日', '月', '火', '水', '木', '金', '土'][$dateObj->dayOfWeek];
+        $isSunday = $dateObj->dayOfWeek === 0;
+        $isSaturday = $dateObj->dayOfWeek === 6;
     @endphp
-    
-    @if ($hasPrograms)
-    <div class="tablebox">
-        <div class="table">
-            <table class="table table-bordered table-responsive">
-                <thead>
-                    <tr>
-                        <th>{{ date('m月d日(D)',strtotime($thisWeek[$i])) }}</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach ($entries as $entry)
-                    @php
-                        // 現在の曜日の日付
-                        $currentDate = $thisWeek[$i];
-                        
-                        // 前日の日付（深夜番組用）
-                        $previousDate = isset($thisWeek[$i - 1]) ? $thisWeek[$i - 1] : null;
-                        
-                        // 番組の日付と開始時刻
-                        $entryDate = $entry['date'];
-                        $entryStart = $entry['start']; // "HH:MM"形式
-                        
-                        // 時刻を整数に変換（"24:30" -> 2430）
-                        $startTimeInt = (int)str_replace(':', '', $entryStart);
-                        
-                        // 表示条件
-                        // 1. 当日の5:00〜23:59の番組（24:00以降は除外して重複を防ぐ）
-                        $isCurrentDayProgram = ($currentDate === $entryDate && $startTimeInt >= 500 && $startTimeInt < 2400);
-                        
-                        // 2. 当日の24:00〜28:59の深夜番組（dateは翌日だがstartは24時以降）
-                        $isCurrentDayLateNightProgram = false;
-                        $nextDate = date('Ymd', strtotime($currentDate . ' +1 day'));
-                        // 当日の深夜番組: dateは翌日、startは24:00以降
-                        $isCurrentDayLateNightProgram = ($entryDate === $nextDate && $startTimeInt >= 2400 && $startTimeInt < 2900);
-                        
-                        // 表示判定: 当日5:00〜23:59 または 当日24:00〜28:59
-                        $shouldDisplay = $isCurrentDayProgram || $isCurrentDayLateNightProgram;
-                    @endphp
-                    @if ($shouldDisplay)
-                    <tr>
-                        <td>
-                            <a href="{{ url('list/' . $entry['id'] . '/' . $entry['title']) }}?from=weekly&station_id={{ $station_id }}">{{$entry['title']}}</a>
-                            @if ($entry['cast'] !== '')
-                            <br>
-                            {{ $entry['cast'] }}
-                            @endif
-                            <br>
-                            <span class="program-time">{{ $entry['start'] }} - {{ $entry['end'] }}</span>
-                            <br>
-                            @php
-                                $programStartTime = \Carbon\Carbon::createFromFormat('Ymd H:i', $entry['date'] . ' ' . $entry['start']);
-                                $programEndTime = \Carbon\Carbon::createFromFormat('Ymd H:i', $entry['date'] . ' ' . $entry['end']);
-                                $canRecord = $programEndTime->diffInDays(now()) <= 7;
-                            @endphp
-                            @if(!$programStartTime->isPast())
-                                @if (Auth::check())
-                                    <button class="btn btn-sm btn-warning schedule-recording-btn"
-                                            data-station-id="{{ $entry['id'] }}"
-                                            data-station-name="{{ $station_id }}"
-                                            data-title="{{ $entry['title'] }}"
-                                            data-cast="{{ $entry['cast'] ?? '' }}"
-                                            data-start="{{ $entry['date'] . str_replace(':', '', $entry['start']) }}"
-                                            data-end="{{ $entry['date'] . str_replace(':', '', $entry['end']) }}">
-                                        録音予約
-                                    </button>
-                                @else
-                                    <a href="{{ route('login') }}" class="btn btn-sm btn-warning">
-                                        ログインして録音予約
-                                    </a>
-                                @endif
-                            @elseif($canRecord && $programEndTime->isPast())
-                                <div class="recording-controls-wrapper">
-                                    <div class="d-flex align-items-center gap-2 mb-2 recording-btn-wrapper">
-                                        <select class="form-select form-select-sm area-select" style="max-width: 180px;" data-entry-id="{{ $entry['id'] }}">
-                                            <option value="">エリア内</option>
-                                            <optgroup label="北海道・東北">
-                                                <option value="JP1">北海道</option>
-                                                <option value="JP2">青森県</option>
-                                                <option value="JP3">岩手県</option>
-                                                <option value="JP4">宮城県</option>
-                                                <option value="JP5">秋田県</option>
-                                                <option value="JP6">山形県</option>
-                                                <option value="JP7">福島県</option>
-                                            </optgroup>
-                                            <optgroup label="関東">
-                                                <option value="JP8">茨城県</option>
-                                                <option value="JP9">栃木県</option>
-                                                <option value="JP10">群馬県</option>
-                                                <option value="JP11">埼玉県</option>
-                                                <option value="JP12">千葉県</option>
-                                                <option value="JP13">東京都</option>
-                                                <option value="JP14">神奈川県</option>
-                                            </optgroup>
-                                            <optgroup label="中部">
-                                                <option value="JP15">新潟県</option>
-                                                <option value="JP16">富山県</option>
-                                                <option value="JP17">石川県</option>
-                                                <option value="JP18">福井県</option>
-                                                <option value="JP19">山梨県</option>
-                                                <option value="JP20">長野県</option>
-                                                <option value="JP21">岐阜県</option>
-                                                <option value="JP22">静岡県</option>
-                                                <option value="JP23">愛知県</option>
-                                                <option value="JP24">三重県</option>
-                                            </optgroup>
-                                            <optgroup label="近畿">
-                                                <option value="JP25">滋賀県</option>
-                                                <option value="JP26">京都府</option>
-                                                <option value="JP27">大阪府</option>
-                                                <option value="JP28">兵庫県</option>
-                                                <option value="JP29">奈良県</option>
-                                                <option value="JP30">和歌山県</option>
-                                            </optgroup>
-                                            <optgroup label="中国・四国">
-                                                <option value="JP31">鳥取県</option>
-                                                <option value="JP32">島根県</option>
-                                                <option value="JP33">岡山県</option>
-                                                <option value="JP34">広島県</option>
-                                                <option value="JP35">山口県</option>
-                                                <option value="JP36">徳島県</option>
-                                                <option value="JP37">香川県</option>
-                                                <option value="JP38">愛媛県</option>
-                                                <option value="JP39">高知県</option>
-                                            </optgroup>
-                                            <optgroup label="九州・沖縄">
-                                                <option value="JP40">福岡県</option>
-                                                <option value="JP41">佐賀県</option>
-                                                <option value="JP42">長崎県</option>
-                                                <option value="JP43">熊本県</option>
-                                                <option value="JP44">大分県</option>
-                                                <option value="JP45">宮崎県</option>
-                                                <option value="JP46">鹿児島県</option>
-                                                <option value="JP47">沖縄県</option>
-                                            </optgroup>
-                                        </select>
-                                        <button class="btn btn-sm btn-success recording-btn"
-                                                data-station-id="{{ $entry['id'] }}"
-                                                data-station-name="{{ $station_id }}"
-                                                data-title="{{ $entry['title'] }}"
-                                                data-cast="{{ $entry['cast'] ?? '' }}"
-                                                data-date="{{ $entry['date'] }}"
-                                                data-start="{{ str_replace(':', '', $entry['start']) }}"
-                                                data-end="{{ str_replace(':', '', $entry['end']) }}">
-                                            タイムフリー録音
-                                        </button>
-                                    </div>
-                                    <div class="recording-status" style="display:none; margin-top:5px;">
-                                    <div class="progress" style="height: 20px; margin-bottom: 5px;">
-                                        <div class="progress-bar progress-bar-striped progress-bar-animated"
-                                             role="progressbar"
-                                             style="width: 0%"
-                                             aria-valuenow="0"
-                                             aria-valuemin="0"
-                                             aria-valuemax="100">0%</div>
-                                    </div>
-                                    <small class="recording-info" style="display: block; margin-bottom: 3px;">
-                                        サイズ: <span class="file-size">0 MB</span> |
-                                        時間: <span class="elapsed-time">00:00</span> / <span class="total-time">--:--</span>
-                                    </small>
-                                    <button class="btn btn-sm btn-danger stop-recording-btn" style="width: 100%;">
-                                        録音停止
-                                    </button>
-                                </div>
-                            @endif
-                        </td>
-                    </tr>
+
+    @if($hasPrograms)
+    <div id="date-{{ $date }}" class="mb-12">
+        <h2 class="text-xl md:text-2xl font-bold text-gray-800 dark:text-white mb-4 sticky top-20 bg-white dark:bg-gray-900 py-2 z-10 {{ $isSunday ? 'text-red-600 dark:text-red-400' : ($isSaturday ? 'text-blue-600 dark:text-blue-400' : '') }}">
+            {{ $dateObj->format('Y年m月d日') }}（{{ $dayOfWeek }}）
+        </h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            @foreach($entries as $entry)
+            @php
+                $entryDate = $entry['date'];
+                $startTimeInt = (int)str_replace(':', '', $entry['start']);
+                $isCurrentDayProgram = ($currentDate === $entryDate && $startTimeInt >= 500 && $startTimeInt < 2400);
+                $isCurrentDayLateNightProgram = ($entryDate === $nextDate && $startTimeInt >= 2400 && $startTimeInt < 2900);
+                $shouldDisplay = $isCurrentDayProgram || $isCurrentDayLateNightProgram;
+
+                if (!$shouldDisplay) continue;
+
+                $programStartTime = \Carbon\Carbon::createFromFormat('Ymd H:i', $entry['date'] . ' ' . $entry['start']);
+                $programEndTime = \Carbon\Carbon::createFromFormat('Ymd H:i', $entry['date'] . ' ' . $entry['end']);
+                $canRecord = $programEndTime->diffInDays(now()) <= 7;
+                $isFuture = !$programStartTime->isPast();
+                $isPast = $programEndTime->isPast();
+            @endphp
+
+            <div class="card-base group">
+                <!-- 番組時間バッジ -->
+                <div class="flex items-center justify-between mb-3">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300">
+                        <i class="fas fa-clock mr-1"></i>
+                        {{ $entry['start'] }} - {{ $entry['end'] }}
+                    </span>
+                </div>
+
+                <!-- 番組タイトル -->
+                <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-2 group-hover:text-primary-600 transition">
+                    <a href="{{ url('list/' . $entry['id'] . '/' . $entry['title']) }}?from=weekly&station_id={{ $station_id }}" 
+                       class="hover:underline">
+                        {{ $entry['title'] }}
+                    </a>
+                </h3>
+
+                <!-- 出演者 -->
+                @if(!empty($entry['cast']))
+                <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                    <i class="fas fa-microphone mr-1"></i>{{ $entry['cast'] }}
+                </p>
+                @endif
+
+                <!-- アクション -->
+                <div class="flex flex-col space-y-2 mt-4">
+                    @if($isFuture)
+                        <!-- 未来の番組：録音予約 -->
+                        @if(Auth::check())
+                        <button class="touch-target w-full bg-gradient-to-r from-yellow-400 to-yellow-600 text-gray-800 font-semibold py-3 rounded-lg hover:shadow-lg transition schedule-recording-btn"
+                                data-station-id="{{ $entry['id'] }}"
+                                data-station-name="{{ $station_id }}"
+                                data-title="{{ $entry['title'] }}"
+                                data-cast="{{ $entry['cast'] ?? '' }}"
+                                data-start="{{ $entry['date'] . str_replace(':', '', $entry['start']) }}"
+                                data-end="{{ $entry['date'] . str_replace(':', '', $entry['end']) }}">
+                            <i class="fas fa-calendar-check mr-2"></i>録音予約
+                        </button>
+                        @else
+                        <a href="{{ route('login') }}"
+                           class="touch-target w-full text-center bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold py-3 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition">
+                            <i class="fas fa-sign-in-alt mr-2"></i>ログインして録音予約
+                        </a>
                         @endif
-                    @endforeach
-                </tbody>
-            </table>
+                    @elseif($canRecord && $isPast)
+                        <!-- 過去7日以内：タイムフリー録音 -->
+                        <div class="recording-controls-wrapper">
+                            <div class="flex flex-col space-y-2 recording-btn-wrapper">
+                                <select class="form-select form-select-sm area-select bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm" 
+                                        data-entry-id="{{ $entry['id'] }}">
+                                    <option value="">エリア内</option>
+                                    <optgroup label="北海道・東北">
+                                        <option value="JP1">北海道</option>
+                                        <option value="JP2">青森県</option>
+                                        <option value="JP3">岩手県</option>
+                                        <option value="JP4">宮城県</option>
+                                        <option value="JP5">秋田県</option>
+                                        <option value="JP6">山形県</option>
+                                        <option value="JP7">福島県</option>
+                                    </optgroup>
+                                    <optgroup label="関東">
+                                        <option value="JP8">茨城県</option>
+                                        <option value="JP9">栃木県</option>
+                                        <option value="JP10">群馬県</option>
+                                        <option value="JP11">埼玉県</option>
+                                        <option value="JP12">千葉県</option>
+                                        <option value="JP13">東京都</option>
+                                        <option value="JP14">神奈川県</option>
+                                    </optgroup>
+                                    <optgroup label="中部">
+                                        <option value="JP15">新潟県</option>
+                                        <option value="JP16">富山県</option>
+                                        <option value="JP17">石川県</option>
+                                        <option value="JP18">福井県</option>
+                                        <option value="JP19">山梨県</option>
+                                        <option value="JP20">長野県</option>
+                                        <option value="JP21">岐阜県</option>
+                                        <option value="JP22">静岡県</option>
+                                        <option value="JP23">愛知県</option>
+                                        <option value="JP24">三重県</option>
+                                    </optgroup>
+                                    <optgroup label="近畿">
+                                        <option value="JP25">滋賀県</option>
+                                        <option value="JP26">京都府</option>
+                                        <option value="JP27">大阪府</option>
+                                        <option value="JP28">兵庫県</option>
+                                        <option value="JP29">奈良県</option>
+                                        <option value="JP30">和歌山県</option>
+                                    </optgroup>
+                                    <optgroup label="中国・四国">
+                                        <option value="JP31">鳥取県</option>
+                                        <option value="JP32">島根県</option>
+                                        <option value="JP33">岡山県</option>
+                                        <option value="JP34">広島県</option>
+                                        <option value="JP35">山口県</option>
+                                        <option value="JP36">徳島県</option>
+                                        <option value="JP37">香川県</option>
+                                        <option value="JP38">愛媛県</option>
+                                        <option value="JP39">高知県</option>
+                                    </optgroup>
+                                    <optgroup label="九州・沖縄">
+                                        <option value="JP40">福岡県</option>
+                                        <option value="JP41">佐賀県</option>
+                                        <option value="JP42">長崎県</option>
+                                        <option value="JP43">熊本県</option>
+                                        <option value="JP44">大分県</option>
+                                        <option value="JP45">宮崎県</option>
+                                        <option value="JP46">鹿児島県</option>
+                                        <option value="JP47">沖縄県</option>
+                                    </optgroup>
+                                </select>
+                                <button class="touch-target w-full bg-gradient-to-r from-green-500 to-green-700 text-white font-semibold py-3 rounded-lg hover:shadow-lg transition recording-btn"
+                                        data-station-id="{{ $entry['id'] }}"
+                                        data-station-name="{{ $station_id }}"
+                                        data-title="{{ $entry['title'] }}"
+                                        data-cast="{{ $entry['cast'] ?? '' }}"
+                                        data-date="{{ $entry['date'] }}"
+                                        data-start="{{ str_replace(':', '', $entry['start']) }}"
+                                        data-end="{{ str_replace(':', '', $entry['end']) }}">
+                                    <i class="fas fa-download mr-2"></i>タイムフリー録音
+                                </button>
+                            </div>
+                            <div class="recording-status" style="display:none; margin-top:0.5rem;">
+                                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-5 mb-2">
+                                    <div class="progress-bar bg-gradient-to-r from-green-500 to-green-600 h-5 rounded-full text-xs font-medium text-white text-center leading-5 transition-all duration-300"
+                                         style="width: 0%">0%</div>
+                                </div>
+                                <small class="block text-gray-600 dark:text-gray-400 text-xs mb-2 recording-info">
+                                    サイズ: <span class="file-size">0 MB</span> |
+                                    時間: <span class="elapsed-time">00:00</span> / <span class="total-time">--:--</span>
+                                </small>
+                                <button class="w-full touch-target bg-red-500 hover:bg-red-600 text-white font-semibold py-2 rounded-lg transition stop-recording-btn">
+                                    <i class="fas fa-stop mr-2"></i>録音停止
+                                </button>
+                            </div>
+                        </div>
+                    @endif
+
+                    <a href="{{ url('list/' . $entry['id'] . '/' . $entry['title']) }}?from=weekly&station_id={{ $station_id }}"
+                       class="touch-target w-full text-center border-2 border-primary-500 text-primary-600 dark:text-primary-400 font-semibold py-3 rounded-lg hover:bg-primary-50 dark:hover:bg-primary-900/20 transition">
+                        <i class="fas fa-info-circle mr-2"></i>詳細を見る
+                    </a>
+                </div>
+            </div>
+            @endforeach
         </div>
     </div>
     @endif
-@endfor
+    @endforeach
 </div>
+
+<!-- スクロールバー非表示CSS -->
+<style>
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+.scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+</style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -229,13 +274,11 @@ document.addEventListener('DOMContentLoaded', function() {
             const startTime = this.dataset.start;
             const endTime = this.dataset.end;
 
-            // ボタンを無効化
             this.disabled = true;
-            this.textContent = '予約中...';
+            this.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>予約中...';
 
             const currentButton = this;
 
-            // AJAX リクエストで録音予約
             fetch('{{ route("recording.schedule.store") }}', {
                 method: 'POST',
                 headers: {
@@ -252,19 +295,19 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    currentButton.textContent = '予約完了';
-                    currentButton.classList.remove('btn-warning');
-                    currentButton.classList.add('btn-secondary');
+                    currentButton.innerHTML = '<i class="fas fa-check mr-2"></i>予約完了';
+                    currentButton.classList.remove('from-yellow-400', 'to-yellow-600', 'text-gray-800');
+                    currentButton.classList.add('bg-gray-400', 'text-white', 'cursor-not-allowed');
                     alert('録音予約が完了しました');
                 } else {
                     currentButton.disabled = false;
-                    currentButton.textContent = '録音予約';
+                    currentButton.innerHTML = '<i class="fas fa-calendar-check mr-2"></i>録音予約';
                     alert('録音予約に失敗しました: ' + data.message);
                 }
             })
             .catch(error => {
                 currentButton.disabled = false;
-                currentButton.textContent = '録音予約';
+                currentButton.innerHTML = '<i class="fas fa-calendar-check mr-2"></i>録音予約';
                 alert('エラーが発生しました: ' + error);
             });
         });
@@ -281,32 +324,19 @@ document.addEventListener('DOMContentLoaded', function() {
             const startTime = this.dataset.start;
             const endTime = this.dataset.end;
 
-            console.log('=== 録音ボタンがクリックされました ===');
-            console.log('Station ID:', stationId);
-            console.log('Date:', date);
-
-            // エリアIDを取得（同じ録音コントロールラッパー内のselectから）
             const wrapper = this.closest('.recording-controls-wrapper');
-            console.log('Wrapper found:', wrapper);
-
             const areaSelect = wrapper ? wrapper.querySelector('.area-select[data-entry-id="' + stationId + '"]') : null;
-            console.log('Area select element:', areaSelect);
-
             const areaId = areaSelect ? areaSelect.value : '';
-            console.log('Selected Area ID:', areaId);
 
-            // 録音時間を計算（分単位）
             const startMinutes = parseInt(startTime.substring(0, 2)) * 60 + parseInt(startTime.substring(2, 4));
             const endMinutes = parseInt(endTime.substring(0, 2)) * 60 + parseInt(endTime.substring(2, 4));
             const durationMinutes = endMinutes - startMinutes;
 
-            // ボタンを無効化
             this.disabled = true;
-            this.textContent = '録音開始中...';
+            this.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>録音開始中...';
 
             const currentButton = this;
 
-            // リクエストボディを構築
             const requestBody = {
                 station_id: stationId,
                 station_name: stationName,
@@ -316,15 +346,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 end_time: date + endTime
             };
 
-            // エリアIDが指定されている場合のみ追加
             if (areaId) {
                 requestBody.area_id = areaId;
             }
 
-            // デバッグ: リクエストボディを確認
-            console.log('Request Body:', requestBody);
-
-            // AJAX リクエストでタイムフリー録音開始
             fetch('{{ route("recording.timefree.start") }}', {
                 method: 'POST',
                 headers: {
@@ -336,7 +361,6 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // ボタンのラッパーを非表示にして、進行状況表示を表示
                     const btnWrapper = currentButton.closest('.recording-btn-wrapper');
                     if (btnWrapper) {
                         btnWrapper.style.display = 'none';
@@ -347,7 +371,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (statusDiv) {
                         statusDiv.style.display = 'block';
 
-                        // 停止ボタンのイベントリスナーを設定
                         const stopBtn = statusDiv.querySelector('.stop-recording-btn');
                         if (stopBtn) {
                             stopBtn.onclick = function() {
@@ -355,37 +378,31 @@ document.addEventListener('DOMContentLoaded', function() {
                             };
                         }
 
-                        // 共通モジュールの録音監視を開始
                         window.startRecordingMonitor(data.recording_id, currentButton, data.filename, statusDiv, durationMinutes);
                     }
                 } else {
-                    // エラー時：ボタンラッパーを再表示
                     const btnWrapper = currentButton.closest('.recording-btn-wrapper');
                     if (btnWrapper) {
                         btnWrapper.style.display = 'flex';
                     }
                     currentButton.disabled = false;
-                    currentButton.textContent = 'タイムフリー録音';
+                    currentButton.innerHTML = '<i class="fas fa-download mr-2"></i>タイムフリー録音';
                     alert('録音開始に失敗しました: ' + data.message);
                 }
             })
             .catch(error => {
-                // エラー時：ボタンラッパーを再表示
                 const btnWrapper = currentButton.closest('.recording-btn-wrapper');
                 if (btnWrapper) {
                     btnWrapper.style.display = 'flex';
                 }
                 currentButton.disabled = false;
-                currentButton.textContent = 'タイムフリー録音';
+                currentButton.innerHTML = '<i class="fas fa-download mr-2"></i>タイムフリー録音';
                 alert('エラーが発生しました: ' + error);
             });
         });
     });
-
 });
-</script>
 
-<script>
 // 録音ファイルをダウンロード（週間番組表用：共通モジュールを使用）
 async function downloadRecording(recordingId) {
     const filename = window.getFilenameFromRecordingId(recordingId);
