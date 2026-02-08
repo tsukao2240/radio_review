@@ -20,3 +20,6 @@ use Illuminate\Support\Facades\Route;
 
 //番組タイトルで検索する(投稿画面)
 Route::get('/programs', 'Api\SearchController@index')->middleware('throttle:api');
+
+//オートコンプリート用の番組候補を取得
+Route::get('/programs/suggest', 'Api\SearchController@suggest')->middleware('throttle:api');
