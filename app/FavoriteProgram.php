@@ -9,7 +9,8 @@ class FavoriteProgram extends Model
     protected $fillable = [
         'user_id',
         'station_id',
-        'program_title'
+        'program_title',
+        'broadcast_day',
     ];
 
     // ユーザーとのリレーション

@@ -208,7 +208,7 @@
 
                 <!-- 番組情報 -->
                 <div class="flex-1">
-                    <a href="{{ url('list/' . $entry['id'] . '/' . urlencode($entry['title'])) }}?from=timefree"
+                    <a href="{{ url('list/' . $entry['id'] . '/' . urlencode($entry['title'])) }}?from=timefree&date={{ $entry['date'] }}"
                        class="text-lg font-bold text-gray-800 dark:text-white hover:text-primary-600 dark:hover:text-primary-400 transition hover:underline">
                         {{ $entry['title'] }}
                     </a>

@@ -78,7 +78,6 @@
             <button id="favorite-btn" class="btn btn-outline-danger mb-3" style="width: 100%;">
                 <i class="fas fa-heart"></i> お気に入りに追加
             </button>
-            
             <!-- タイムフリー録音ボタン -->
             @if($latestBroadcast)
             <div class="timefree-recording-section mb-3">
@@ -179,6 +178,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const programTitle = "{{ $result->title }}";
     @endforeach
     @endif
+    const broadcastDay = {{ $broadcast_day !== null ? $broadcast_day : 'null' }};
 
     // ログイン確認
     @guest
@@ -219,7 +219,8 @@ document.addEventListener('DOMContentLoaded', function() {
             },
             body: JSON.stringify({
                 station_id: stationId,
-                program_title: programTitle
+                program_title: programTitle,
+                broadcast_day: broadcastDay
             })
         })
         .then(response => response.json())

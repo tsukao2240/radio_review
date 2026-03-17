@@ -103,7 +103,7 @@
 
                 <!-- 番組タイトル -->
                 <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-2 group-hover:text-primary-600 transition">
-                    <a href="{{ url('list/' . $entry['id'] . '/' . $entry['title']) }}?from=weekly&station_id={{ $station_id }}" 
+                    <a href="{{ url('list/' . $entry['id'] . '/' . $entry['title']) }}?from=weekly&station_id={{ $station_id }}&date={{ $entryDate }}" 
                        class="hover:underline">
                         {{ $entry['title'] }}
                     </a>
@@ -230,7 +230,7 @@
                         </div>
                     @endif
 
-                    <a href="{{ url('list/' . $entry['id'] . '/' . $entry['title']) }}?from=weekly&station_id={{ $station_id }}"
+                    <a href="{{ url('list/' . $entry['id'] . '/' . $entry['title']) }}?from=weekly&station_id={{ $station_id }}&date={{ $entryDate }}"
                        class="touch-target w-full text-center border-2 border-primary-500 text-primary-600 dark:text-primary-400 font-semibold py-3 rounded-lg hover:bg-primary-50 dark:hover:bg-primary-900/20 transition">
                         <i class="fas fa-info-circle mr-2"></i>詳細を見る
                     </a>

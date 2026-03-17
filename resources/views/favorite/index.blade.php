@@ -24,9 +24,13 @@
                 <div class="favorite-card">
                     <div class="favorite-card-header">
                         <div>
-                            <a href="{{ route('program.detail', ['station_id' => $favorite->station_id, 'title' => $favorite->program_title, 'from' => 'favorites']) }}" style="text-decoration: none; color: inherit;">
+                            <a href="{{ route('program.detail', ['station_id' => $favorite->station_id, 'title' => $favorite->program_title, 'from' => 'favorites', 'broadcast_day' => $favorite->broadcast_day]) }}" style="text-decoration: none; color: inherit;">
                                 <div class="favorite-title" style="cursor: pointer; transition: color 0.2s;" onmouseover="this.style.color='#007bff'" onmouseout="this.style.color='inherit'">{{ $favorite->program_title }}</div>
                             </a>
+                            @if($favorite->broadcast_day !== null)
+                                @php $days = ['月','火','水','木','金','土','日']; @endphp
+                                <span class="badge bg-secondary">{{ $days[$favorite->broadcast_day] }}曜日</span>
+                            @endif
                             <span class="favorite-station">{{ $favorite->station_id }}</span>
                         </div>
                     </div>

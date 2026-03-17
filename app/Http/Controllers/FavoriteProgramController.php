@@ -44,6 +44,14 @@ class FavoriteProgramController extends Controller
 
                 foreach ($schedule['entries'] as $entry) {
                     if ($entry['title'] === $favorite->program_title) {
+                        // 曜日フィルタ: broadcast_day が設定されている場合は曜日が一致するエントリのみ対象
+                        if ($favorite->broadcast_day !== null) {
+                            $entryDayOfWeek = Carbon::createFromFormat('Ymd', $entry['date'])->isoWeekday() - 1;
+                            if ($entryDayOfWeek !== (int) $favorite->broadcast_day) {
+                                continue;
+                            }
+                        }
+
                         $programEndTime = Carbon::createFromFormat('Ymd H:i', $entry['date'] . ' ' . $entry['end']);
 
                         // タイムフリー期間内（放送終了から7日以内）かつ、放送が終了済みの番組
@@ -78,11 +86,23 @@ class FavoriteProgramController extends Controller
     public function store(FavoriteProgramRequest $request)
     {
         try {
+            // broadcast_day を取得（nullable, 0-6）
+            $broadcastDay = $request->has('broadcast_day') && $request->broadcast_day !== null
+                ? (int) $request->broadcast_day
+                : null;
+
             // exists()を使って重複チェックを最適化
-            $exists = FavoriteProgram::where('user_id', Auth::id())
+            $query = FavoriteProgram::where('user_id', Auth::id())
                 ->where('station_id', $request->station_id)
-                ->where('program_title', $request->program_title)
-                ->exists();
+                ->where('program_title', $request->program_title);
+
+            if ($broadcastDay !== null) {
+                $query->where('broadcast_day', $broadcastDay);
+            } else {
+                $query->whereNull('broadcast_day');
+            }
+
+            $exists = $query->exists();
 
             if ($exists) {
                 return response()->json([
@@ -95,7 +115,8 @@ class FavoriteProgramController extends Controller
             FavoriteProgram::create([
                 'user_id' => Auth::id(),
                 'station_id' => $request->station_id,
-                'program_title' => $request->program_title
+                'program_title' => $request->program_title,
+                'broadcast_day' => $broadcastDay,
             ]);
 
             // レコメンデーションキャッシュをクリア

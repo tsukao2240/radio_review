@@ -35,7 +35,7 @@
 
             <!-- 番組名 -->
             <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-2 group-hover:text-primary-600 transition">
-                <a href="{{ url('list/' . $result['station_id'] . '/' . $result['title']) }}?from=schedule" 
+                <a href="{{ url('list/' . $result['station_id'] . '/' . $result['title']) }}?from=schedule&date={{ date('Ymd') }}"
                    class="hover:underline">
                     {{ $result['title'] }}
                 </a>
