@@ -304,7 +304,7 @@ class RadioRecordingController extends Controller
             }
 
             $auth2Body = (string)$response2->getBody();
-            \Log::info('radiko auth2成功', ['response' => $auth2Body]);
+            \Log::info('radiko auth2成功');
 
             return $authToken;
 
@@ -952,11 +952,9 @@ class RadioRecordingController extends Controller
         $command = implode(' ', $commandParts) . ' 2>&1';
 
         \Log::info('FFmpegメタデータ埋め込み実行（日本語対応）', [
-            'command' => $command,
             'title' => $title,
             'artist' => $artist,
             'album' => $album,
-            'metadata_file' => $metadataFile,
             'title_length' => mb_strlen($title),
             'encoding' => mb_detect_encoding($title, ['UTF-8', 'ASCII', 'ISO-8859-1'], true)
         ]);
