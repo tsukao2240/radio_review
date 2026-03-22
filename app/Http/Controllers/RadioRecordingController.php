@@ -672,8 +672,9 @@ class RadioRecordingController extends Controller
                 return response()->json(['success' => false, 'message' => '録音情報が見つかりません']);
             }
 
-            // ffmpegプロセスを停止
-            exec("pkill -f 'ffmpeg.*{$recordingInfo['station_id']}'");
+            // ffmpegプロセスを停止（station_idをエスケープしてコマンドインジェクションを防止）
+            $safeStationId = escapeshellarg('ffmpeg.*' . $recordingInfo['station_id']);
+            exec("pkill -f {$safeStationId}");
 
             // ステータスを更新
             $recordingInfo['status'] = 'stopped';
