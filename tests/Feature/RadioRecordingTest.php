@@ -8,6 +8,11 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 use App\User;
+use App\Http\Controllers\RadioRecordingController;
+use GuzzleHttp\Client;
+use GuzzleHttp\Handler\MockHandler;
+use GuzzleHttp\HandlerStack;
+use GuzzleHttp\Psr7\Response;
 
 class RadioRecordingTest extends TestCase
 {
@@ -355,7 +360,7 @@ class RadioRecordingTest extends TestCase
             'area_id' => 'JP27',
         ];
 
-        $this->mockRadikoAuth();
+        $this->mockRadikoAuth('JP27');
 
         $response = $this->postJson('/recording/timefree/start', $requestData);
 
@@ -364,43 +369,35 @@ class RadioRecordingTest extends TestCase
     }
 
     /**
-     * radiko認証をモックする
+     * radiko認証をモックする（GuzzleHttp MockHandlerを使用）
      */
-    private function mockRadikoAuth()
+    private function mockRadikoAuth(?string $areaId = null): void
     {
-        // HTTP clientをモック
-        $this->app->bind('GuzzleHttp\Client', function () {
-            $mock = \Mockery::mock('GuzzleHttp\Client');
-
-            // auth1のレスポンス
-            $auth1Response = \Mockery::mock('Psr\Http\Message\ResponseInterface');
-            $auth1Response->shouldReceive('getHeaderLine')
-                ->with('X-Radiko-AuthToken')->andReturn('mock_auth_token');
-            $auth1Response->shouldReceive('getHeaderLine')
-                ->with('X-Radiko-KeyLength')->andReturn('16');
-            $auth1Response->shouldReceive('getHeaderLine')
-                ->with('X-Radiko-KeyOffset')->andReturn('0');
-
-            // auth2のレスポンス
-            $auth2Response = \Mockery::mock('Psr\Http\Message\ResponseInterface');
-            $auth2Response->shouldReceive('getStatusCode')->andReturn(200);
-
-            $mock->shouldReceive('post')
-                ->with('https://radiko.jp/v2/api/auth1', \Mockery::any())
-                ->andReturn($auth1Response);
-
-            $mock->shouldReceive('post')
-                ->with('https://radiko.jp/v2/api/auth2', \Mockery::any())
-                ->andReturn($auth2Response);
-
-            return $mock;
-        });
-
-        // file_get_contentsをモック
-        if (!function_exists(__NAMESPACE__ . '\file_get_contents_original')) {
-            function file_get_contents_original($filename, $use_include_path = false, $context = null, $offset = 0, $length = null) {
-                return \file_get_contents($filename, $use_include_path, $context, $offset, $length);
-            }
+        // テスト用認証キーファイルを作成（32バイト以上のダミーキー）
+        $keyDir = storage_path('app/keys');
+        if (!is_dir($keyDir)) {
+            mkdir($keyDir, 0755, true);
         }
+        $dummyKey = base64_encode(str_repeat('a', 64)); // 64バイトのダミーキー
+        file_put_contents(storage_path('app/keys/radiko_auth_key.txt'), $dummyKey);
+
+        // auth1レスポンス: 必要なヘッダーを返す
+        $auth1Response = new Response(200, [
+            'X-Radiko-AuthToken' => 'mock_auth_token',
+            'X-Radiko-KeyLength' => '16',
+            'X-Radiko-KeyOffset' => '0',
+        ]);
+
+        // auth2レスポンス: 200 OK
+        $auth2Response = new Response(200, [], 'JP13,東京都');
+
+        $mockHandler = new MockHandler([$auth1Response, $auth2Response]);
+        $handlerStack = HandlerStack::create($mockHandler);
+        $mockClient = new Client(['handler' => $handlerStack]);
+
+        // コントローラーをモッククライアントで初期化してコンテナに登録
+        $this->app->bind(RadioRecordingController::class, function () use ($mockClient) {
+            return new RadioRecordingController($mockClient);
+        });
     }
 }
