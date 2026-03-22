@@ -154,7 +154,8 @@ class RadioRecordingController extends Controller
                 'start_time' => $startTime,
                 'end_time' => $endTime,
                 'created_at' => Carbon::now()->toISOString(),
-                'status' => 'recording'
+                'status' => 'recording',
+                'owner_key' => $this->getOwnerKey($request),
             ];
             Cache::put("recording_{$recordingId}", $recordingInfo, 7200);
 
@@ -1053,7 +1054,11 @@ class RadioRecordingController extends Controller
 
         $recordingInfo = Cache::get("recording_{$recordingId}");
 
-        if (!$recordingInfo || !file_exists($recordingInfo['filepath'])) {
+        if (!$recordingInfo) {
+            return response()->json(['success' => false, 'message' => 'ファイルが見つかりません']);
+        }
+
+        if (!file_exists($recordingInfo['filepath'])) {
             return response()->json(['success' => false, 'message' => 'ファイルが見つかりません']);
         }
 
@@ -1061,9 +1066,10 @@ class RadioRecordingController extends Controller
     }
 
     // 録音一覧
-    public function listRecordings(): JsonResponse
+    public function listRecordings(Request $request): JsonResponse
     {
         $recordings = [];
+        $ownerKey = $this->getOwnerKey($request);
 
         // Redisドライバーの場合のみkeys()を使用
         if (method_exists(Cache::getStore(), 'getRedis')) {
@@ -1071,7 +1077,7 @@ class RadioRecordingController extends Controller
 
             foreach ($cacheKeys as $key) {
                 $recordingInfo = Cache::get(str_replace('laravel_database_', '', $key));
-                if ($recordingInfo) {
+                if ($recordingInfo && ($recordingInfo['owner_key'] ?? null) === $ownerKey) {
                     $recordings[] = $recordingInfo;
                 }
             }
@@ -1081,10 +1087,11 @@ class RadioRecordingController extends Controller
     }
 
     // 録音履歴画面表示
-    public function showHistory()
+    public function showHistory(Request $request)
     {
         $recordings = [];
         $seenRecordingIds = [];
+        $ownerKey = $this->getOwnerKey($request);
 
         // Redisドライバーの場合のみkeys()を使用
         $store = Cache::getStore();
@@ -1127,7 +1134,7 @@ class RadioRecordingController extends Controller
 
                     $recordingInfo = Cache::get($cleanKey);
 
-                    if ($recordingInfo) {
+                    if ($recordingInfo && ($recordingInfo['owner_key'] ?? null) === $ownerKey) {
                         // ファイル情報を追加
                         $filepath = $recordingInfo['filepath'];
                         $fileExists = file_exists($filepath);
@@ -1215,6 +1222,24 @@ class RadioRecordingController extends Controller
             \Log::error('録音ファイル削除エラー', ['error' => $e->getMessage(), 'filename' => $filename]);
             throw new RecordingException('録音ファイルの削除に失敗しました', 0, $e);
         }
+    }
+
+    // 録音のオーナーキーを取得（ログイン時はuser_{id}、ゲスト時はsession_{id}）
+    private function getOwnerKey(Request $request): string
+    {
+        if (auth()->check()) {
+            return 'user_' . auth()->id();
+        }
+        return 'session_' . $request->session()->getId();
+    }
+
+    // 録音のオーナーかどうかチェック（owner_keyが未設定の古いデータは互換のためtrue扱い）
+    public function isOwner(Request $request, array $recordingInfo): bool
+    {
+        if (!isset($recordingInfo['owner_key'])) {
+            return true;
+        }
+        return $recordingInfo['owner_key'] === $this->getOwnerKey($request);
     }
 
     // 放送局IDから主エリアID（本社所在地）を取得
