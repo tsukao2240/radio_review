@@ -5,6 +5,7 @@
  * 共通して使用される録音関連の処理を提供します。
  */
 
+import { toast } from 'react-toastify';
 
 // 進行中の録音を管理するMap
 window.activeRecordings = window.activeRecordings || new Map();
@@ -229,14 +230,14 @@ export function stopRecording(recordingId, button, statusDiv) {
             button.classList.add('btn-success');
             button.disabled = false;
 
-            alert('録音を停止しました');
+            toast.success('録音を停止しました');
         } else {
-            alert('録音停止に失敗しました: ' + (data.message || '不明なエラー'));
+            toast.error('録音停止に失敗しました: ' + (data.message || '不明なエラー'));
         }
     })
     .catch(error => {
         console.error('録音停止エラー:', error);
-        alert('エラーが発生しました: ' + error.message);
+        toast.error('エラーが発生しました: ' + error.message);
     });
 }
 
@@ -295,7 +296,7 @@ export async function downloadRecording(recordingId, filename) {
 
     } catch (error) {
         console.error('ダウンロードエラー:', error);
-        alert('ダウンロードに失敗しました: ' + error.message);
+        toast.error('ダウンロードに失敗しました: ' + error.message);
     }
 }
 

@@ -23,8 +23,9 @@ import { Dropdown } from 'bootstrap';
 // React関連
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import { ToastContainer } from 'react-toastify';
+import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+window.toast = toast;
 
 import ToastComponent from './components/ToastComponent.jsx';
 import NotificationCenter from './components/NotificationCenter.jsx';

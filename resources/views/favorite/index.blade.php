@@ -203,14 +203,13 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert('お気に入りを削除しました');
                     location.reload();
                 } else {
-                    alert('削除に失敗しました: ' + data.message);
+                    window.toast ? window.toast.error('削除に失敗しました: ' + data.message) : alert('削除に失敗しました: ' + data.message);
                 }
             })
             .catch(error => {
-                alert('エラーが発生しました: ' + error);
+                window.toast ? window.toast.error('エラーが発生しました: ' + error) : alert('エラーが発生しました: ' + error);
             });
         });
     });
@@ -299,7 +298,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                     currentButton.disabled = false;
                     currentButton.textContent = 'タイムフリー録音';
-                    alert('録音開始に失敗しました: ' + data.message);
+                    window.toast ? window.toast.error('録音開始に失敗しました: ' + data.message) : alert('録音開始に失敗しました: ' + data.message);
                 }
             })
             .catch(error => {
@@ -310,7 +309,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 currentButton.disabled = false;
                 currentButton.textContent = 'タイムフリー録音';
-                alert('エラーが発生しました: ' + error);
+                window.toast ? window.toast.error('エラーが発生しました: ' + error) : alert('エラーが発生しました: ' + error);
             });
         });
     });
