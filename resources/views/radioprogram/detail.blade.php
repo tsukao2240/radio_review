@@ -59,18 +59,18 @@
             <h5>{{ $entry['cast'] }}</h5>
             @if (!empty($entry['image']))
             <div>
-                <img src="{!! $entry['image'] !!}" loading="lazy" alt="{{ $entry['title'] }}">
+                <img src="{{ $entry['image'] }}" loading="lazy" alt="{{ $entry['title'] }}">
             </div>
             @endif
             @if(!empty($entry['desc']))
             <div>
-                {!! $entry['desc'] !!}
+                {{ strip_tags($entry['desc']) }}
             </div>
             @endif
             @if (!empty($entry['info']))
             <br>
             <div>
-                {!! $entry['info'] !!}
+                {{ strip_tags($entry['info']) }}
             </div>
             @endif
             <br>
