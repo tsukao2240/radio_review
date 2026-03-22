@@ -26,6 +26,7 @@ docker-compose exec app php artisan test
 
 - シナリオ一覧・実行方法は `tests/e2e/README.md` を参照
 - **フロントエンド（Blade/JS/CSS）を修正した場合は、必ず該当シナリオを実行して壊れていないことを確認してからコミットすること**
+- **仕様を変更した場合は `tests/e2e/` の該当シナリオも合わせて修正してからコミットすること**
 - 実行前提: `docker-compose up -d` でコンテナが起動済み、`http://localhost:8000` でアクセス可能
 
 ## プロジェクト概要
