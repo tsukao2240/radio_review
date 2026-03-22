@@ -1229,7 +1229,7 @@ class RadioRecordingController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            \Log::error('録音ファイル削除エラー', ['error' => $e->getMessage(), 'filename' => $filename]);
+            \Log::error('録音ファイル削除エラー', ['error' => $e->getMessage(), 'filename' => $recordingInfo['filename'] ?? 'unknown']);
             throw new RecordingException('録音ファイルの削除に失敗しました', 0, $e);
         }
     }
