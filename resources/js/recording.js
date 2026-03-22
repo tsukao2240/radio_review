@@ -289,7 +289,6 @@ export async function downloadRecording(recordingId, filename) {
                 await writable.write(blob);
                 await writable.close();
 
-                showSaveSuccessPopup(fileHandle.name);
                 return;
             } catch (e) {
                 if (e.name !== 'AbortError') {
@@ -302,7 +301,6 @@ export async function downloadRecording(recordingId, filename) {
 
         // File System Access API未対応の場合のフォールバック
         downloadWithCustomName(blob, finalFilename);
-        showBrowserDownloadInfo();
 
     } catch (error) {
         console.error('ダウンロードエラー:', error);
