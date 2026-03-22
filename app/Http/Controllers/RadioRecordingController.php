@@ -76,7 +76,7 @@ class RadioRecordingController extends Controller
         $this->client = $client ?? new Client([
             'timeout' => 30,
             'connect_timeout' => 2,
-            'verify' => false,
+            'verify' => false, // Radiko APIがSSL証明書検証を通らないため無効化（意図的）
             'http_errors' => false,
             'allow_redirects' => true,
             'decode_content' => false,
