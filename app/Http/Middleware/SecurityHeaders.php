@@ -35,9 +35,9 @@ class SecurityHeaders
         // Content-Security-Policy: XSS攻撃を防ぐ
         $csp = implode('; ', [
             "default-src 'self'",
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net",
+            "script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net",
             "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com",
-            "img-src 'self' data: https: http:",
+            "img-src 'self' data: https:",
             "font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com",
             "connect-src 'self' http://radiko.jp https://radiko.jp",
             "frame-ancestors 'self'",
