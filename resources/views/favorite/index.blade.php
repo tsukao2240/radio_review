@@ -226,19 +226,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const startTime = this.dataset.start;
             const endTime = this.dataset.end;
 
-            console.log('=== 録音ボタンがクリックされました ===');
-            console.log('Station ID:', stationId);
-            console.log('Date:', date);
-
             // エリアIDを取得（同じ録音コントロールラッパー内のselectから）
             const wrapper = this.closest('.recording-controls-wrapper');
-            console.log('Wrapper found:', wrapper);
-
             const areaSelect = wrapper ? wrapper.querySelector('.area-select[data-entry-id="' + stationId + '"]') : null;
-            console.log('Area select element:', areaSelect);
-
             const areaId = areaSelect ? areaSelect.value : '';
-            console.log('Selected Area ID:', areaId);
 
             // 録音時間を計算（分単位）
             const startMinutes = parseInt(startTime.substring(0, 2)) * 60 + parseInt(startTime.substring(2, 4));
@@ -265,9 +256,6 @@ document.addEventListener('DOMContentLoaded', function() {
             if (areaId) {
                 requestBody.area_id = areaId;
             }
-
-            // デバッグ: リクエストボディを確認
-            console.log('Request Body:', requestBody);
 
             // AJAX リクエストでタイムフリー録音開始
             fetch('{{ route("recording.timefree.start") }}', {

@@ -5,7 +5,6 @@
  * 共通して使用される録音関連の処理を提供します。
  */
 
-console.log("Recorder file loaded!"); // これを追加
 
 // 進行中の録音を管理するMap
 window.activeRecordings = window.activeRecordings || new Map();
@@ -101,8 +100,6 @@ export function checkRecordingStatus(recordingId, button, filename, statusDiv, i
 
             // 録音完了判定
             if (data.status === 'completed' || (data.file_exists && !data.is_recording)) {
-                console.log('録音完了:', recordingId);
-
                 // 録音情報を削除（重複実行防止）
                 const recording = window.activeRecordings.get(recordingId);
                 window.activeRecordings.delete(recordingId);
@@ -117,11 +114,9 @@ export function checkRecordingStatus(recordingId, button, filename, statusDiv, i
 
                 // ボタンとラッパーを確実に取得して再表示
                 const controlsWrapper = statusDiv.parentElement;
-                console.log('Controls wrapper:', controlsWrapper);
 
                 // recording-btn-wrapper を探す
                 let btnWrapper = controlsWrapper ? controlsWrapper.querySelector('.recording-btn-wrapper') : null;
-                console.log('btnWrapper found:', btnWrapper);
 
                 // ボタンを再取得（元のbutton参照が失われている可能性があるため）
                 let recordingButton = button;
@@ -129,7 +124,6 @@ export function checkRecordingStatus(recordingId, button, filename, statusDiv, i
                     const foundButton = btnWrapper.querySelector('.recording-btn, .timefree-btn');
                     if (foundButton) {
                         recordingButton = foundButton;
-                        console.log('Button re-found:', recordingButton);
                     }
                 }
 
@@ -137,7 +131,6 @@ export function checkRecordingStatus(recordingId, button, filename, statusDiv, i
                 if (btnWrapper) {
                     btnWrapper.style.display = 'flex';
                     btnWrapper.style.visibility = 'visible';
-                    console.log('btnWrapper displayed');
                 }
 
                 // ボタンをダウンロードボタンに変更
@@ -153,8 +146,6 @@ export function checkRecordingStatus(recordingId, button, filename, statusDiv, i
                         e.preventDefault();
                         downloadRecording(recordingId, filename);
                     };
-
-                    console.log('Button updated to download button');
                 }
 
                 // 目立つ完了ポップアップを表示
