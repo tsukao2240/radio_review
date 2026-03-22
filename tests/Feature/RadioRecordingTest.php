@@ -65,11 +65,8 @@ class RadioRecordingTest extends TestCase
     {
         $response = $this->postJson('/recording/timefree/start', []);
 
-        $response->assertStatus(200)
-                ->assertJson([
-                    'success' => false,
-                    'message' => '放送局ID、開始時間、終了時間が必要です'
-                ]);
+        $response->assertStatus(422)
+                ->assertJsonValidationErrors(['station_id', 'start_time', 'end_time']);
     }
 
     /**

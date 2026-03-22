@@ -94,12 +94,22 @@ class RadioRecordingController extends Controller
     // タイムフリー録音開始
     public function startTimefreeRecording(Request $request): JsonResponse
     {
-        $stationId = $request->input('station_id');
-        $stationName = $request->input('station_name');
-        $title = $request->input('title');
-        $cast = $request->input('cast');
-        $startTime = $request->input('start_time'); // YYYYMMDDHHMM形式
-        $endTime = $request->input('end_time'); // YYYYMMDDHHMM形式
+        $validated = $request->validate([
+            'station_id' => 'required|string|max:50',
+            'start_time' => ['required', 'regex:/^\d{12}$/'],
+            'end_time'   => ['required', 'regex:/^\d{12}$/'],
+            'title'      => 'nullable|string|max:255',
+            'cast'       => 'nullable|string|max:255',
+            'station_name' => 'nullable|string|max:100',
+            'area_id'    => 'nullable|string|max:10',
+        ]);
+
+        $stationId = $validated['station_id'];
+        $stationName = $validated['station_name'] ?? null;
+        $title = $validated['title'] ?? '';
+        $cast = $validated['cast'] ?? null;
+        $startTime = $validated['start_time'];
+        $endTime = $validated['end_time'];
 
         if (!$stationId || !$startTime || !$endTime) {
             return response()->json(['success' => false, 'message' => '放送局ID、開始時間、終了時間が必要です']);
@@ -124,7 +134,7 @@ class RadioRecordingController extends Controller
 
         try {
             // エリアIDを取得（未指定の場合は放送局IDから自動判定）
-            $areaId = $request->input('area_id');
+            $areaId = $validated['area_id'] ?? null;
             if (empty($areaId)) {
                 $areaId = $this->getAreaIdFromStationId($stationId);
             }
