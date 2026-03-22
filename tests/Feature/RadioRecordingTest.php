@@ -8,11 +8,6 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 use App\User;
-use App\Http\Controllers\RadioRecordingController;
-use GuzzleHttp\Client;
-use GuzzleHttp\Handler\MockHandler;
-use GuzzleHttp\HandlerStack;
-use GuzzleHttp\Psr7\Response;
 
 class RadioRecordingTest extends TestCase
 {
@@ -369,35 +364,16 @@ class RadioRecordingTest extends TestCase
     }
 
     /**
-     * radiko認証をモックする（GuzzleHttp MockHandlerを使用）
+     * radiko認証をモックする（Cacheに偽トークンを事前セット）
+     *
+     * getRadikoAuthToken() はキャッシュを最初にチェックするため、
+     * HTTP呼び出しなしでテスト可能。
      */
     private function mockRadikoAuth(?string $areaId = null): void
     {
-        // テスト用認証キーファイルを作成（32バイト以上のダミーキー）
-        $keyDir = storage_path('app/keys');
-        if (!is_dir($keyDir)) {
-            mkdir($keyDir, 0755, true);
+        $areas = ['default', 'JP13', 'JP27', $areaId];
+        foreach (array_unique(array_filter($areas)) as $area) {
+            Cache::put("radiko_auth_token_{$area}", 'mock_auth_token', 3300);
         }
-        $dummyKey = base64_encode(str_repeat('a', 64)); // 64バイトのダミーキー
-        file_put_contents(storage_path('app/keys/radiko_auth_key.txt'), $dummyKey);
-
-        // auth1レスポンス: 必要なヘッダーを返す
-        $auth1Response = new Response(200, [
-            'X-Radiko-AuthToken' => 'mock_auth_token',
-            'X-Radiko-KeyLength' => '16',
-            'X-Radiko-KeyOffset' => '0',
-        ]);
-
-        // auth2レスポンス: 200 OK
-        $auth2Response = new Response(200, [], 'JP13,東京都');
-
-        $mockHandler = new MockHandler([$auth1Response, $auth2Response]);
-        $handlerStack = HandlerStack::create($mockHandler);
-        $mockClient = new Client(['handler' => $handlerStack]);
-
-        // コントローラーをモッククライアントで初期化してコンテナに登録
-        $this->app->bind(RadioRecordingController::class, function () use ($mockClient) {
-            return new RadioRecordingController($mockClient);
-        });
     }
 }

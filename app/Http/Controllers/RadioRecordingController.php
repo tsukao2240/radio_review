@@ -209,6 +209,13 @@ class RadioRecordingController extends Controller
     // radiko認証トークンを取得（Web API + Android認証キー版 - rajiko方式）
     private function getRadikoAuthToken(?string $areaId = null): ?string
     {
+        // キャッシュに有効なトークンがあればそれを返す（テスト環境でも利用可能）
+        $cacheKey = 'radiko_auth_token_' . ($areaId ?? 'default');
+        $cachedToken = Cache::get($cacheKey);
+        if ($cachedToken) {
+            return $cachedToken;
+        }
+
         try {
             // デバイス情報を生成（rajiko方式）
             $appVersion = '8.2.4';
@@ -305,6 +312,9 @@ class RadioRecordingController extends Controller
 
             $auth2Body = (string)$response2->getBody();
             \Log::info('radiko auth2成功');
+
+            // トークンをキャッシュ（55分、Radikoトークンの有効期限より短く設定）
+            Cache::put($cacheKey, $authToken, 3300);
 
             return $authToken;
 
