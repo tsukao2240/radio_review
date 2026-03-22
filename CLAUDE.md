@@ -25,7 +25,7 @@ docker-compose exec app php artisan test
 `tests/e2e/` にシナリオファイル（YAML）を配置。Claude CodeがPlaywright MCPツールを使ってブラウザを操作して実行する。
 
 - シナリオ一覧・実行方法は `tests/e2e/README.md` を参照
-- フロントエンド（Blade/JS/CSS）を修正した場合は、該当シナリオを実行して動作確認してからコミットすること
+- **フロントエンド（Blade/JS/CSS）を修正した場合は、必ず該当シナリオを実行して壊れていないことを確認してからコミットすること**
 - 実行前提: `docker-compose up -d` でコンテナが起動済み、`http://localhost:8000` でアクセス可能
 
 ## プロジェクト概要
