@@ -1140,29 +1140,29 @@ class RadioRecordingController extends Controller
             return $timeB - $timeA;
         });
 
-        // ディスク使用状況を取得（ファイル一覧取得を最適化）
+        // ディスク使用状況を取得（60秒キャッシュで全ファイルスキャンの頻度を抑制）
         $recordingsPath = storage_path('app/recordings');
-        $diskUsage = null;
+        $diskUsage = Cache::remember('recording_disk_usage', 60, function () use ($recordingsPath) {
+            if (!is_dir($recordingsPath)) {
+                return null;
+            }
 
-        if (is_dir($recordingsPath)) {
             $totalSize = 0;
             $iterator = new \FilesystemIterator($recordingsPath, \FilesystemIterator::SKIP_DOTS);
-
             foreach ($iterator as $file) {
                 if ($file->isFile()) {
                     $totalSize += $file->getSize();
                 }
             }
 
-            $diskFree = disk_free_space($recordingsPath);
             $diskTotal = disk_total_space($recordingsPath);
 
-            $diskUsage = [
+            return [
                 'used' => $this->formatFileSize($totalSize),
                 'total' => $this->formatFileSize($diskTotal),
                 'percentage' => $diskTotal > 0 ? round(($totalSize / $diskTotal) * 100, 2) : 0
             ];
-        }
+        });
 
         return view('recording.history', compact('recordings', 'diskUsage'));
     }
