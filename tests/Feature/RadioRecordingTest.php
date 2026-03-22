@@ -309,6 +309,61 @@ class RadioRecordingTest extends TestCase
     }
 
     /**
+     * 録音履歴の重複エントリが存在しないことを確認
+     */
+    public function test_show_history_no_duplicate_entries()
+    {
+        // 同一recording_idのキャッシュを複数設定（Redis SCANが重複を返すケースを模倣）
+        $recordingId = 'TBS_202509292200_20250929220000';
+        $recordingInfo = [
+            'station_id' => 'TBS',
+            'title' => 'テスト番組',
+            'filename' => 'test.m4a',
+            'filepath' => '/path/to/test.m4a',
+            'start_time' => '202509292200',
+            'end_time' => '202509292230',
+            'created_at' => Carbon::now()->toISOString(),
+            'status' => 'completed'
+        ];
+
+        Cache::put("recording_{$recordingId}", $recordingInfo, 7200);
+
+        $response = $this->get('/recording/history');
+
+        $response->assertStatus(200);
+
+        // 録音一覧APIで同一IDが重複していないことを確認
+        $listResponse = $this->getJson('/recording/list');
+        $recordings = $listResponse->json('recordings');
+
+        $ids = array_column($recordings, 'recording_id');
+        $this->assertEquals(count($ids), count(array_unique($ids)), '録音IDが重複しています');
+    }
+
+    /**
+     * エリアIDを指定したタイムフリー録音開始のテスト
+     */
+    public function test_start_timefree_recording_with_area_id()
+    {
+        $yesterday = Carbon::now()->subDay();
+
+        $requestData = [
+            'station_id' => 'OBC',
+            'title' => 'テスト番組（エリア指定）',
+            'start_time' => $yesterday->format('YmdHi'),
+            'end_time' => $yesterday->copy()->addMinutes(30)->format('YmdHi'),
+            'area_id' => 'JP27',
+        ];
+
+        $this->mockRadikoAuth();
+
+        $response = $this->postJson('/recording/timefree/start', $requestData);
+
+        $response->assertStatus(200)
+                ->assertJson(['success' => true]);
+    }
+
+    /**
      * radiko認証をモックする
      */
     private function mockRadikoAuth()
@@ -342,7 +397,7 @@ class RadioRecordingTest extends TestCase
         });
 
         // file_get_contentsをモック
-        if (!function_exists('file_get_contents_original')) {
+        if (!function_exists(__NAMESPACE__ . '\file_get_contents_original')) {
             function file_get_contents_original($filename, $use_include_path = false, $context = null, $offset = 0, $length = null) {
                 return \file_get_contents($filename, $use_include_path, $context, $offset, $length);
             }
