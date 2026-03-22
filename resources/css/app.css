@@ -1,7 +1,52 @@
-@import 'bootstrap';
+/* Bootstrap 5とその他のライブラリ（@importはTailwindディレクティブの前に配置） */
+@import 'bootstrap/dist/css/bootstrap.min.css';
+@import '@fortawesome/fontawesome-free/css/all.min.css';
 @import 'react-toastify/dist/ReactToastify.css';
+
+/* Tailwindディレクティブ */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* カスタムコンポーネント層 */
+@layer components {
+  .btn-primary-gradient {
+    @apply bg-gradient-to-r from-primary-500 to-primary-900 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-300;
+  }
+
+  .card-base {
+    @apply bg-white dark:bg-gray-800 rounded-xl shadow-md p-5 transition-all duration-300 hover:shadow-lg;
+  }
+
+  .touch-target {
+    @apply min-h-touch-target min-w-touch-target flex items-center justify-center;
+  }
+}
+
+@layer utilities {
+  .main-content {
+    @apply pt-20 pb-16 md:pt-24 md:pb-20;
+    min-height: calc(100vh - 80px);
+  }
+
+  /* 超小型デバイス専用スタイル */
+  @media (max-width: 479px) {
+    .text-responsive {
+      font-size: 14px;
+    }
+
+    .container {
+      padding-left: 0.75rem;
+      padding-right: 0.75rem;
+    }
+
+    .card-base {
+      padding: 1rem;
+    }
+  }
+}
 
 /* アプリケーション固有のスタイル */
 body {
-    font-family: 'Nunito', sans-serif;
+    font-family: 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif;
 }

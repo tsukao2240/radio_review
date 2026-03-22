@@ -1,0 +1,36 @@
+# 依存関係（最優先で除外！）
+node_modules/
+
+# ビルド成果物・キャッシュ
+dist/
+build/
+.next/
+.cache/
+out/
+*.pyc
+
+# Gitディレクトリ
+.git/
+
+# ログ・一時ファイル
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+tmp/
+temp/
+
+# 画像・音声・動画（中身を読ませる必要がないもの）
+public/images/
+public/assets/
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.svg
+*.mp3
+*.wav
+*.mp4
+
+# 環境変数（セキュリティのため）
+.env*

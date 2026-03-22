@@ -15,6 +15,7 @@ class Kernel extends ConsoleKernel
     protected $commands = [
         Commands\ProcessRecordingSchedules::class,
         Commands\CheckFavoriteProgramsBroadcast::class,
+        Commands\InsertRadioProgramCommand::class,
     ];
 
     /**

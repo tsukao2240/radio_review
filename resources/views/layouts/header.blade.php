@@ -18,10 +18,10 @@
     <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ config('app.name', 'Laravel') }}</title>
+    <title>{{ config('app.name', 'RadioProgram Review') }}</title>
 
     <!-- PWA Meta Tags -->
-    <meta name="theme-color" content="#f8f9fa">
+    <meta name="theme-color" content="#667eea">
     <meta name="color-scheme" content="light dark">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -50,130 +50,182 @@
 
 <body>
     <div id="app">
-        <header class="head-animation">
-            <nav class="navbar navbar-expand-lg bg-body-tertiary">
-                <div class="col-12 clearfix">
-                    <div class="float-left">
-                        <ul class="navbar-nav">
-                            <li class="nav-item active">
-                                <h3><a class="nav-link" href="/">RadioProgram Review</a></h3>
-                            </li>
-                        </ul>
-                    </div>
-                    <div class="float-right">
-                        <ul class="navbar-nav mr-auto">
-                            <li class="nav-item active">
-                                <a class="hover nav-link" href="{{ route('program.schedule') }}">
-                                    <i class="fas fa-broadcast-tower fa-fw fa-lg"></i>
-                                    <span class="text-center">
-                                        放送中の番組
-                                    </span>
+        <!-- ヘッダーナビゲーション -->
+        <nav class="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-primary-500 to-primary-900 shadow-lg" role="navigation">
+            <div class="container mx-auto px-4">
+                <div class="flex items-center justify-between h-16 md:h-20">
+                    <!-- ロゴ -->
+                    <a href="/" class="text-white font-bold text-xl md:text-2xl flex-shrink-0">
+                        RadioProgram Review
+                    </a>
+
+                    <!-- ハンバーガーメニューボタン（モバイルのみ） -->
+                    <button
+                        id="mobile-menu-toggle"
+                        class="md:hidden touch-target text-white focus:outline-none focus:ring-2 focus:ring-white/50 rounded-lg p-2"
+                        aria-label="メニューを開く"
+                        aria-expanded="false"
+                        aria-controls="mobile-menu"
+                    >
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                        </svg>
+                    </button>
+
+                    <!-- デスクトップメニュー -->
+                    <div class="hidden md:flex md:items-center md:space-x-2">
+                        <a href="{{ route('program.search') }}" class="touch-target text-white hover:bg-white/10 rounded-lg px-3 py-2 transition flex items-center text-sm">
+                            <i class="fas fa-search mr-2"></i>番組検索
+                        </a>
+                        <a href="{{ route('program.schedule') }}" class="touch-target text-white hover:bg-white/10 rounded-lg px-3 py-2 transition flex items-center text-sm">
+                            <i class="fas fa-broadcast-tower mr-2"></i>放送中
+                        </a>
+                        <a href="{{ route('schedule.twoweek') }}" class="touch-target text-white hover:bg-white/10 rounded-lg px-3 py-2 transition flex items-center text-sm">
+                            <i class="fas fa-podcast mr-2"></i>録音
+                        </a>
+                        <a href="{{ route('recording.history') }}" class="touch-target text-white hover:bg-white/10 rounded-lg px-3 py-2 transition flex items-center text-sm">
+                            <i class="fas fa-microphone mr-2"></i>履歴
+                        </a>
+                        
+                        @auth
+                        <a href="{{ route('favorites.index') }}" class="touch-target text-white hover:bg-white/10 rounded-lg px-3 py-2 transition flex items-center text-sm">
+                            <i class="fas fa-heart mr-2"></i>お気に入り
+                        </a>
+                        <a href="{{ route('review.view') }}" class="touch-target text-white hover:bg-white/10 rounded-lg px-3 py-2 transition flex items-center text-sm">
+                            <i class="fas fa-book-open mr-2"></i>レビュー
+                        </a>
+                        
+                        <!-- 通知センター -->
+                        <div id="notification-center-mount"></div>
+                        
+                        <!-- ユーザーメニュー（ドロップダウン） -->
+                        <div class="relative ml-2 group">
+                            <button class="touch-target text-white hover:bg-white/10 rounded-lg px-3 py-2 transition flex items-center text-sm">
+                                <i class="fas fa-user-circle mr-2"></i>
+                                {{ Auth::user()->name }}
+                                <i class="fas fa-chevron-down ml-2"></i>
+                            </button>
+                            <div class="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-xl py-2 invisible group-hover:visible transition-all">
+                                <a href="{{ route('myreview.view') }}" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+                                    <i class="fas fa-user mr-2"></i>マイページ
                                 </a>
-                            </li>
-                            <li class="nav-item active">
-                                <a class="hover nav-link" href="{{ route('schedule.twoweek') }}">
-                                    <i class="fas fa-podcast fa-fw fa-lg"></i>
-                                    <span class="text-center">
-                                        タイムフリー録音
-                                    </span>
+                                <a href="{{ route('recording.schedules') }}" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+                                    <i class="fas fa-calendar-check mr-2"></i>録音予約
                                 </a>
-                            </li>
-                            <li class="nav-item active">
-                                <a class="hover nav-link" href="{{ route('recording.history') }}">
-                                    <i class="fas fa-microphone fa-fw fa-lg"></i>
-                                    <span class="text-center">
-                                        録音履歴
-                                    </span>
+                                <a href="{{ route('recommendations.index') }}" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+                                    <i class="fas fa-star mr-2"></i>おすすめ
                                 </a>
-                            </li>
-                            @if (Auth::check())
-                            <li class="nav-item active">
-                                <a class="hover nav-link" href="{{ route('recording.schedules') }}">
-                                    <i class="fas fa-calendar-check fa-fw fa-lg"></i>
-                                    <span class="text-center">
-                                        録音予約
-                                    </span>
-                                </a>
-                            </li>
-                            @endif
-                            @if (Auth::check())
-                            <li class="nav-item active">
-                                <a class="hover nav-link" href="{{ route('favorites.index') }}">
-                                    <i class="fas fa-heart fa-fw fa-lg"></i>
-                                    <span class="text-center">
-                                        お気に入り番組
-                                    </span>
-                                </a>
-                            </li>
-                            @endif
-                            <li class="nav-item active">
-                                <a class="hover nav-link" href="{{ route('review.view') }}">
-                                    <i class="fas fa-book-open fa-fw fa-lg"></i>
-                                    <span class="text-center">
-                                        レビューを見る
-                                    </span>
-                                </a>
-                            </li>
-                            @if (Auth::check())
-                            <li class="nav-item active">
-                                <a class="hover nav-link" href="{{ route('post.program') }}">
-                                    <i class="fas fa-pen-square fa-fw fa-lg"></i>
-                                    <span class="text-center"> レビューを投稿する
-                                    </span>
-                                </a>
-                            </li>
-                            @else
-                            <li class="nav-item active">
-                                <a class="hover nav-link" href="{{ route('login') }}">
-                                    <i class="fas fa-pen-square fa-fw fa-lg"></i>
-                                    <span class="text-center"> レビューを投稿する
-                                    </span>
-                                </a>
-                            </li>
-                            @endif
-                            @if (Auth::check())
-                            <li class="nav-item active">
-                                <!-- 通知センター -->
-                                <div id="notification-center-mount"></div>
-                            </li>
-                            <li class="nav-item dropdown active">
-                                <a class="hover nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button"
-                                    aria-haspopup="true" aria-expanded="false">
-                                    <span><i class="fas fa-user-circle fa-fw fa-lg"></i>{{ Auth::user()->name }}</span>
-                                </a>
-                                <div class="dropdown-menu dropdown-menu-right">
-                                    <a class="dropdown-item" href="{{ route('myreview.view') }}">投稿したレビューを見る</a>
+                                <div class="border-t border-gray-200 dark:border-gray-700 my-2"></div>
+                                <form method="POST" action="{{ route('logout') }}">
                                     @csrf
-                                    <form method="POST" action="{{ route('logout') }}">
-                                        @csrf
-                                        <button type="submit" class="dropdown-item">ログアウト</button>
-                                    </form>
-                                </div>
-                            </li>
-                            @else
-                            <li class="nav-item active">
-                                @if (Route::has('register'))
-                                <a class="hover nav-link" href="{{ route('register') }}">
-                                    <i class="fas fa-registered fa-fw fa-lg"></i>
-                                    <span class="text-center">
-                                        会員登録
-                                    </span>
-                                </a>
-                                @endif
-                            </li>
-                            <li class="nav-item active">
-                                <a class="hover nav-link" href="{{ route('login') }}">
-                                    <i class="fas fa-sign-in-alt fa-fw fa-lg"></i>
-                                    <span class="text-center">ログイン</span></a>
-                            </li>
-                            @endif
-                        </ul>
+                                    <button type="submit" class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+                                        <i class="fas fa-sign-out-alt mr-2"></i>ログアウト
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        @else
+                        <a href="{{ route('review.view') }}" class="touch-target text-white hover:bg-white/10 rounded-lg px-3 py-2 transition flex items-center text-sm">
+                            <i class="fas fa-book-open mr-2"></i>レビュー
+                        </a>
+                        <a href="{{ route('login') }}" class="touch-target text-white hover:bg-white/10 rounded-lg px-3 py-2 transition flex items-center text-sm">
+                            <i class="fas fa-sign-in-alt mr-2"></i>ログイン
+                        </a>
+                        @if (Route::has('register'))
+                        <a href="{{ route('register') }}" class="touch-target bg-white/20 text-white hover:bg-white/30 rounded-lg px-4 py-2 transition flex items-center text-sm font-semibold">
+                            <i class="fas fa-user-plus mr-2"></i>会員登録
+                        </a>
+                        @endif
+                        @endauth
                     </div>
                 </div>
-            </nav>
-        </header>
+            </div>
+        </nav>
 
-        <main class="py-4">
+        <!-- モバイルメニュー（スライドイン） -->
+        <div
+            id="mobile-menu"
+            class="fixed inset-y-0 left-0 w-72 bg-gradient-to-b from-primary-600 to-primary-900 transform -translate-x-full transition-transform duration-300 ease-in-out md:hidden z-50 overflow-y-auto"
+            aria-hidden="true"
+        >
+            <div class="p-6 space-y-4">
+                <!-- 閉じるボタン -->
+                <button
+                    id="mobile-menu-close"
+                    class="touch-target text-white mb-4"
+                    aria-label="メニューを閉じる"
+                >
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+
+                <!-- メニュー項目（縦配置） -->
+                <nav class="space-y-2">
+                    <a href="{{ route('program.search') }}" class="block touch-target text-white hover:bg-white/10 rounded-lg px-4 py-3 transition">
+                        <i class="fas fa-search mr-3"></i>番組検索
+                    </a>
+                    <a href="{{ route('program.schedule') }}" class="block touch-target text-white hover:bg-white/10 rounded-lg px-4 py-3 transition">
+                        <i class="fas fa-broadcast-tower mr-3"></i>放送中の番組
+                    </a>
+                    <a href="{{ route('schedule.twoweek') }}" class="block touch-target text-white hover:bg-white/10 rounded-lg px-4 py-3 transition">
+                        <i class="fas fa-podcast mr-3"></i>タイムフリー録音
+                    </a>
+                    <a href="{{ route('recording.history') }}" class="block touch-target text-white hover:bg-white/10 rounded-lg px-4 py-3 transition">
+                        <i class="fas fa-microphone mr-3"></i>録音履歴
+                    </a>
+                    <a href="{{ route('review.view') }}" class="block touch-target text-white hover:bg-white/10 rounded-lg px-4 py-3 transition">
+                        <i class="fas fa-book-open mr-3"></i>レビューを見る
+                    </a>
+
+                    @auth
+                    <div class="border-t border-white/20 pt-4 mt-4">
+                        <p class="text-white/70 text-sm px-4 mb-2">{{ Auth::user()->name }}</p>
+                        <a href="{{ route('myreview.view') }}" class="block touch-target text-white hover:bg-white/10 rounded-lg px-4 py-3 transition">
+                            <i class="fas fa-user mr-3"></i>マイページ
+                        </a>
+                        <a href="{{ route('recording.schedules') }}" class="block touch-target text-white hover:bg-white/10 rounded-lg px-4 py-3 transition">
+                            <i class="fas fa-calendar-check mr-3"></i>録音予約
+                        </a>
+                        <a href="{{ route('favorites.index') }}" class="block touch-target text-white hover:bg-white/10 rounded-lg px-4 py-3 transition">
+                            <i class="fas fa-heart mr-3"></i>お気に入り番組
+                        </a>
+                        <a href="{{ route('recommendations.index') }}" class="block touch-target text-white hover:bg-white/10 rounded-lg px-4 py-3 transition">
+                            <i class="fas fa-star mr-3"></i>おすすめ
+                        </a>
+                        <a href="{{ route('post.program') }}" class="block touch-target text-white hover:bg-white/10 rounded-lg px-4 py-3 transition">
+                            <i class="fas fa-pen-square mr-3"></i>レビューを投稿
+                        </a>
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button type="submit" class="w-full text-left touch-target text-white hover:bg-white/10 rounded-lg px-4 py-3 transition">
+                                <i class="fas fa-sign-out-alt mr-3"></i>ログアウト
+                            </button>
+                        </form>
+                    </div>
+                    @else
+                    <div class="border-t border-white/20 pt-4 mt-4">
+                        <a href="{{ route('login') }}" class="block touch-target text-white hover:bg-white/10 rounded-lg px-4 py-3 transition">
+                            <i class="fas fa-sign-in-alt mr-3"></i>ログイン
+                        </a>
+                        @if (Route::has('register'))
+                        <a href="{{ route('register') }}" class="block touch-target bg-white/20 text-white hover:bg-white/30 rounded-lg px-4 py-3 transition font-semibold">
+                            <i class="fas fa-user-plus mr-3"></i>会員登録
+                        </a>
+                        @endif
+                    </div>
+                    @endauth
+                </nav>
+            </div>
+        </div>
+
+        <!-- オーバーレイ（メニュー表示時に背景を暗くする） -->
+        <div
+            id="mobile-menu-overlay"
+            class="fixed inset-0 bg-black/50 hidden md:hidden z-40"
+            aria-hidden="true"
+        ></div>
+
+        <!-- メインコンテンツ -->
+        <main class="main-content container mx-auto px-4 md:px-6">
             @yield('content')
         </main>
 

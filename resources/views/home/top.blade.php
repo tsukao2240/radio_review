@@ -3,7 +3,173 @@
 
 <title>RadioProgram Review</title>
 
+<!-- ヒーローセクション -->
 <div class="img_body">
-    @include('includes.search')
+    <div class="container text-center" style="padding-top: 80px; position: relative; z-index: 1;">
+        <h1 class="display-4 fw-bold mb-4" style="color: white; text-shadow: 0 4px 20px rgba(0,0,0,0.3), 0 2px 10px rgba(0,0,0,0.2);">
+            <i class="fas fa-radio" style="color: #ffd700;"></i> RadioProgram Review
+        </h1>
+        <p class="lead mb-4" style="color: rgba(255,255,255,0.95); font-size: 1.25rem; max-width: 700px; margin: 0 auto 30px; text-shadow: 0 2px 8px rgba(0,0,0,0.3);">
+            お気に入りのラジオ番組を見つけて、録音して、レビューを共有しよう
+        </p>
+        @include('includes.search')
+    </div>
 </div>
+
+<!-- 主要機能紹介 -->
+<div class="container my-5">
+    <h2 class="text-center mb-5 fw-bold" style="color: var(--bs-body-color);">
+        <i class="fas fa-star" style="color: #ffc107;"></i> 主な機能
+    </h2>
+    <div class="row g-4">
+        <div class="col-lg-4 col-md-6">
+            <div class="card h-100 text-center" style="border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.1); transition: transform 0.3s ease; position: relative; overflow: visible;" onmouseover="this.style.transform='translateY(-10px)'" onmouseout="this.style.transform='translateY(0)'">
+                <!-- エリアフリー対応バッジ -->
+                <div style="position: absolute; top: -12px; right: -12px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: 700; box-shadow: 0 4px 15px rgba(245, 87, 108, 0.4); z-index: 10; animation: pulse 2s infinite;">
+                    <i class="fas fa-globe-asia"></i> エリアフリー対応
+                </div>
+                <style>
+                    @keyframes pulse {
+                        0%, 100% { transform: scale(1); }
+                        50% { transform: scale(1.05); }
+                    }
+                </style>
+                <div class="card-body" style="padding: 40px 30px;">
+                    <div class="mb-4">
+                        <i class="fas fa-microphone fa-3x" style="color: #667eea;"></i>
+                    </div>
+                    <h5 class="card-title fw-bold mb-3">
+                        タイムフリー・エリアフリー録音
+                    </h5>
+                    <p class="card-text" style="color: #6c757d; margin-bottom: 15px;">
+                        <strong style="color: #667eea;">過去1週間の番組を簡単に録音</strong>。<br>
+                        聞き逃しても大丈夫！
+                    </p>
+                    <div style="background: linear-gradient(135deg, #f093fb15 0%, #f5576c15 100%); padding: 12px; border-radius: 8px; margin-bottom: 15px; border-left: 3px solid #f5576c;">
+                        <p style="margin: 0; font-size: 13px; color: #f5576c; font-weight: 600;">
+                            <i class="fas fa-globe-asia"></i> エリアフリー会員なら<br>
+                            <span style="font-size: 12px; color: #6c757d;">全国のラジオ番組を録音可能！</span>
+                        </p>
+                    </div>
+                    <a href="{{ route('schedule.twoweek') }}" class="btn btn-primary mt-3">
+                        <i class="fas fa-arrow-right"></i> 録音する
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-6">
+            <div class="card h-100 text-center" style="border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.1); transition: transform 0.3s ease;" onmouseover="this.style.transform='translateY(-10px)'" onmouseout="this.style.transform='translateY(0)'">
+                <div class="card-body" style="padding: 40px 30px;">
+                    <div class="mb-4">
+                        <i class="fas fa-heart fa-3x" style="color: #dc3545;"></i>
+                    </div>
+                    <h5 class="card-title fw-bold mb-3">お気に入り管理</h5>
+                    <p class="card-text" style="color: #6c757d;">お気に入りの番組を登録して、最新情報を素早くチェック</p>
+                    @if (Auth::check())
+                    <a href="{{ route('favorites.index') }}" class="btn btn-primary mt-3">
+                        <i class="fas fa-arrow-right"></i> お気に入りを見る
+                    </a>
+                    @else
+                    <a href="{{ route('login') }}" class="btn btn-primary mt-3">
+                        <i class="fas fa-sign-in-alt"></i> ログインして使う
+                    </a>
+                    @endif
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-6">
+            <div class="card h-100 text-center" style="border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.1); transition: transform 0.3s ease;" onmouseover="this.style.transform='translateY(-10px)'" onmouseout="this.style.transform='translateY(0)'">
+                <div class="card-body" style="padding: 40px 30px;">
+                    <div class="mb-4">
+                        <i class="fas fa-book-open fa-3x" style="color: #28a745;"></i>
+                    </div>
+                    <h5 class="card-title fw-bold mb-3">レビュー投稿・閲覧</h5>
+                    <p class="card-text" style="color: #6c757d;">番組の感想を共有して、他のリスナーと交流しよう</p>
+                    <a href="{{ route('review.view') }}" class="btn btn-primary mt-3">
+                        <i class="fas fa-arrow-right"></i> レビューを見る
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-6">
+            <div class="card h-100 text-center" style="border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.1); transition: transform 0.3s ease;" onmouseover="this.style.transform='translateY(-10px)'" onmouseout="this.style.transform='translateY(0)'">
+                <div class="card-body" style="padding: 40px 30px;">
+                    <div class="mb-4">
+                        <i class="fas fa-search fa-3x" style="color: #17a2b8;"></i>
+                    </div>
+                    <h5 class="card-title fw-bold mb-3">番組検索</h5>
+                    <p class="card-text" style="color: #6c757d;">キーワードで番組を検索して、新しい番組を発見</p>
+                    <a href="{{ route('program.search') }}" class="btn btn-primary mt-3">
+                        <i class="fas fa-arrow-right"></i> 検索する
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-6">
+            <div class="card h-100 text-center" style="border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.1); transition: transform 0.3s ease;" onmouseover="this.style.transform='translateY(-10px)'" onmouseout="this.style.transform='translateY(0)'">
+                <div class="card-body" style="padding: 40px 30px;">
+                    <div class="mb-4">
+                        <i class="fas fa-broadcast-tower fa-3x" style="color: #fd7e14;"></i>
+                    </div>
+                    <h5 class="card-title fw-bold mb-3">放送中の番組</h5>
+                    <p class="card-text" style="color: #6c757d;">今放送中の番組をリアルタイムでチェック</p>
+                    <a href="{{ route('program.schedule') }}" class="btn btn-primary mt-3">
+                        <i class="fas fa-arrow-right"></i> 確認する
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-6">
+            <div class="card h-100 text-center" style="border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.1); transition: transform 0.3s ease;" onmouseover="this.style.transform='translateY(-10px)'" onmouseout="this.style.transform='translateY(0)'">
+                <div class="card-body" style="padding: 40px 30px;">
+                    <div class="mb-4">
+                        <i class="fas fa-calendar-check fa-3x" style="color: #6610f2;"></i>
+                    </div>
+                    <h5 class="card-title fw-bold mb-3">録音予約</h5>
+                    <p class="card-text" style="color: #6c757d;">これから放送される番組を事前に録音予約</p>
+                    @if (Auth::check())
+                    <a href="{{ route('recording.schedules') }}" class="btn btn-primary mt-3">
+                        <i class="fas fa-arrow-right"></i> 予約する
+                    </a>
+                    @else
+                    <a href="{{ route('login') }}" class="btn btn-primary mt-3">
+                        <i class="fas fa-sign-in-alt"></i> ログインして使う
+                    </a>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CTAセクション -->
+<div class="container my-5">
+    <div class="card text-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; padding: 60px 30px; border-radius: 15px; box-shadow: 0 8px 30px rgba(0,0,0,0.15);">
+        <div class="card-body">
+            <h2 class="fw-bold mb-4" style="color: white; font-size: 2rem;">
+                <i class="fas fa-user-plus"></i> 今すぐ始めよう
+            </h2>
+            <p class="mb-4" style="color: rgba(255,255,255,0.95); font-size: 1.15rem; max-width: 700px; margin: 0 auto;">
+                無料アカウントを作成して、すべての機能を使い始めましょう
+            </p>
+            @if (!Auth::check())
+            <div class="d-flex gap-3 justify-content-center flex-wrap">
+                <a href="{{ route('register') }}" class="btn btn-light btn-lg" style="padding: 12px 40px; font-weight: 600; border-radius: 8px;">
+                    <i class="fas fa-user-plus"></i> 無料登録
+                </a>
+                <a href="{{ route('login') }}" class="btn btn-outline-light btn-lg" style="padding: 12px 40px; font-weight: 600; border-radius: 8px; border-width: 2px;">
+                    <i class="fas fa-sign-in-alt"></i> ログイン
+                </a>
+            </div>
+            @else
+            <div>
+                <a href="{{ route('schedule.twoweek') }}" class="btn btn-light btn-lg" style="padding: 12px 40px; font-weight: 600; border-radius: 8px;">
+                    <i class="fas fa-microphone"></i> 録音を始める
+                </a>
+            </div>
+            @endif
+        </div>
+    </div>
+</div>
+
 @endsection

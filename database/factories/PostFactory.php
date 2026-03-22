@@ -19,6 +19,10 @@ class PostFactory extends Factory
             'program_title' => $this->faker->sentence(3),
             'title' => $this->faker->sentence(5),
             'body' => $this->faker->paragraph(3),
+            'rating' => $this->faker->randomFloat(1, 1, 5),
+            'station_id' => $this->faker->randomElement(['TBS', 'QRR', 'LFR', 'INT', 'FMT', 'FMJ', 'JORF']),
+            'likes_count' => 0,
+            'comments_count' => 0,
         ];
     }
 }

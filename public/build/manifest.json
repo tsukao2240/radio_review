@@ -1,6 +1,6 @@
 {
-  "_bootstrap-ByU619x-.js": {
-    "file": "assets/bootstrap-ByU619x-.js",
+  "_bootstrap-CKjBpyqh.js": {
+    "file": "assets/bootstrap-CKjBpyqh.js",
     "name": "bootstrap"
   },
   "_react-vendor-DEQ385Nk.js": {
@@ -40,26 +40,26 @@
     "src": "node_modules/@fortawesome/fontawesome-free/webfonts/fa-v4compatibility.woff2"
   },
   "resources/css/app.css": {
-    "file": "assets/app-CNVJEZje.css",
+    "file": "assets/app-XDw9a7SR.css",
     "src": "resources/css/app.css",
     "isEntry": true
   },
   "resources/css/custom.css": {
-    "file": "assets/custom-C-FJdSh_.css",
+    "file": "assets/custom-CuYhd7KF.css",
     "src": "resources/css/custom.css",
     "isEntry": true
   },
   "resources/js/app.jsx": {
-    "file": "assets/app-Bli6T32T.js",
+    "file": "assets/app-CEIzVtZA.js",
     "name": "app",
     "src": "resources/js/app.jsx",
     "isEntry": true,
     "imports": [
       "_react-vendor-DEQ385Nk.js",
-      "_bootstrap-ByU619x-.js"
+      "_bootstrap-CKjBpyqh.js"
     ],
     "css": [
-      "assets/app-CZOjr4-t.css"
+      "assets/app-D-XE8XQj.css"
     ]
   }
 }

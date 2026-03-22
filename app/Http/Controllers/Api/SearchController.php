@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\RadioProgram;
 use App\Services\RadioProgramSearchService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
@@ -125,6 +126,45 @@ class SearchController extends Controller
                 'message' => '番組情報の取得中にエラーが発生しました',
                 'error' => config('app.debug') ? $e->getMessage() : 'Internal Server Error'
             ], 500);
+        }
+    }
+
+    /**
+     * オートコンプリート用の番組候補を取得
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function suggest(Request $request)
+    {
+        try {
+            $query = $request->input('q', '');
+
+            if (strlen($query) < 2) {
+                return response()->json(['suggestions' => []]);
+            }
+
+            $cacheKey = 'search_suggest_' . md5($query);
+
+            $suggestions = Cache::remember($cacheKey, 600, function () use ($query) {
+                return RadioProgram::where('title', 'LIKE', "%{$query}%")
+                    ->whereRaw("title NOT REGEXP ?", ['【新】|【終】|【最終回】|（再）|再放送'])
+                    ->select('title', 'cast', 'station_id')
+                    ->distinct()
+                    ->limit(10)
+                    ->get()
+                    ->toArray();
+            });
+
+            return response()->json(['suggestions' => $suggestions]);
+
+        } catch (\Exception $e) {
+            Log::error('API Suggest error: ' . $e->getMessage());
+
+            return response()->json([
+                'suggestions' => [],
+                'error' => config('app.debug') ? $e->getMessage() : null
+            ]);
         }
     }
 }

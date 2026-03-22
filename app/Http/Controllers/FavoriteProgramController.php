@@ -7,30 +7,102 @@ use App\FavoriteProgram;
 use Illuminate\Support\Facades\Auth;
 use App\Exceptions\DatabaseException;
 use App\Http\Requests\FavoriteProgramRequest;
+use App\Services\RadikoApiService;
+use App\Services\RecommendationService;
+use Carbon\Carbon;
 
 class FavoriteProgramController extends Controller
 {
-    public function __construct()
-    {
+    protected $radikoApiService;
+    protected $recommendationService;
+
+    public function __construct(
+        RadikoApiService $radikoApiService,
+        RecommendationService $recommendationService
+    ) {
         $this->middleware('auth');
+        $this->radikoApiService = $radikoApiService;
+        $this->recommendationService = $recommendationService;
     }
 
     // お気に入り一覧表示
     public function index()
     {
         $favorites = Auth::user()->favoritePrograms;
-        return view('favorite.index', compact('favorites'));
+
+        // 各お気に入り番組の直近放送情報を取得
+        $favoritesWithSchedule = $favorites->map(function($favorite) {
+            try {
+                // 2週間番組表を取得（過去7日+未来7日）
+                $schedule = $this->radikoApiService->getTwoWeekSchedule($favorite->station_id);
+
+                // 番組タイトルにマッチする直近の放送を検索
+                $latestBroadcast = null;
+                $latestEndTime = null;
+                $now = Carbon::now();
+                $timefreeLimitDate = $now->copy()->subDays(7);
+
+                foreach ($schedule['entries'] as $entry) {
+                    if ($entry['title'] === $favorite->program_title) {
+                        // 曜日フィルタ: broadcast_day が設定されている場合は曜日が一致するエントリのみ対象
+                        if ($favorite->broadcast_day !== null) {
+                            $entryDayOfWeek = Carbon::createFromFormat('Ymd', $entry['date'])->isoWeekday() - 1;
+                            if ($entryDayOfWeek !== (int) $favorite->broadcast_day) {
+                                continue;
+                            }
+                        }
+
+                        $programEndTime = Carbon::createFromFormat('Ymd H:i', $entry['date'] . ' ' . $entry['end']);
+
+                        // タイムフリー期間内（放送終了から7日以内）かつ、放送が終了済みの番組
+                        if ($programEndTime->isPast() && $programEndTime->isAfter($timefreeLimitDate)) {
+                            // より新しい放送を優先
+                            if ($latestEndTime === null || $programEndTime->isAfter($latestEndTime)) {
+                                $latestBroadcast = $entry;
+                                $latestEndTime = $programEndTime;
+                            }
+                        }
+                    }
+                }
+
+                $favorite->latest_broadcast = $latestBroadcast;
+            } catch (\Exception $e) {
+                \Log::error('お気に入り番組の放送情報取得エラー', [
+                    'favorite_id' => $favorite->id,
+                    'station_id' => $favorite->station_id,
+                    'program_title' => $favorite->program_title,
+                    'error' => $e->getMessage()
+                ]);
+                $favorite->latest_broadcast = null;
+            }
+
+            return $favorite;
+        });
+
+        return view('favorite.index', ['favorites' => $favoritesWithSchedule]);
     }
 
     // お気に入り登録
     public function store(FavoriteProgramRequest $request)
     {
         try {
+            // broadcast_day を取得（nullable, 0-6）
+            $broadcastDay = $request->has('broadcast_day') && $request->broadcast_day !== null
+                ? (int) $request->broadcast_day
+                : null;
+
             // exists()を使って重複チェックを最適化
-            $exists = FavoriteProgram::where('user_id', Auth::id())
+            $query = FavoriteProgram::where('user_id', Auth::id())
                 ->where('station_id', $request->station_id)
-                ->where('program_title', $request->program_title)
-                ->exists();
+                ->where('program_title', $request->program_title);
+
+            if ($broadcastDay !== null) {
+                $query->where('broadcast_day', $broadcastDay);
+            } else {
+                $query->whereNull('broadcast_day');
+            }
+
+            $exists = $query->exists();
 
             if ($exists) {
                 return response()->json([
@@ -43,8 +115,12 @@ class FavoriteProgramController extends Controller
             FavoriteProgram::create([
                 'user_id' => Auth::id(),
                 'station_id' => $request->station_id,
-                'program_title' => $request->program_title
+                'program_title' => $request->program_title,
+                'broadcast_day' => $broadcastDay,
             ]);
+
+            // レコメンデーションキャッシュをクリア
+            $this->recommendationService->clearUserCache(Auth::id());
 
             return response()->json([
                 'success' => true,
@@ -76,6 +152,9 @@ class FavoriteProgramController extends Controller
                     'message' => 'お気に入りが見つかりません'
                 ], 404);
             }
+
+            // レコメンデーションキャッシュをクリア
+            $this->recommendationService->clearUserCache(Auth::id());
 
             return response()->json([
                 'success' => true,

@@ -1,11 +1,12 @@
 {
-  "name": "RadioProgram Review",
-  "short_name": "Radio Review",
-  "description": "ラジオ番組のレビューと録音管理アプリケーション",
+  "name": "ラジオレビュー",
+  "short_name": "ラジオレビュー",
+  "description": "ラジオ番組の検索・レビュー・録音アプリ。放送中の番組をチェックし、タイムフリー録音や番組レビューができます。",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#f8f9fa",
+  "background_color": "#667eea",
+  "theme_color": "#667eea",
   "orientation": "portrait-primary",
   "icons": [
     {
@@ -57,9 +58,21 @@
       "purpose": "any maskable"
     }
   ],
-  "categories": ["entertainment", "lifestyle"],
+  "categories": ["entertainment", "music", "news"],
   "screenshots": [],
   "shortcuts": [
+    {
+      "name": "番組検索",
+      "short_name": "検索",
+      "description": "番組名で検索する",
+      "url": "/search",
+      "icons": [
+        {
+          "src": "/images/icons/icon-96x96.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
     {
       "name": "放送中の番組",
       "short_name": "放送中",
@@ -85,10 +98,10 @@
       ]
     },
     {
-      "name": "レビュー投稿",
-      "short_name": "投稿",
-      "description": "番組のレビューを投稿する",
-      "url": "/post/program",
+      "name": "お気に入り",
+      "short_name": "お気に入り",
+      "description": "お気に入り番組を見る",
+      "url": "/favorite",
       "icons": [
         {
           "src": "/images/icons/icon-96x96.png",
@@ -96,5 +109,8 @@
         }
       ]
     }
-  ]
+  ],
+  "lang": "ja",
+  "dir": "ltr",
+  "prefer_related_applications": false
 }

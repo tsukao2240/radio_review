@@ -1,0 +1,46 @@
+name: 感想投稿・一覧
+description: 感想の投稿・閲覧が正常に動作すること（投稿は要メール認証済みログイン）
+base_url: http://localhost:8000
+auth_required: true
+
+setup:
+  - action: login
+    email: "${TEST_USER_EMAIL}"
+    password: "${TEST_USER_PASSWORD}"
+
+steps:
+  # 感想一覧
+  - action: navigate
+    url: /review/list
+    description: 感想一覧ページにアクセス
+
+  - action: assert_visible
+    selector: ".card, .post, .review, .empty-state"
+    description: 感想一覧または空状態が表示される
+
+  - action: screenshot
+    name: 08_review_list
+
+  # 感想投稿ページ
+  - action: navigate
+    url: /program
+    description: 感想投稿の番組選択ページにアクセス
+
+  - action: assert_visible
+    selector: "form, .card, input"
+    description: 投稿フォームまたは番組選択が表示される
+
+  - action: screenshot
+    name: 08_review_create
+
+  # マイページ
+  - action: navigate
+    url: /mypage
+    description: マイページにアクセス
+
+  - action: assert_visible
+    selector: ".post, .card, .empty-state, h3"
+    description: 自分の投稿一覧または空状態が表示される
+
+  - action: screenshot
+    name: 08_mypage

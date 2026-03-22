@@ -163,7 +163,8 @@ class MypageControllerTest extends TestCase
         $updatedData = [
             'id' => $this->post->id,
             'title' => '更新されたレビュー',
-            'body' => '更新されたレビュー本文'
+            'body' => '更新されたレビュー本文',
+            'rating' => 4.0
         ];
 
         $response = $this->actingAs($this->user)
@@ -202,7 +203,7 @@ class MypageControllerTest extends TestCase
     public function test_user_can_delete_own_post()
     {
         $response = $this->actingAs($this->user)
-            ->post('/my', ['id' => $this->post->id]);
+            ->post('/my', ['program_id' => $this->post->program_id]);
 
         $response->assertRedirect();
         $response->assertSessionHas('message', '削除しました');
@@ -245,10 +246,11 @@ class MypageControllerTest extends TestCase
     public function test_updating_nonexistent_post_returns_404()
     {
         $response = $this->actingAs($this->user)
-            ->post('/my/edit/' . $this->post->program_id, [
+            ->post('/my/edit/99999', [
                 'id' => 99999,
                 'title' => 'テスト',
-                'body' => 'テスト'
+                'body' => 'テスト',
+                'rating' => 4.0
             ]);
 
         $response->assertStatus(404);
@@ -260,7 +262,7 @@ class MypageControllerTest extends TestCase
     public function test_deleting_nonexistent_post_returns_404()
     {
         $response = $this->actingAs($this->user)
-            ->post('/my', ['id' => 99999]);
+            ->post('/my', ['program_id' => 99999]);
 
         $response->assertStatus(404);
     }

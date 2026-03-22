@@ -7,11 +7,18 @@
 .env.backup
 .env.local
 .env.production
+.env.testing
 .phpunit.result.cache
 Homestead.json
 Homestead.yaml
 npm-debug.log
 yarn-error.log
+
+# Docker関連
+docker/nginx/*.backup
+
+# Viteビルド成果物（Gitで管理）
+# public/build/ は含める
 
 # ffmpeg binaries
 /ffmpeg/ffmpeg-master-latest-win64-gpl/
@@ -30,3 +37,5 @@ MIGRATION_NOTES.md
 PRIORITY_TASKS.md
 SECURITY_CHECKLIST.md
 ENV_SETUP.md
+.claude/settings.local.json
+.env.testing.local

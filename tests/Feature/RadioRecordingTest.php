@@ -26,11 +26,14 @@ class RadioRecordingTest extends TestCase
      */
     public function test_start_timefree_recording_success()
     {
+        // 1日前の番組を指定（タイムフリー期間内）
+        $yesterday = Carbon::now()->subDay();
+
         $requestData = [
             'station_id' => 'TBS',
             'title' => 'テスト番組',
-            'start_time' => '202509292200',
-            'end_time' => '202509292230'
+            'start_time' => $yesterday->format('YmdHi'),
+            'end_time' => $yesterday->copy()->addMinutes(30)->format('YmdHi')
         ];
 
         // 認証をモック
@@ -306,43 +309,71 @@ class RadioRecordingTest extends TestCase
     }
 
     /**
-     * radiko認証をモックする
+     * 録音履歴の重複エントリが存在しないことを確認
      */
-    private function mockRadikoAuth()
+    public function test_show_history_no_duplicate_entries()
     {
-        // HTTP clientをモック
-        $this->app->bind('GuzzleHttp\Client', function () {
-            $mock = \Mockery::mock('GuzzleHttp\Client');
+        // 同一recording_idのキャッシュを複数設定（Redis SCANが重複を返すケースを模倣）
+        $recordingId = 'TBS_202509292200_20250929220000';
+        $recordingInfo = [
+            'station_id' => 'TBS',
+            'title' => 'テスト番組',
+            'filename' => 'test.m4a',
+            'filepath' => '/path/to/test.m4a',
+            'start_time' => '202509292200',
+            'end_time' => '202509292230',
+            'created_at' => Carbon::now()->toISOString(),
+            'status' => 'completed'
+        ];
 
-            // auth1のレスポンス
-            $auth1Response = \Mockery::mock('Psr\Http\Message\ResponseInterface');
-            $auth1Response->shouldReceive('getHeaderLine')
-                ->with('X-Radiko-AuthToken')->andReturn('mock_auth_token');
-            $auth1Response->shouldReceive('getHeaderLine')
-                ->with('X-Radiko-KeyLength')->andReturn('16');
-            $auth1Response->shouldReceive('getHeaderLine')
-                ->with('X-Radiko-KeyOffset')->andReturn('0');
+        Cache::put("recording_{$recordingId}", $recordingInfo, 7200);
 
-            // auth2のレスポンス
-            $auth2Response = \Mockery::mock('Psr\Http\Message\ResponseInterface');
-            $auth2Response->shouldReceive('getStatusCode')->andReturn(200);
+        $response = $this->get('/recording/history');
 
-            $mock->shouldReceive('post')
-                ->with('https://radiko.jp/v2/api/auth1', \Mockery::any())
-                ->andReturn($auth1Response);
+        $response->assertStatus(200);
 
-            $mock->shouldReceive('post')
-                ->with('https://radiko.jp/v2/api/auth2', \Mockery::any())
-                ->andReturn($auth2Response);
+        // 録音一覧APIで同一IDが重複していないことを確認
+        $listResponse = $this->getJson('/recording/list');
+        $recordings = $listResponse->json('recordings');
 
-            return $mock;
-        });
+        $ids = array_column($recordings, 'recording_id');
+        $this->assertEquals(count($ids), count(array_unique($ids)), '録音IDが重複しています');
+    }
 
-        // file_get_contentsをモック
-        if (!function_exists('file_get_contents_original')) {
-            function file_get_contents_original($filename, $use_include_path = false, $context = null, $offset = 0, $length = null) {
-                return \file_get_contents($filename, $use_include_path, $context, $offset, $length);
-            }
+    /**
+     * エリアIDを指定したタイムフリー録音開始のテスト
+     */
+    public function test_start_timefree_recording_with_area_id()
+    {
+        $yesterday = Carbon::now()->subDay();
+
+        $requestData = [
+            'station_id' => 'OBC',
+            'title' => 'テスト番組（エリア指定）',
+            'start_time' => $yesterday->format('YmdHi'),
+            'end_time' => $yesterday->copy()->addMinutes(30)->format('YmdHi'),
+            'area_id' => 'JP27',
+        ];
+
+        $this->mockRadikoAuth('JP27');
+
+        $response = $this->postJson('/recording/timefree/start', $requestData);
+
+        $response->assertStatus(200)
+                ->assertJson(['success' => true]);
+    }
+
+    /**
+     * radiko認証をモックする（Cacheに偽トークンを事前セット）
+     *
+     * getRadikoAuthToken() はキャッシュを最初にチェックするため、
+     * HTTP呼び出しなしでテスト可能。
+     */
+    private function mockRadikoAuth(?string $areaId = null): void
+    {
+        $areas = ['default', 'JP13', 'JP27', $areaId];
+        foreach (array_unique(array_filter($areas)) as $area) {
+            Cache::put("radiko_auth_token_{$area}", 'mock_auth_token', 3300);
         }
     }
 }

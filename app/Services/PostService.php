@@ -3,10 +3,12 @@
 namespace App\Services;
 
 use App\Post;
+use App\PostTag;
 use App\RadioProgram;
 use App\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * 投稿（レビュー）に関するビジネスロジックを担当するサービスクラス
@@ -133,12 +135,26 @@ class PostService
     {
         try {
             $user = User::findOrFail($userId);
+            
+            $tags = $data['tags'] ?? [];
+            unset($data['tags']);
+            
             $post = $user->posts()->create($data);
+            
+            // タグを添付
+            if (!empty($tags)) {
+                $post->tags()->attach($tags);
+            }
+
+            // レコメンデーションキャッシュをクリア
+            Cache::forget("recommendations_user_{$userId}");
 
             Log::info('Post created', [
                 'post_id' => $post->id,
                 'user_id' => $userId,
-                'program_id' => $data['program_id']
+                'program_id' => $data['program_id'],
+                'rating' => $data['rating'] ?? null,
+                'tags_count' => count($tags)
             ]);
 
             return $post;
@@ -164,13 +180,28 @@ class PostService
     {
         try {
             $post = Post::findOrFail($postId);
+
+            // 基本フィールドの更新
             $post->title = $data['title'];
             $post->body = $data['body'];
+
+            // 評価の更新（提供されている場合）
+            if (isset($data['rating'])) {
+                $post->rating = $data['rating'];
+            }
+
             $post->save();
+
+            // タグの同期（提供されている場合）
+            if (array_key_exists('tags', $data)) {
+                $post->tags()->sync($data['tags'] ?? []);
+            }
 
             Log::info('Post updated', [
                 'post_id' => $postId,
-                'user_id' => $post->user_id
+                'user_id' => $post->user_id,
+                'rating_updated' => isset($data['rating']),
+                'tags_updated' => array_key_exists('tags', $data),
             ]);
 
             return $post;
@@ -234,6 +265,107 @@ class PostService
         } catch (\Exception $e) {
             Log::error('Error retrieving post detail: ' . $e->getMessage(), [
                 'post_id' => $postId,
+                'trace' => $e->getTraceAsString()
+            ]);
+            throw $e;
+        }
+    }
+
+    /**
+     * フィルタリング条件付きで投稿を取得
+     *
+     * @param array $filters
+     * @param int $perPage
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
+     */
+    public function getPostsFiltered($filters, $perPage = 10)
+    {
+        try {
+            $query = Post::query()
+                ->select('posts.*', 'radio_programs.station_id', 'users.name')
+                ->leftJoin('users', 'users.id', '=', 'posts.user_id')
+                ->leftJoin('radio_programs', 'posts.program_id', '=', 'radio_programs.id');
+
+            // 最小評価でフィルタリング
+            if (isset($filters['min_rating']) && $filters['min_rating']) {
+                $query->where('posts.rating', '>=', $filters['min_rating']);
+            }
+
+            // タグでフィルタリング
+            if (isset($filters['tag_id']) && $filters['tag_id']) {
+                $query->whereHas('tags', function ($q) use ($filters) {
+                    $q->where('post_tags.id', $filters['tag_id']);
+                });
+            }
+
+            // ソート順
+            $sortBy = $filters['sort_by'] ?? 'created_at';
+            $sortOrder = $filters['sort_order'] ?? 'desc';
+            
+            if ($sortBy === 'likes_count') {
+                $query->orderBy('posts.likes_count', $sortOrder);
+            } elseif ($sortBy === 'rating') {
+                $query->orderBy('posts.rating', $sortOrder);
+            } else {
+                $query->orderBy('posts.created_at', $sortOrder);
+            }
+
+            $posts = $query->paginate($perPage);
+
+            Log::info('Filtered posts retrieved', [
+                'total' => $posts->total(),
+                'filters' => $filters
+            ]);
+
+            return $posts;
+
+        } catch (\Exception $e) {
+            Log::error('Error retrieving filtered posts: ' . $e->getMessage(), [
+                'filters' => $filters,
+                'trace' => $e->getTraceAsString()
+            ]);
+            throw $e;
+        }
+    }
+
+    /**
+     * 番組の平均評価を取得
+     *
+     * @param int $programId
+     * @return array
+     */
+    public function getAverageRatingByProgram($programId)
+    {
+        try {
+            $result = Post::where('program_id', $programId)
+                ->selectRaw('AVG(rating) as avg_rating, COUNT(*) as review_count')
+                ->first();
+
+            return [
+                'average_rating' => $result->avg_rating ? round($result->avg_rating, 1) : null,
+                'review_count' => $result->review_count
+            ];
+
+        } catch (\Exception $e) {
+            Log::error('Error calculating average rating: ' . $e->getMessage(), [
+                'program_id' => $programId,
+                'trace' => $e->getTraceAsString()
+            ]);
+            throw $e;
+        }
+    }
+
+    /**
+     * 全タグを取得
+     *
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function getAllTags()
+    {
+        try {
+            return PostTag::ordered()->get();
+        } catch (\Exception $e) {
+            Log::error('Error retrieving tags: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString()
             ]);
             throw $e;

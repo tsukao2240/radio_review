@@ -26,6 +26,7 @@ class FavoriteProgramRequest extends FormRequest
         return [
             'station_id' => 'required|string|max:50',
             'program_title' => 'required|string|max:255',
+            'broadcast_day' => 'nullable|integer|min:0|max:6',
         ];
     }
 

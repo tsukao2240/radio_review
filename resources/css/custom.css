@@ -25,6 +25,79 @@ header, .head-animation {
     z-index: 1030;
 }
 
+/* ヘッダーのグラデーション背景 */
+.navbar {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.navbar .nav-link {
+    color: rgba(255, 255, 255, 0.9) !important;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    position: relative;
+    padding: 8px 12px !important;
+}
+
+.navbar .nav-link:hover {
+    color: white !important;
+    transform: translateY(-2px);
+}
+
+.navbar .nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.8);
+    transition: width 0.3s ease;
+}
+
+.navbar .nav-link:hover::after {
+    width: 80%;
+}
+
+.navbar h3 a.nav-link {
+    color: white !important;
+    font-weight: 700;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    letter-spacing: 0.5px;
+}
+
+.navbar h3 a.nav-link:hover {
+    text-shadow: 0 4px 20px rgba(255, 255, 255, 0.3);
+}
+
+.navbar .nav-item i {
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+.navbar .dropdown-toggle::after {
+    filter: brightness(0) invert(1);
+}
+
+.navbar .dropdown-menu {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(118, 75, 162, 0.2);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+[data-bs-theme="dark"] .navbar {
+    background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+[data-bs-theme="dark"] .navbar .dropdown-menu {
+    background: rgba(45, 55, 72, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
 /* フッター固定 */
 footer {
     position: fixed;
@@ -605,20 +678,73 @@ footer {
 
 /* ホーム画面 */
 .img_body {
-    background-image: url('/images/radio.png');
-    background-size: cover;
-    background-position: center;
+    position: relative;
     height: 500px;
+    overflow: hidden;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.img_body::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: 
+        radial-gradient(circle at 20% 50%, rgba(102, 126, 234, 0.3) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(118, 75, 162, 0.3) 0%, transparent 50%),
+        radial-gradient(circle at 40% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 30%);
+    animation: gradientShift 15s ease infinite;
+}
+
+.img_body::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: 
+        repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255, 255, 255, 0.03) 10px, rgba(255, 255, 255, 0.03) 20px),
+        url('/images/radio.png');
+    background-size: auto, cover;
+    background-position: center, center;
+    opacity: 0.15;
+    mix-blend-mode: overlay;
+}
+
+@keyframes gradientShift {
+    0%, 100% {
+        transform: scale(1) rotate(0deg);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.1) rotate(5deg);
+        opacity: 0.8;
+    }
 }
 
 [data-bs-theme="light"] .img_body {
-    background-color: rgba(255, 255, 255, 0.8);
-    background-blend-mode: lighten;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+}
+
+[data-bs-theme="light"] .img_body::before {
+    background-image: 
+        radial-gradient(circle at 20% 50%, rgba(102, 126, 234, 0.4) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(240, 147, 251, 0.4) 0%, transparent 50%),
+        radial-gradient(circle at 40% 20%, rgba(255, 255, 255, 0.2) 0%, transparent 30%);
 }
 
 [data-bs-theme="dark"] .img_body {
-    background-color: rgba(0, 0, 0, 0.6);
-    background-blend-mode: darken;
+    background: linear-gradient(135deg, #4a5568 0%, #2d3748 50%, #1a202c 100%);
+}
+
+[data-bs-theme="dark"] .img_body::before {
+    background-image: 
+        radial-gradient(circle at 20% 50%, rgba(102, 126, 234, 0.2) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(118, 75, 162, 0.2) 0%, transparent 50%),
+        radial-gradient(circle at 40% 20%, rgba(255, 255, 255, 0.05) 0%, transparent 30%);
 }
 
 /* レビュー画面 */
@@ -907,5 +1033,227 @@ footer {
 @media (min-width: 1201px) {
     .timetable {
         grid-template-columns: repeat(7, 1fr);
+    }
+}
+/* ========================================
+   Star Rating Styles
+   ======================================== */
+.star-rating {
+    display: inline-flex;
+    align-items: center;
+}
+
+.star-rating-interactive .star {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.star-rating-interactive .star:hover {
+    transform: scale(1.2);
+}
+
+.star-filled {
+    color: #ffc107 !important;
+}
+
+.star-empty {
+    color: #e0e0e0 !important;
+}
+
+/* ========================================
+   Tag Styles
+   ======================================== */
+.tag-selector .btn {
+    border-radius: 20px;
+    font-size: 14px;
+    padding: 6px 16px;
+    transition: all 0.2s ease;
+}
+
+.tag-selector .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.post-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.post-tags .badge {
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 12px;
+    background-color: #e7f3ff;
+    color: #0066cc;
+    font-weight: normal;
+}
+
+/* ========================================
+   Comment Section Styles
+   ======================================== */
+.comment-section {
+    border-top: 1px solid #e0e0e0;
+    padding-top: 12px;
+    margin-top: 12px;
+}
+
+.comments-list {
+    max-height: 400px;
+    overflow-y: auto;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+}
+
+.comments-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.comments-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.comments-list::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 3px;
+}
+
+.comments-list::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* ========================================
+   Social Actions Styles
+   ======================================== */
+.social-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #e0e0e0;
+}
+
+.social-actions .btn {
+    transition: all 0.2s ease;
+}
+
+.social-actions .btn:hover {
+    transform: translateY(-2px);
+}
+
+/* ========================================
+   Filter Controls Styles
+   ======================================== */
+.filter-controls {
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.filter-controls .form-label {
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 8px;
+}
+
+.filter-controls .form-select,
+.filter-controls .btn {
+    border-radius: 6px;
+}
+
+/* ========================================
+   Post Rating Display
+   ======================================== */
+.program-rating {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 20px;
+    font-weight: 600;
+    margin-bottom: 16px;
+}
+
+.program-rating .rating-value {
+    font-size: 20px;
+}
+
+.program-rating .rating-count {
+    font-size: 12px;
+    opacity: 0.9;
+}
+
+/* ========================================
+   Recommendations Page
+   ======================================== */
+.recommendations-section {
+    background-color: white;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    margin-bottom: 24px;
+}
+
+.recommendations-section h2 {
+    color: #667eea;
+    font-weight: 700;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.recommendation-card {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+    transition: all 0.3s ease;
+}
+
+.recommendation-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+    border-color: #667eea;
+}
+
+.recommendation-card .program-title {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.recommendation-card .program-station {
+    color: #666;
+    font-size: 14px;
+}
+
+/* ========================================
+   Responsive Adjustments
+   ======================================== */
+@media (max-width: 768px) {
+    .filter-controls {
+        padding: 15px;
+    }
+    
+    .social-actions {
+        flex-wrap: wrap;
+    }
+    
+    .star-rating {
+        font-size: 18px;
+    }
+    
+    .tag-selector .btn {
+        font-size: 12px;
+        padding: 4px 12px;
     }
 }

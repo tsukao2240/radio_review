@@ -1,0 +1,38 @@
+name: タイムフリー番組表
+description: タイムフリー番組表が正常に表示・動作すること
+base_url: http://localhost:8000
+auth_required: false
+
+steps:
+  - action: navigate
+    url: /timefree
+    description: タイムフリー番組表にアクセス
+
+  - action: assert_visible
+    selector: ".program, .card, table, .schedule"
+    description: 番組表が表示される
+
+  - action: screenshot
+    name: 05_timefree_top
+
+  # エリア選択
+  - action: assert_visible
+    selector: "select.area-select, select[name*=area], select"
+    description: エリア選択セレクトボックスが存在する
+
+  # 局別タイムフリー
+  - action: navigate
+    url: /timefree/TBS
+    description: TBSのタイムフリー番組表にアクセス
+
+  - action: assert_visible
+    selector: ".program, .card, table"
+    description: TBSの番組表が表示される
+
+  - action: screenshot
+    name: 05_timefree_tbs
+
+  # 録音ボタンの存在確認
+  - action: assert_visible
+    selector: ".recording-btn, button[class*=recording], .timefree-btn"
+    description: 録音ボタンが存在する

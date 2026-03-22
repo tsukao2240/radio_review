@@ -1,29 +1,59 @@
 @extends('layouts.header')
 @section('content')
 @include('includes.search')
-<span>
-    {{ Breadcrumbs::render('weekly_schedule') }}
-</span>
+
+<x-breadcrumbs :items="[
+    ['label' => '放送中の番組', 'url' => route('program.schedule')],
+    ['label' => $broadcast_name . ' 週間番組表']
+]" />
+
 <title>{{ $broadcast_name }}の週間番組表</title>
-<div class="schedule-header">
-    <h3>週間番組表（{{ $broadcast_name }}）</h3>
-</div>
-<div class="timetable">
-    @for ($i = 0; $i < count($thisWeek); $i++)
+
+<div class="max-w-7xl mx-auto">
+    <h1 class="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white mb-6">
+        <i class="fas fa-calendar-week mr-2"></i>{{ $broadcast_name }} 週間番組表
+    </h1>
+
+    <!-- 日付ナビゲーション（横スクロール） -->
+    <div class="mb-8 -mx-4 px-4 md:mx-0 md:px-0">
+        <div class="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide space-x-2 pb-2">
+            @foreach($thisWeek as $index => $date)
+            @php
+                $dateObj = \Carbon\Carbon::createFromFormat('Ymd', $date);
+                $dayOfWeek = ['日', '月', '火', '水', '木', '金', '土'][$dateObj->dayOfWeek];
+                $isToday = $date === \Carbon\Carbon::now()->format('Ymd');
+                $isSunday = $dateObj->dayOfWeek === 0;
+                $isSaturday = $dateObj->dayOfWeek === 6;
+            @endphp
+            <a href="#date-{{ $date }}"
+               class="snap-start flex-shrink-0 touch-target px-4 py-3 rounded-lg text-center font-medium transition min-w-[100px]
+                   {{ $isToday ? 'bg-primary-500 text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-primary-100 dark:hover:bg-primary-900' }}">
+                <div class="text-xs {{ $isSunday ? 'text-red-500' : ($isSaturday ? 'text-blue-500' : '') }} {{ $isToday ? 'text-white' : '' }}">
+                    {{ $dateObj->format('m月d日') }}
+                </div>
+                <div class="text-sm font-bold {{ $isSunday ? 'text-red-600' : ($isSaturday ? 'text-blue-600' : '') }} {{ $isToday ? 'text-white' : '' }}">
+                    ({{ $dayOfWeek }})
+                </div>
+                @if($isToday)
+                <div class="text-xs mt-1 bg-yellow-400 text-gray-800 rounded px-1">今日</div>
+                @endif
+            </a>
+            @endforeach
+        </div>
+    </div>
+
+    <!-- 番組カードグリッド -->
+    @foreach($thisWeek as $date)
     @php
-        // この曜日に表示すべき番組があるかチェック
-        $currentDate = $thisWeek[$i];
+        // この日に表示すべき番組があるかチェック
+        $currentDate = $date;
         $nextDate = date('Ymd', strtotime($currentDate . ' +1 day'));
         $hasPrograms = false;
         
         foreach ($entries as $entry) {
             $entryDate = $entry['date'];
             $startTimeInt = (int)str_replace(':', '', $entry['start']);
-            
-            // 当日の5:00〜23:59の番組
             $isCurrentDayProgram = ($currentDate === $entryDate && $startTimeInt >= 500 && $startTimeInt < 2400);
-            
-            // 当日の24:00〜28:59の深夜番組
             $isCurrentDayLateNightProgram = ($entryDate === $nextDate && $startTimeInt >= 2400 && $startTimeInt < 2900);
             
             if ($isCurrentDayProgram || $isCurrentDayLateNightProgram) {
@@ -31,118 +61,205 @@
                 break;
             }
         }
+
+        $dateObj = \Carbon\Carbon::createFromFormat('Ymd', $date);
+        $dayOfWeek = ['日', '月', '火', '水', '木', '金', '土'][$dateObj->dayOfWeek];
+        $isSunday = $dateObj->dayOfWeek === 0;
+        $isSaturday = $dateObj->dayOfWeek === 6;
     @endphp
-    
-    @if ($hasPrograms)
-    <div class="tablebox">
-        <div class="table">
-            <table class="table table-bordered table-responsive">
-                <thead>
-                    <tr>
-                        <th>{{ date('m月d日(D)',strtotime($thisWeek[$i])) }}</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach ($entries as $entry)
-                    @php
-                        // 現在の曜日の日付
-                        $currentDate = $thisWeek[$i];
-                        
-                        // 前日の日付（深夜番組用）
-                        $previousDate = isset($thisWeek[$i - 1]) ? $thisWeek[$i - 1] : null;
-                        
-                        // 番組の日付と開始時刻
-                        $entryDate = $entry['date'];
-                        $entryStart = $entry['start']; // "HH:MM"形式
-                        
-                        // 時刻を整数に変換（"24:30" -> 2430）
-                        $startTimeInt = (int)str_replace(':', '', $entryStart);
-                        
-                        // 表示条件
-                        // 1. 当日の5:00〜23:59の番組（24:00以降は除外して重複を防ぐ）
-                        $isCurrentDayProgram = ($currentDate === $entryDate && $startTimeInt >= 500 && $startTimeInt < 2400);
-                        
-                        // 2. 当日の24:00〜28:59の深夜番組（dateは翌日だがstartは24時以降）
-                        $isCurrentDayLateNightProgram = false;
-                        $nextDate = date('Ymd', strtotime($currentDate . ' +1 day'));
-                        // 当日の深夜番組: dateは翌日、startは24:00以降
-                        $isCurrentDayLateNightProgram = ($entryDate === $nextDate && $startTimeInt >= 2400 && $startTimeInt < 2900);
-                        
-                        // 表示判定: 当日5:00〜23:59 または 当日24:00〜28:59
-                        $shouldDisplay = $isCurrentDayProgram || $isCurrentDayLateNightProgram;
-                    @endphp
-                    @if ($shouldDisplay)
-                    <tr>
-                        <td>
-                            <a href="{{ url('list/' . $entry['id'] . '/' . $entry['title'])}}">{{$entry['title']}}</a>
-                            @if ($entry['cast'] !== '')
-                            <br>
-                            {{ $entry['cast'] }}
-                            @endif
-                            <br>
-                            <span class="program-time">{{ $entry['start'] }} - {{ $entry['end'] }}</span>
-                            <br>
-                            @php
-                                $programStartTime = \Carbon\Carbon::createFromFormat('Ymd H:i', $entry['date'] . ' ' . $entry['start']);
-                                $programEndTime = \Carbon\Carbon::createFromFormat('Ymd H:i', $entry['date'] . ' ' . $entry['end']);
-                                $canRecord = $programEndTime->diffInDays(now()) <= 7;
-                            @endphp
-                            @if(!$programStartTime->isPast())
-                                @if (Auth::check())
-                                    <button class="btn btn-sm btn-warning schedule-recording-btn"
-                                            data-station-id="{{ $entry['id'] }}"
-                                            data-title="{{ $entry['title'] }}"
-                                            data-start="{{ $entry['date'] . str_replace(':', '', $entry['start']) }}"
-                                            data-end="{{ $entry['date'] . str_replace(':', '', $entry['end']) }}">
-                                        録音予約
-                                    </button>
-                                @else
-                                    <a href="{{ route('login') }}" class="btn btn-sm btn-warning">
-                                        ログインして録音予約
-                                    </a>
-                                @endif
-                            @elseif($canRecord && $programEndTime->isPast())
-                                <button class="btn btn-sm btn-success recording-btn"
+
+    @if($hasPrograms)
+    <div id="date-{{ $date }}" class="mb-12">
+        <h2 class="text-xl md:text-2xl font-bold text-gray-800 dark:text-white mb-4 sticky top-20 bg-white dark:bg-gray-900 py-2 z-10 {{ $isSunday ? 'text-red-600 dark:text-red-400' : ($isSaturday ? 'text-blue-600 dark:text-blue-400' : '') }}">
+            {{ $dateObj->format('Y年m月d日') }}（{{ $dayOfWeek }}）
+        </h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            @foreach($entries as $entry)
+            @php
+                $entryDate = $entry['date'];
+                $startTimeInt = (int)str_replace(':', '', $entry['start']);
+                $isCurrentDayProgram = ($currentDate === $entryDate && $startTimeInt >= 500 && $startTimeInt < 2400);
+                $isCurrentDayLateNightProgram = ($entryDate === $nextDate && $startTimeInt >= 2400 && $startTimeInt < 2900);
+                $shouldDisplay = $isCurrentDayProgram || $isCurrentDayLateNightProgram;
+
+                if (!$shouldDisplay) continue;
+
+                $programStartTime = \Carbon\Carbon::createFromFormat('Ymd H:i', $entry['date'] . ' ' . $entry['start']);
+                $programEndTime = \Carbon\Carbon::createFromFormat('Ymd H:i', $entry['date'] . ' ' . $entry['end']);
+                $canRecord = $programEndTime->diffInDays(now()) <= 7;
+                $isFuture = !$programStartTime->isPast();
+                $isPast = $programEndTime->isPast();
+            @endphp
+
+            <div class="card-base group">
+                <!-- 番組時間バッジ -->
+                <div class="flex items-center justify-between mb-3">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300">
+                        <i class="fas fa-clock mr-1"></i>
+                        {{ $entry['start'] }} - {{ $entry['end'] }}
+                    </span>
+                </div>
+
+                <!-- 番組タイトル -->
+                <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-2 group-hover:text-primary-600 transition">
+                    <a href="{{ url('list/' . $entry['id'] . '/' . $entry['title']) }}?from=weekly&station_id={{ $station_id }}&date={{ $entryDate }}" 
+                       class="hover:underline">
+                        {{ $entry['title'] }}
+                    </a>
+                </h3>
+
+                <!-- 出演者 -->
+                @if(!empty($entry['cast']))
+                <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                    <i class="fas fa-microphone mr-1"></i>{{ $entry['cast'] }}
+                </p>
+                @endif
+
+                <!-- アクション -->
+                <div class="flex flex-col space-y-2 mt-4">
+                    @if($isFuture)
+                        <!-- 未来の番組：録音予約 -->
+                        @if(Auth::check())
+                        <button class="touch-target w-full bg-gradient-to-r from-yellow-400 to-yellow-600 text-gray-800 font-semibold py-3 rounded-lg hover:shadow-lg transition schedule-recording-btn"
+                                data-station-id="{{ $entry['id'] }}"
+                                data-station-name="{{ $station_id }}"
+                                data-title="{{ $entry['title'] }}"
+                                data-cast="{{ $entry['cast'] ?? '' }}"
+                                data-start="{{ $entry['date'] . str_replace(':', '', $entry['start']) }}"
+                                data-end="{{ $entry['date'] . str_replace(':', '', $entry['end']) }}">
+                            <i class="fas fa-calendar-check mr-2"></i>録音予約
+                        </button>
+                        @else
+                        <a href="{{ route('login') }}"
+                           class="touch-target w-full text-center bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold py-3 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition">
+                            <i class="fas fa-sign-in-alt mr-2"></i>ログインして録音予約
+                        </a>
+                        @endif
+                    @elseif($canRecord && $isPast)
+                        <!-- 過去7日以内：タイムフリー録音 -->
+                        <div class="recording-controls-wrapper">
+                            <div class="flex flex-col space-y-2 recording-btn-wrapper">
+                                <select class="form-select form-select-sm area-select bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm" 
+                                        data-entry-id="{{ $entry['id'] }}">
+                                    <option value="">エリア内</option>
+                                    <optgroup label="北海道・東北">
+                                        <option value="JP1">北海道</option>
+                                        <option value="JP2">青森県</option>
+                                        <option value="JP3">岩手県</option>
+                                        <option value="JP4">宮城県</option>
+                                        <option value="JP5">秋田県</option>
+                                        <option value="JP6">山形県</option>
+                                        <option value="JP7">福島県</option>
+                                    </optgroup>
+                                    <optgroup label="関東">
+                                        <option value="JP8">茨城県</option>
+                                        <option value="JP9">栃木県</option>
+                                        <option value="JP10">群馬県</option>
+                                        <option value="JP11">埼玉県</option>
+                                        <option value="JP12">千葉県</option>
+                                        <option value="JP13">東京都</option>
+                                        <option value="JP14">神奈川県</option>
+                                    </optgroup>
+                                    <optgroup label="中部">
+                                        <option value="JP15">新潟県</option>
+                                        <option value="JP16">富山県</option>
+                                        <option value="JP17">石川県</option>
+                                        <option value="JP18">福井県</option>
+                                        <option value="JP19">山梨県</option>
+                                        <option value="JP20">長野県</option>
+                                        <option value="JP21">岐阜県</option>
+                                        <option value="JP22">静岡県</option>
+                                        <option value="JP23">愛知県</option>
+                                        <option value="JP24">三重県</option>
+                                    </optgroup>
+                                    <optgroup label="近畿">
+                                        <option value="JP25">滋賀県</option>
+                                        <option value="JP26">京都府</option>
+                                        <option value="JP27">大阪府</option>
+                                        <option value="JP28">兵庫県</option>
+                                        <option value="JP29">奈良県</option>
+                                        <option value="JP30">和歌山県</option>
+                                    </optgroup>
+                                    <optgroup label="中国・四国">
+                                        <option value="JP31">鳥取県</option>
+                                        <option value="JP32">島根県</option>
+                                        <option value="JP33">岡山県</option>
+                                        <option value="JP34">広島県</option>
+                                        <option value="JP35">山口県</option>
+                                        <option value="JP36">徳島県</option>
+                                        <option value="JP37">香川県</option>
+                                        <option value="JP38">愛媛県</option>
+                                        <option value="JP39">高知県</option>
+                                    </optgroup>
+                                    <optgroup label="九州・沖縄">
+                                        <option value="JP40">福岡県</option>
+                                        <option value="JP41">佐賀県</option>
+                                        <option value="JP42">長崎県</option>
+                                        <option value="JP43">熊本県</option>
+                                        <option value="JP44">大分県</option>
+                                        <option value="JP45">宮崎県</option>
+                                        <option value="JP46">鹿児島県</option>
+                                        <option value="JP47">沖縄県</option>
+                                    </optgroup>
+                                </select>
+                                <button class="touch-target w-full bg-gradient-to-r from-green-500 to-green-700 text-white font-semibold py-3 rounded-lg hover:shadow-lg transition recording-btn"
                                         data-station-id="{{ $entry['id'] }}"
+                                        data-station-name="{{ $station_id }}"
                                         data-title="{{ $entry['title'] }}"
+                                        data-cast="{{ $entry['cast'] ?? '' }}"
                                         data-date="{{ $entry['date'] }}"
                                         data-start="{{ str_replace(':', '', $entry['start']) }}"
                                         data-end="{{ str_replace(':', '', $entry['end']) }}">
-                                    タイムフリー録音
+                                    <i class="fas fa-download mr-2"></i>タイムフリー録音
                                 </button>
-                                <div class="recording-status" style="display:none; margin-top:5px;">
-                                    <div class="progress" style="height: 20px; margin-bottom: 5px;">
-                                        <div class="progress-bar progress-bar-striped progress-bar-animated"
-                                             role="progressbar"
-                                             style="width: 0%"
-                                             aria-valuenow="0"
-                                             aria-valuemin="0"
-                                             aria-valuemax="100">0%</div>
-                                    </div>
-                                    <small class="recording-info" style="display: block; margin-bottom: 3px;">
-                                        サイズ: <span class="file-size">0 MB</span> |
-                                        時間: <span class="elapsed-time">00:00</span> / <span class="total-time">--:--</span>
-                                    </small>
-                                    <button class="btn btn-sm btn-danger stop-recording-btn" style="width: 100%;">
-                                        録音停止
-                                    </button>
+                            </div>
+                            <div class="recording-status" style="display:none; margin-top:0.5rem;">
+                                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-5 mb-2">
+                                    <div class="progress-bar bg-gradient-to-r from-green-500 to-green-600 h-5 rounded-full text-xs font-medium text-white text-center leading-5 transition-all duration-300"
+                                         style="width: 0%">0%</div>
                                 </div>
-                            @endif
-                        </td>
-                    </tr>
-                        @endif
-                    @endforeach
-                </tbody>
-            </table>
+                                <small class="block text-gray-600 dark:text-gray-400 text-xs mb-2 recording-info">
+                                    サイズ: <span class="file-size">0 MB</span> |
+                                    時間: <span class="elapsed-time">00:00</span> / <span class="total-time">--:--</span>
+                                </small>
+                                <button class="w-full touch-target bg-red-500 hover:bg-red-600 text-white font-semibold py-2 rounded-lg transition stop-recording-btn">
+                                    <i class="fas fa-stop mr-2"></i>録音停止
+                                </button>
+                            </div>
+                        </div>
+                    @endif
+
+                    <a href="{{ url('list/' . $entry['id'] . '/' . $entry['title']) }}?from=weekly&station_id={{ $station_id }}&date={{ $entryDate }}"
+                       class="touch-target w-full text-center border-2 border-primary-500 text-primary-600 dark:text-primary-400 font-semibold py-3 rounded-lg hover:bg-primary-50 dark:hover:bg-primary-900/20 transition">
+                        <i class="fas fa-info-circle mr-2"></i>詳細を見る
+                    </a>
+                </div>
+            </div>
+            @endforeach
         </div>
     </div>
     @endif
-@endfor
+    @endforeach
 </div>
+
+<!-- スクロールバー非表示CSS -->
+<style>
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+.scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+</style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    let activeRecordings = new Map();
+    // 録音APIのルートURLを設定（共通モジュールで使用）
+    window.recordingStatusUrl = '{{ route("recording.status") }}';
+    window.recordingStopUrl = '{{ route("recording.stop") }}';
+    window.recordingDownloadUrl = '{{ route("recording.download") }}';
 
     // 通知許可リクエスト
     if ('Notification' in window && Notification.permission === 'default') {
@@ -157,13 +274,11 @@ document.addEventListener('DOMContentLoaded', function() {
             const startTime = this.dataset.start;
             const endTime = this.dataset.end;
 
-            // ボタンを無効化
             this.disabled = true;
-            this.textContent = '予約中...';
+            this.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>予約中...';
 
             const currentButton = this;
 
-            // AJAX リクエストで録音予約
             fetch('{{ route("recording.schedule.store") }}', {
                 method: 'POST',
                 headers: {
@@ -180,19 +295,19 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    currentButton.textContent = '予約完了';
-                    currentButton.classList.remove('btn-warning');
-                    currentButton.classList.add('btn-secondary');
+                    currentButton.innerHTML = '<i class="fas fa-check mr-2"></i>予約完了';
+                    currentButton.classList.remove('from-yellow-400', 'to-yellow-600', 'text-gray-800');
+                    currentButton.classList.add('bg-gray-400', 'text-white', 'cursor-not-allowed');
                     alert('録音予約が完了しました');
                 } else {
                     currentButton.disabled = false;
-                    currentButton.textContent = '録音予約';
+                    currentButton.innerHTML = '<i class="fas fa-calendar-check mr-2"></i>録音予約';
                     alert('録音予約に失敗しました: ' + data.message);
                 }
             })
             .catch(error => {
                 currentButton.disabled = false;
-                currentButton.textContent = '録音予約';
+                currentButton.innerHTML = '<i class="fas fa-calendar-check mr-2"></i>録音予約';
                 alert('エラーが発生しました: ' + error);
             });
         });
@@ -202,404 +317,96 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.recording-btn').forEach(function(btn) {
         btn.addEventListener('click', function() {
             const stationId = this.dataset.stationId;
+            const stationName = this.dataset.stationName;
             const title = this.dataset.title;
+            const cast = this.dataset.cast;
             const date = this.dataset.date;
             const startTime = this.dataset.start;
             const endTime = this.dataset.end;
 
-            // 録音時間を計算（分単位）
+            const wrapper = this.closest('.recording-controls-wrapper');
+            const areaSelect = wrapper ? wrapper.querySelector('.area-select[data-entry-id="' + stationId + '"]') : null;
+            const areaId = areaSelect ? areaSelect.value : '';
+
             const startMinutes = parseInt(startTime.substring(0, 2)) * 60 + parseInt(startTime.substring(2, 4));
             const endMinutes = parseInt(endTime.substring(0, 2)) * 60 + parseInt(endTime.substring(2, 4));
             const durationMinutes = endMinutes - startMinutes;
 
-            // ボタンを無効化
             this.disabled = true;
-            this.textContent = '録音開始中...';
+            this.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>録音開始中...';
 
             const currentButton = this;
 
-            // AJAX リクエストでタイムフリー録音開始
+            const requestBody = {
+                station_id: stationId,
+                station_name: stationName,
+                title: title,
+                cast: cast,
+                start_time: date + startTime,
+                end_time: date + endTime
+            };
+
+            if (areaId) {
+                requestBody.area_id = areaId;
+            }
+
             fetch('{{ route("recording.timefree.start") }}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                 },
-                body: JSON.stringify({
-                    station_id: stationId,
-                    title: title,
-                    start_time: date + startTime,
-                    end_time: date + endTime
-                })
+                body: JSON.stringify(requestBody)
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // ボタンを非表示にして、進行状況表示を表示
-                    currentButton.style.display = 'none';
-                    const statusDiv = currentButton.nextElementSibling;
+                    const btnWrapper = currentButton.closest('.recording-btn-wrapper');
+                    if (btnWrapper) {
+                        btnWrapper.style.display = 'none';
+                    }
 
-                    if (statusDiv && statusDiv.classList.contains('recording-status')) {
+                    const statusDiv = currentButton.closest('.recording-controls-wrapper').querySelector('.recording-status');
+
+                    if (statusDiv) {
                         statusDiv.style.display = 'block';
 
-                        // 停止ボタンのイベントリスナーを設定
                         const stopBtn = statusDiv.querySelector('.stop-recording-btn');
                         if (stopBtn) {
                             stopBtn.onclick = function() {
-                                stopRecording(data.recording_id, currentButton, statusDiv);
+                                window.stopRecording(data.recording_id, currentButton, statusDiv);
                             };
                         }
 
-                        // 録音状態を監視開始
-                        startRecordingMonitor(data.recording_id, currentButton, data.filename, statusDiv, durationMinutes);
+                        window.startRecordingMonitor(data.recording_id, currentButton, data.filename, statusDiv, durationMinutes);
                     }
                 } else {
+                    const btnWrapper = currentButton.closest('.recording-btn-wrapper');
+                    if (btnWrapper) {
+                        btnWrapper.style.display = 'flex';
+                    }
                     currentButton.disabled = false;
-                    currentButton.textContent = 'タイムフリー録音';
+                    currentButton.innerHTML = '<i class="fas fa-download mr-2"></i>タイムフリー録音';
                     alert('録音開始に失敗しました: ' + data.message);
                 }
             })
             .catch(error => {
+                const btnWrapper = currentButton.closest('.recording-btn-wrapper');
+                if (btnWrapper) {
+                    btnWrapper.style.display = 'flex';
+                }
                 currentButton.disabled = false;
-                currentButton.textContent = 'タイムフリー録音';
+                currentButton.innerHTML = '<i class="fas fa-download mr-2"></i>タイムフリー録音';
                 alert('エラーが発生しました: ' + error);
             });
         });
     });
-
-    // 録音状態監視開始
-    function startRecordingMonitor(recordingId, button, filename, statusDiv, durationMinutes) {
-        const startTime = Date.now();
-        const totalSeconds = durationMinutes * 60;
-
-        activeRecordings.set(recordingId, {
-            button: button,
-            statusDiv: statusDiv,
-            filename: filename,
-            startTime: startTime,
-            totalSeconds: totalSeconds
-        });
-
-        // 総録音時間を表示
-        const totalTimeSpan = statusDiv.querySelector('.total-time');
-        if (totalTimeSpan) {
-            totalTimeSpan.textContent = formatTime(totalSeconds);
-        }
-
-        // 即座に最初のチェックを実行
-        checkRecordingStatus(recordingId, button, filename, statusDiv, null, startTime, totalSeconds);
-
-        // 500ms間隔で状態をチェック（高速ダウンロード対応）
-        const intervalId = setInterval(() => {
-            checkRecordingStatus(recordingId, button, filename, statusDiv, intervalId, startTime, totalSeconds);
-        }, 500);
-
-        activeRecordings.get(recordingId).intervalId = intervalId;
-    }
-
-    // 録音状態をチェック
-    function checkRecordingStatus(recordingId, button, filename, statusDiv, intervalId, startTime, totalSeconds) {
-        // 既に完了済みの録音はチェックしない
-        if (!activeRecordings.has(recordingId)) {
-            return;
-        }
-
-        fetch('{{ route("recording.status") }}?' + new URLSearchParams({
-            recording_id: recordingId
-        }))
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // 既に完了済みならスキップ
-                if (!activeRecordings.has(recordingId)) {
-                    return;
-                }
-
-                // 経過時間を表示（整数に変換）
-                const elapsedSeconds = Math.floor(data.elapsed_seconds || Math.floor((Date.now() - startTime) / 1000));
-                const elapsedTimeSpan = statusDiv.querySelector('.elapsed-time');
-                if (elapsedTimeSpan) {
-                    elapsedTimeSpan.textContent = formatTime(elapsedSeconds);
-                }
-
-                // 進捗率を表示（サーバーからの値を優先）
-                const progress = data.progress_percentage !== undefined ? data.progress_percentage : 0;
-                const progressBar = statusDiv.querySelector('.progress-bar');
-                if (progressBar) {
-                    const progressInt = Math.floor(progress);
-                    progressBar.style.width = progressInt + '%';
-                    progressBar.textContent = progressInt + '%';
-                    progressBar.setAttribute('aria-valuenow', progressInt);
-                }
-
-                // ファイルサイズを表示
-                if (data.file_size !== undefined && data.file_size > 0) {
-                    const fileSizeSpan = statusDiv.querySelector('.file-size');
-                    if (fileSizeSpan) {
-                        fileSizeSpan.textContent = data.file_size_formatted || formatFileSize(data.file_size);
-                    }
-                }
-
-                // 録音完了判定
-                if (data.status === 'completed' || (data.file_exists && !data.is_recording)) {
-                    // 録音情報を削除（重複実行防止）
-                    const recording = activeRecordings.get(recordingId);
-                    activeRecordings.delete(recordingId);
-
-                    // タイマーを停止
-                    if (recording && recording.intervalId) {
-                        clearInterval(recording.intervalId);
-                    }
-
-                    // 進行状況表示を非表示
-                    statusDiv.style.display = 'none';
-
-                    // ボタンを再表示してダウンロードボタンに変更
-                    button.style.display = 'block';
-                    button.textContent = 'ダウンロード';
-                    button.classList.remove('btn-success', 'btn-warning');
-                    button.classList.add('btn-primary');
-                    button.disabled = false;
-
-                    // ボタンをダウンロードボタンに変更
-                    button.onclick = function() {
-                        downloadRecording(recordingId);
-                    };
-
-                    // ブラウザ通知を表示
-                    showBrowserNotification(filename);
-                    alert('録音が完了しました: ' + filename);
-                }
-            }
-        })
-        .catch(error => {
-            // エラー表示
-            if (activeRecordings.has(recordingId)) {
-                const recording = activeRecordings.get(recordingId);
-                if (recording && recording.statusDiv) {
-                    const recordingInfo = recording.statusDiv.querySelector('.recording-info');
-                    if (recordingInfo) {
-                        recordingInfo.innerHTML = '<span style="color: red;">エラー: 状態取得失敗</span>';
-                    }
-                }
-            }
-        });
-    }
-
-    // 録音を停止
-    function stopRecording(recordingId, button, statusDiv) {
-        if (!confirm('録音を停止しますか？')) {
-            return;
-        }
-
-        fetch('{{ route("recording.stop") }}', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            },
-            body: JSON.stringify({
-                recording_id: recordingId
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // 監視を停止
-                const recording = activeRecordings.get(recordingId);
-                if (recording && recording.intervalId) {
-                    clearInterval(recording.intervalId);
-                }
-                activeRecordings.delete(recordingId);
-
-                // 進行状況表示を非表示
-                statusDiv.style.display = 'none';
-
-                // ボタンを元に戻す
-                button.style.display = 'block';
-                button.textContent = 'タイムフリー録音';
-                button.classList.remove('btn-warning', 'btn-primary');
-                button.classList.add('btn-success');
-                button.disabled = false;
-
-                alert('録音を停止しました');
-            } else {
-                alert('録音停止に失敗しました: ' + data.message);
-            }
-        })
-        .catch(error => {
-            alert('エラーが発生しました: ' + error);
-        });
-    }
-
-    // 時間をフォーマット（秒 -> MM:SS）
-    function formatTime(seconds) {
-        const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        return String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
-    }
-
-    // ファイルサイズをフォーマット
-    function formatFileSize(bytes) {
-        if (bytes < 1024) {
-            return bytes + ' B';
-        } else if (bytes < 1024 * 1024) {
-            return (bytes / 1024).toFixed(0) + ' KB';
-        } else {
-            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
-        }
-    }
 });
 
-// 録音ファイルをダウンロード（週間番組表用）
+// 録音ファイルをダウンロード（週間番組表用：共通モジュールを使用）
 async function downloadRecording(recordingId) {
-    try {
-        // ダウンロードURLを構築
-        const downloadUrl = '{{ route("recording.download") }}?' + new URLSearchParams({
-            recording_id: recordingId
-        });
-
-        // ファイルを取得
-        const response = await fetch(downloadUrl);
-        if (!response.ok) {
-            throw new Error('ダウンロードに失敗しました');
-        }
-
-        const blob = await response.blob();
-        const filename = getFilenameFromRecordingId(recordingId);
-
-        // File System Access APIをサポートしているかチェック
-        if ('showSaveFilePicker' in window) {
-            try {
-                // カスタム保存先を指定（D:\ミュージック\radio）
-                const fileHandle = await window.showSaveFilePicker({
-                    suggestedName: filename,
-                    startIn: 'music', // 音楽フォルダから開始
-                    types: [{
-                        description: '音声ファイル',
-                        accept: {
-                            'audio/mp4': ['.m4a'],
-                            'audio/mpeg': ['.mp3']
-                        }
-                    }]
-                });
-
-                const writable = await fileHandle.createWritable();
-                await writable.write(blob);
-                await writable.close();
-
-                alert('ファイルが正常に保存されました！');
-                return;
-            } catch (e) {
-                console.log('Save picker cancelled, falling back to default download');
-            }
-        }
-
-        // フォールバック: 通常のダウンロード
-        downloadWithCustomName(blob, filename);
-
-    } catch (error) {
-        console.error('ダウンロードエラー:', error);
-        alert('ダウンロードに失敗しました: ' + error.message);
-    }
-}
-
-// カスタム名でダウンロード（フォールバック用）
-function downloadWithCustomName(blob, filename) {
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.style.display = 'none';
-    a.href = url;
-    a.download = filename;
-
-    document.body.appendChild(a);
-    a.click();
-
-    window.URL.revokeObjectURL(url);
-    document.body.removeChild(a);
-
-    showDownloadLocationInfo();
-}
-
-// 録音IDからファイル名を取得
-function getFilenameFromRecordingId(recordingId) {
-    const parts = recordingId.split('_');
-    if (parts.length >= 3) {
-        const station = parts[0];
-        const datetime = parts[1];
-        const timestamp = parts[2];
-
-        const year = datetime.substring(0, 4);
-        const month = datetime.substring(4, 6);
-        const day = datetime.substring(6, 8);
-        const hour = datetime.substring(8, 10);
-        const minute = datetime.substring(10, 12);
-
-        return `${station}_${year}${month}${day}_${hour}${minute}.m4a`;
-    }
-    return recordingId + '.m4a';
-}
-
-// ダウンロード場所の案内を表示
-function showDownloadLocationInfo() {
-    const info = document.createElement('div');
-    info.style.cssText = `
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        background: #007bff;
-        color: white;
-        padding: 15px 20px;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        z-index: 10001;
-        max-width: 350px;
-    `;
-
-    info.innerHTML = `
-        <div style="font-weight: bold; margin-bottom: 8px;">💾 ダウンロード完了</div>
-        <div style="font-size: 14px; line-height: 1.4;">
-            推奨保存先: <strong>D:\\ミュージック\\radio</strong><br>
-            ブラウザの設定でデフォルト保存先を変更できます
-        </div>
-    `;
-
-    document.body.appendChild(info);
-
-    setTimeout(() => {
-        if (document.body.contains(info)) {
-            document.body.removeChild(info);
-        }
-    }, 8000);
-}
-
-// ブラウザ通知を表示
-function showBrowserNotification(filename) {
-    if ('Notification' in window && Notification.permission === 'granted') {
-        try {
-            const notification = new Notification('録音完了', {
-                body: `${filename} のダウンロードが完了しました`,
-                icon: '/favicon.ico',
-                badge: '/favicon.ico',
-                tag: 'recording-complete',
-                requireInteraction: false,
-                silent: false
-            });
-
-            // 通知をクリックした時の動作
-            notification.onclick = function() {
-                window.focus();
-                this.close();
-            };
-
-            // 5秒後に自動で閉じる
-            setTimeout(() => {
-                notification.close();
-            }, 5000);
-        } catch (error) {
-            console.error('通知の表示に失敗しました:', error);
-        }
-    }
+    const filename = window.getFilenameFromRecordingId(recordingId);
+    await window.downloadRecording(recordingId, filename);
 }
 </script>
 @endsection

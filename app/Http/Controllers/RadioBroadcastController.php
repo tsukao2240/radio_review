@@ -29,7 +29,8 @@ class RadioBroadcastController extends Controller
             $data = [
                 'entries' => [],
                 'thisWeek' => [],
-                'broadcast_name' => '番組表取得エラー'
+                'broadcast_name' => '番組表取得エラー',
+                'station_id' => $id
             ];
         }
 
@@ -100,7 +101,8 @@ class RadioBroadcastController extends Controller
             return [
                 'entries' => $entries,
                 'thisWeek' => $thisWeek,
-                'broadcast_name' => $broadcast_name
+                'broadcast_name' => $broadcast_name,
+                'station_id' => $id
             ];
 
         } catch (\Exception $e) {
