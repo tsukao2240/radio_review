@@ -1070,6 +1070,7 @@ class RadioRecordingController extends Controller
     public function showHistory()
     {
         $recordings = [];
+        $seenRecordingIds = [];
 
         // Redisドライバーの場合のみkeys()を使用
         $store = Cache::getStore();
@@ -1082,13 +1083,13 @@ class RadioRecordingController extends Controller
 
             do {
                 $result = $redis->scan($cursor, ['MATCH' => $pattern, 'COUNT' => 100]);
-                
+
                 // scanが失敗した場合のエラーハンドリング
                 if ($result === false || !is_array($result) || count($result) < 2) {
                     \Log::warning('Redis scanが失敗しました', ['cursor' => $cursor, 'result' => $result]);
                     break;
                 }
-                
+
                 $cursor = $result[0];
                 $keys = $result[1] ?? [];
 
@@ -1100,13 +1101,19 @@ class RadioRecordingController extends Controller
                         continue;
                     }
 
+                    // recording_id を抽出（キーから）
+                    preg_match('/recording_(.+)$/', $cleanKey, $matches);
+                    $recordingId = $matches[1] ?? $cleanKey;
+
+                    // Redis SCANは同一キーを複数回返す場合があるため重複を除外
+                    if (isset($seenRecordingIds[$recordingId])) {
+                        continue;
+                    }
+                    $seenRecordingIds[$recordingId] = true;
+
                     $recordingInfo = Cache::get($cleanKey);
 
                     if ($recordingInfo) {
-                        // recording_id を抽出（キーから）
-                        preg_match('/recording_(.+)$/', $cleanKey, $matches);
-                        $recordingId = $matches[1] ?? $cleanKey;
-
                         // ファイル情報を追加
                         $filepath = $recordingInfo['filepath'];
                         $fileExists = file_exists($filepath);
