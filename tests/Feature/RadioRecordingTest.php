@@ -65,11 +65,8 @@ class RadioRecordingTest extends TestCase
     {
         $response = $this->postJson('/recording/timefree/start', []);
 
-        $response->assertStatus(200)
-                ->assertJson([
-                    'success' => false,
-                    'message' => '放送局ID、開始時間、終了時間が必要です'
-                ]);
+        $response->assertStatus(422)
+                ->assertJsonValidationErrors(['station_id', 'start_time', 'end_time']);
     }
 
     /**
@@ -361,6 +358,46 @@ class RadioRecordingTest extends TestCase
 
         $response->assertStatus(200)
                 ->assertJson(['success' => true]);
+    }
+
+    /**
+     * 録音開始時にowner_keyがキャッシュに保存されることを確認
+     */
+    public function test_recording_stores_owner_key()
+    {
+        $yesterday = Carbon::now()->subDay();
+        $requestData = [
+            'station_id' => 'TBS',
+            'title' => 'テスト番組',
+            'start_time' => $yesterday->format('YmdHi'),
+            'end_time' => $yesterday->copy()->addMinutes(30)->format('YmdHi'),
+        ];
+
+        $this->mockRadikoAuth();
+
+        $response = $this->postJson('/recording/timefree/start', $requestData);
+        $response->assertStatus(200)->assertJson(['success' => true]);
+
+        $recordingId = $response->json('recording_id');
+        $recordingInfo = Cache::get("recording_{$recordingId}");
+
+        $this->assertArrayHasKey('owner_key', $recordingInfo, 'owner_keyが保存されていません');
+        $this->assertNotEmpty($recordingInfo['owner_key']);
+    }
+
+    /**
+     * isOwner: owner_key未設定の古いデータは互換のためtrueを返す
+     */
+    public function test_is_owner_returns_true_for_legacy_recordings_without_owner_key()
+    {
+        $controller = app(\App\Http\Controllers\RadioRecordingController::class);
+
+        // セッション付きのリクエストを作成するためHTTPリクエスト経由で取得
+        $this->getJson('/recording/list');
+        $request = app('request');
+
+        $recordingInfo = ['station_id' => 'TBS', 'title' => '古い録音'];
+        $this->assertTrue($controller->isOwner($request, $recordingInfo));
     }
 
     /**
