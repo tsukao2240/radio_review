@@ -62,16 +62,14 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/my', 'MypageController@destroy')->middleware('throttle:posts')->name('myreview.delete');
 });
 
-// タイムフリー録音関連ルート（認証必須）
-Route::middleware(['auth'])->group(function () {
-    Route::post('/recording/timefree/start', 'RadioRecordingController@startTimefreeRecording')->name('recording.timefree.start');
-    Route::post('/recording/stop', 'RadioRecordingController@stopRecording')->name('recording.stop');
-    Route::get('/recording/status', 'RadioRecordingController@getRecordingStatus')->name('recording.status');
-    Route::get('/recording/download', 'RadioRecordingController@downloadRecording')->name('recording.download');
-    Route::get('/recording/list', 'RadioRecordingController@listRecordings')->name('recording.list');
-    Route::get('/recording/history', 'RadioRecordingController@showHistory')->name('recording.history');
-    Route::post('/recording/delete', 'RadioRecordingController@deleteRecording')->name('recording.delete');
-});
+// タイムフリー録音関連ルート（認証不要）
+Route::post('/recording/timefree/start', 'RadioRecordingController@startTimefreeRecording')->name('recording.timefree.start');
+Route::post('/recording/stop', 'RadioRecordingController@stopRecording')->name('recording.stop');
+Route::get('/recording/status', 'RadioRecordingController@getRecordingStatus')->name('recording.status');
+Route::get('/recording/download', 'RadioRecordingController@downloadRecording')->name('recording.download');
+Route::get('/recording/list', 'RadioRecordingController@listRecordings')->name('recording.list');
+Route::get('/recording/history', 'RadioRecordingController@showHistory')->name('recording.history');
+Route::post('/recording/delete', 'RadioRecordingController@deleteRecording')->name('recording.delete');
 
 // お気に入り番組関連ルート（認証必須）
 Route::middleware(['auth'])->group(function () {

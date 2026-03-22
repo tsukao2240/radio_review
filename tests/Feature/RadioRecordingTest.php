@@ -19,10 +19,6 @@ class RadioRecordingTest extends TestCase
 
         // テスト用のrecordingsディレクトリを作成
         Storage::fake('recordings');
-
-        // 録音ルートは認証必須のため、テストユーザーでログイン
-        $user = User::factory()->create();
-        $this->actingAs($user);
     }
 
     /**
