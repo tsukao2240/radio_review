@@ -35,7 +35,7 @@ class NotificationController extends Controller
      */
     public function getAll(Request $request)
     {
-        $limit = $request->input('limit', 50);
+        $limit = max(1, min((int) $request->input('limit', 50), 100));
         $notifications = $this->notificationService->getAllNotifications(Auth::user(), $limit);
 
         return response()->json([
