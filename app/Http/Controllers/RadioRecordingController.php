@@ -216,6 +216,11 @@ class RadioRecordingController extends Controller
             return $cachedToken;
         }
 
+        // テスト環境では実際のHTTP呼び出しを行わない
+        if (app()->environment('testing')) {
+            return 'test_mock_token';
+        }
+
         try {
             // デバイス情報を生成（rajiko方式）
             $appVersion = '8.2.4';
