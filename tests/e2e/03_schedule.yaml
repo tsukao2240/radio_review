@@ -1,0 +1,38 @@
+name: 放送中番組一覧
+description: 放送中番組一覧が正常に表示・動作すること
+base_url: http://localhost:8000
+auth_required: false
+
+steps:
+  - action: navigate
+    url: /schedule
+    description: 放送中番組一覧にアクセス
+
+  - action: assert_visible
+    selector: ".program-card, .card, table"
+    description: 番組カードまたはテーブルが表示される
+
+  - action: screenshot
+    name: 03_schedule_top
+
+  # タイムフリー番組表リンクの確認
+  - action: assert_visible
+    selector: "a[href*=timefree]"
+    description: タイムフリー番組表へのリンクが存在する
+
+  # 週間番組表リンクの確認（局IDを含むリンク）
+  - action: assert_visible
+    selector: "a[href*=schedule]"
+    description: 週間番組表へのリンクが存在する
+
+  # 最初の局の週間番組表に遷移
+  - action: navigate
+    url: /schedule/TBS
+    description: TBSの週間番組表にアクセス
+
+  - action: assert_visible
+    selector: ".program, .schedule, table, .card"
+    description: 番組スケジュールが表示される
+
+  - action: screenshot
+    name: 03_weekly_schedule_tbs

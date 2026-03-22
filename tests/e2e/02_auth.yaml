@@ -1,0 +1,71 @@
+name: 認証（ログイン・ログアウト）
+description: ログイン・ログアウトが正常に動作すること
+base_url: http://localhost:8000
+auth_required: false
+
+steps:
+  - action: navigate
+    url: /login
+    description: ログインページにアクセス
+
+  - action: assert_visible
+    selector: "input[type=email]"
+    description: メールアドレス入力欄が表示される
+
+  - action: assert_visible
+    selector: "input[type=password]"
+    description: パスワード入力欄が表示される
+
+  - action: screenshot
+    name: 02_login_page
+
+  # 誤ったパスワードでのログイン失敗
+  - action: fill
+    selector: "input[type=email]"
+    value: "wrong@example.com"
+
+  - action: fill
+    selector: "input[type=password]"
+    value: "wrongpassword"
+
+  - action: click
+    selector: "button[type=submit]"
+    description: ログインボタンをクリック
+
+  - action: assert_visible
+    text: "認証に失敗|メールアドレスまたはパスワード|These credentials"
+    description: エラーメッセージが表示される
+
+  - action: screenshot
+    name: 02_login_failed
+
+  # 正しい認証情報でログイン（テスト用アカウント）
+  - action: fill
+    selector: "input[type=email]"
+    value: "${TEST_USER_EMAIL}"
+
+  - action: fill
+    selector: "input[type=password]"
+    value: "${TEST_USER_PASSWORD}"
+
+  - action: click
+    selector: "button[type=submit]"
+
+  - action: assert_url_contains
+    expected: "/schedule"
+    description: ログイン後にリダイレクトされる
+
+  - action: screenshot
+    name: 02_logged_in
+
+  # ログアウト
+  - action: click
+    selector: "a[href*=logout], button[data-action=logout], form[action*=logout] button"
+    description: ログアウトボタンをクリック
+
+  - action: assert_url_contains
+    expected: "/login"
+    description: ログアウト後にログインページへリダイレクト
+
+  - action: screenshot
+    name: 02_logged_out

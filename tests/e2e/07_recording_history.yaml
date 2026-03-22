@@ -1,0 +1,34 @@
+name: 録音履歴
+description: 録音履歴画面が正常に表示されること
+base_url: http://localhost:8000
+auth_required: false
+
+steps:
+  - action: navigate
+    url: /recording/history
+    description: 録音履歴ページにアクセス
+
+  - action: assert_visible
+    selector: ".recording-card, .empty-state, h3"
+    description: 録音履歴一覧または空状態が表示される
+
+  - action: assert_visible
+    text: "録音履歴"
+    description: ページタイトルが表示される
+
+  - action: screenshot
+    name: 07_recording_history
+
+  # ディスク使用状況の表示確認
+  - action: assert_visible
+    selector: ".disk-usage"
+    description: ディスク使用状況が表示される（録音ストレージが存在する場合）
+
+  # 重複エントリがないことを確認（同一recording_idが複数存在しない）
+  - action: assert_no_duplicate
+    selector: ".recording-card"
+    key_attribute: "data-recording-id"
+    description: 同一recording_idの録音カードが重複していないこと
+
+  - action: screenshot
+    name: 07_recording_history_detail

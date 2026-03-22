@@ -1,0 +1,37 @@
+name: 番組検索
+description: 番組検索が正常に動作すること
+base_url: http://localhost:8000
+auth_required: false
+
+steps:
+  - action: navigate
+    url: /search?title=ニュース
+    description: キーワード「ニュース」で検索
+
+  - action: assert_visible
+    selector: ".card, .program, .search-result, table"
+    description: 検索結果が表示される
+
+  - action: screenshot
+    name: 04_search_results
+
+  # 検索結果が0件の場合
+  - action: navigate
+    url: /search?title=zzzzzzzzzz存在しない番組名zzzzzzzz
+
+  - action: assert_visible
+    text: "見つかりません|該当|結果がありません|0件"
+    description: 0件メッセージが表示される
+
+  - action: screenshot
+    name: 04_search_no_results
+
+  # キーワードなしで検索（バリデーション）
+  - action: navigate
+    url: /search
+
+  - action: assert_status
+    description: リダイレクトまたはエラーなく処理される
+
+  - action: screenshot
+    name: 04_search_no_keyword

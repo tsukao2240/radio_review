@@ -1,0 +1,45 @@
+name: お気に入り管理
+description: お気に入りの表示・削除が正常に動作すること（要ログイン）
+base_url: http://localhost:8000
+auth_required: true
+
+setup:
+  - action: login
+    email: "${TEST_USER_EMAIL}"
+    password: "${TEST_USER_PASSWORD}"
+
+steps:
+  # 未ログイン時はリダイレクト
+  - action: navigate
+    url: /favorites
+    description: お気に入りページにアクセス
+
+  - action: assert_visible
+    selector: ".favorite-card, .empty-state, .alert"
+    description: お気に入り一覧または空状態が表示される
+
+  - action: screenshot
+    name: 06_favorites_list
+
+  # お気に入り追加（番組詳細から）
+  - action: navigate
+    url: /schedule/TBS
+    description: 週間番組表からお気に入り追加を試みる
+
+  - action: assert_visible
+    selector: ".favorite-btn, button[data-action*=favorite], .fa-heart"
+    description: お気に入りボタンが存在する
+
+  - action: screenshot
+    name: 06_favorites_add_button
+
+  # お気に入り画面の録音コントロール確認
+  - action: navigate
+    url: /favorites
+
+  - action: assert_visible
+    selector: ".recording-btn, .recording-controls-wrapper"
+    description: 録音ボタンまたは「タイムフリー期間外」メッセージが表示される（お気に入りがある場合）
+
+  - action: screenshot
+    name: 06_favorites_recording_controls

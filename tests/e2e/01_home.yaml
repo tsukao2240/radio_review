@@ -1,0 +1,35 @@
+name: ホーム画面
+description: トップページが正常に表示されること
+base_url: http://localhost:8000
+auth_required: false
+
+steps:
+  - action: navigate
+    url: /
+    description: トップページにアクセス
+
+  - action: assert_visible
+    text: ラジオ
+    description: ページタイトル系のテキストが存在する
+
+  - action: assert_visible
+    selector: nav
+    description: ナビゲーションバーが表示される
+
+  - action: assert_visible
+    selector: a[href*="schedule"]
+    description: 番組表へのリンクが存在する
+
+  - action: screenshot
+    name: 01_home
+
+  - action: navigate
+    url: /schedule
+    description: 放送中番組一覧に遷移
+
+  - action: assert_status
+    expected: 200
+    description: 404や500でないこと
+
+  - action: screenshot
+    name: 01_schedule
