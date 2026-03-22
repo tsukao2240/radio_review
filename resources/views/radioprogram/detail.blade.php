@@ -186,7 +186,7 @@ document.addEventListener('DOMContentLoaded', function() {
     favoriteBtn.disabled = true;
     favoriteBtn.innerHTML = '<i class="fas fa-heart"></i> お気に入りに追加（要ログイン）';
     favoriteBtn.addEventListener('click', function() {
-        alert('お気に入り機能を使うにはログインが必要です');
+        window.toast ? window.toast.info('お気に入り機能を使うにはログインが必要です') : null;
         window.location.href = "{{ route('login') }}";
     });
     @else
@@ -206,7 +206,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const isFavorite = this.classList.contains('btn-danger');
 
         if (isFavorite) {
-            alert('お気に入りの削除は「お気に入り番組」ページから行ってください');
+            window.toast ? window.toast.info('お気に入りの削除は「お気に入り番組」ページから行ってください') : null;
             return;
         }
 
@@ -226,16 +226,16 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert('お気に入りに登録しました');
+                window.toast ? window.toast.success('お気に入りに登録しました') : null;
                 favoriteBtn.classList.remove('btn-outline-danger');
                 favoriteBtn.classList.add('btn-danger');
                 favoriteBtn.innerHTML = '<i class="fas fa-heart"></i> お気に入り登録済み';
             } else {
-                alert(data.message || 'お気に入りの登録に失敗しました');
+                window.toast ? window.toast.error(data.message || 'お気に入りの登録に失敗しました') : null;
             }
         })
         .catch(error => {
-            alert('エラーが発生しました: ' + error);
+            window.toast ? window.toast.error('エラーが発生しました: ' + error) : null;
         });
     });
     @endguest
@@ -273,18 +273,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        alert('録音を開始しました。録音履歴ページで進捗を確認できます。');
-                        // 録音履歴ページへ移動するか確認
-                        if (confirm('録音履歴ページを開きますか？')) {
+                        window.toast ? window.toast.success('録音を開始しました。録音履歴ページで進捗を確認できます。') : null;
+                        setTimeout(() => {
                             window.location.href = '{{ route("recording.history") }}';
-                        }
+                        }, 2000);
                     } else {
-                        alert('エラー: ' + (data.message || '録音の開始に失敗しました'));
+                        window.toast ? window.toast.error('エラー: ' + (data.message || '録音の開始に失敗しました')) : null;
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    alert('録音リクエスト中にエラーが発生しました。');
+                    window.toast ? window.toast.error('録音リクエスト中にエラーが発生しました。') : null;
                 });
             }
         });
