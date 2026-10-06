@@ -34,6 +34,8 @@ class RadioBroadcastController extends Controller
             ];
         }
 
+        $data['station_id'] = $id;
+
         return view('radioprogram.weekly_schedule', $data);
     }
 

@@ -14,6 +14,13 @@
         <i class="fas fa-calendar-week mr-2"></i>{{ $broadcast_name }} 週間番組表
     </h1>
 
+    <div class="mb-6">
+        <a href="{{ route('schedule.twoweek.station', ['station_id' => $station_id]) }}"
+           class="inline-flex items-center touch-target bg-green-600 text-white font-semibold px-4 py-3 rounded-lg hover:bg-green-700 transition">
+            <i class="fas fa-podcast mr-2"></i>過去1週間のタイムフリー録音
+        </a>
+    </div>
+
     <!-- 日付ナビゲーション（横スクロール） -->
     <div class="mb-8 -mx-4 px-4 md:mx-0 md:px-0">
         <div class="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide space-x-2 pb-2">

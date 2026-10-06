@@ -54,6 +54,11 @@
                 <span>{{ $result['start'] }} - {{ $result['end'] }}</span>
             </div>
 
+            <a href="{{ route('schedule.twoweek.station', ['station_id' => $result['station_id']]) }}"
+               class="block touch-target text-center bg-green-600 text-white font-semibold py-2 rounded-lg hover:bg-green-700 transition text-sm mb-3">
+                <i class="fas fa-podcast mr-1"></i>過去1週間のタイムフリー録音
+            </a>
+
             <!-- アクション -->
             <div class="flex space-x-2 mt-auto">
                 <a href="{{ url('schedule/' . $result['station_id']) }}"
